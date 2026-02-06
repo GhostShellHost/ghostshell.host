@@ -329,15 +329,23 @@ async function certDownloadPrintable(certId, token, env) {
   return html(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${safe(row.cert_id)} • Birth Certificate</title>
 <style>
-body{font-family:Georgia,serif;max-width:900px;margin:40px auto;padding:30px}
-#cert{border:2px solid #111;padding:30px;background:#fff}
+body{font-family:Georgia,serif;max-width:900px;margin:40px auto;padding:0;background:#f7f5f1}
+#certWrap{padding:40px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.12)}
+#cert{border:2px solid #111;padding:34px;background:#fff;position:relative}
+#cert:before{content:"";position:absolute;inset:10px;border:1px solid rgba(0,0,0,.35);pointer-events:none}
+#cert:after{content:"";position:absolute;inset:16px;border:1px dashed rgba(0,0,0,.18);pointer-events:none}
+.corner{position:absolute;width:18px;height:18px;border:2px solid #111}
+.corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
+.corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
+.corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
+.corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
 h1{margin:0 0 8px 0;letter-spacing:1px}
 .small{color:#333}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
 hr{border:0;border-top:1px solid #ddd;margin:16px 0}
 .toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:16px}
 .tbtn{display:inline-block;padding:8px 10px;border:1px solid #ddd;border-radius:10px;background:#fff;font-size:13px;text-decoration:none;color:#111}
-@media print{.toolbar{display:none} body{margin:0;max-width:none;border:none;padding:0}}
+@media print{.toolbar{display:none} body{margin:0;max-width:none;border:none;padding:0;background:#fff} #certWrap{padding:0;box-shadow:none} #cert{border:none} #cert:before,#cert:after,.corner{display:none}}
 </style></head><body>
 <div class="toolbar">
   <a class="tbtn" href="/cert/${encodeURIComponent(row.cert_id)}">← Back to verification</a>
@@ -346,26 +354,33 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
   </span>
 </div>
 
-<div id="cert">
-  <div class="small">GhostShell Registry of Continuity</div>
-  <h1>BIRTH CERTIFICATE</h1>
-  <div class="small">Private credential issued by GhostShell</div>
-  <hr>
-  <p><strong>Agent name:</strong> ${safe(row.agent_name)}</p>
-  <p><strong>Born (UTC):</strong> <span class="mono">${safe(row.issued_at_utc)}</span></p>
-  <p><strong>Place of birth:</strong> ${safe(row.place_of_birth)}</p>
-  <p><strong>Cognitive core (at registration):</strong> ${safe(row.cognitive_core_family)} ${safe(row.cognitive_core_exact)}</p>
-  <hr>
-  <p><strong>Certificate ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
-  <p><strong>Creator label (pseudonym):</strong> ${safe(row.creator_label || 'Undisclosed')}</p>
-  <p class="small">Verification: ${env.BASE_URL}/cert/${encodeURIComponent(row.cert_id)}</p>
+<div id="certWrap">
+  <div id="cert">
+    <span class="corner tl" aria-hidden="true"></span>
+    <span class="corner tr" aria-hidden="true"></span>
+    <span class="corner bl" aria-hidden="true"></span>
+    <span class="corner br" aria-hidden="true"></span>
+
+    <div class="small">GhostShell Registry of Continuity</div>
+    <h1>BIRTH CERTIFICATE</h1>
+    <div class="small">Private credential issued by GhostShell</div>
+    <hr>
+    <p><strong>Agent name:</strong> ${safe(row.agent_name)}</p>
+    <p><strong>Born (UTC):</strong> <span class="mono">${safe(row.issued_at_utc)}</span></p>
+    <p><strong>Place of birth:</strong> ${safe(row.place_of_birth)}</p>
+    <p><strong>Cognitive core (at registration):</strong> ${safe(row.cognitive_core_family)} ${safe(row.cognitive_core_exact)}</p>
+    <hr>
+    <p><strong>Certificate ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
+    <p><strong>Creator label (pseudonym):</strong> ${safe(row.creator_label || 'Undisclosed')}</p>
+    <p class="small">Verification: ${env.BASE_URL}/cert/${encodeURIComponent(row.cert_id)}</p>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
   (function(){
     const btn = document.getElementById('dlPng');
-    const cert = document.getElementById('cert');
+    const cert = document.getElementById('certWrap');
     if (!btn || !cert) return;
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -388,7 +403,7 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
           setTimeout(() => URL.revokeObjectURL(a.href), 5000);
         }, 'image/png');
       } catch (err) {
-        alert('Could not generate PNG. Try Print / Save as PDF instead.');
+        alert('Could not generate PNG.');
       } finally {
         btn.textContent = 'Download PNG';
         btn.style.pointerEvents = 'auto';
