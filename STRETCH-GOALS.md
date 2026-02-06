@@ -31,6 +31,13 @@ This is the “later, when v1 is solid” list.
 - Client-side encryption (zero-knowledge)
 - Restore flows
 
+## True PDF download (one-click)
+- Replace Print→Save as PDF with a direct **Download PDF** button
+- Implement via:
+  - Client-side PDF generation (fast, can be flaky), or
+  - Server-side rendering (best, likely using Cloudflare Browser Rendering + optional R2 storage)
+- Optional: email delivery of the PDF after payment
+
 ## SDK / CLI
 - ghostshell backup / restore
 - Agent-side auto-fill for:
