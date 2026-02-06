@@ -100,6 +100,7 @@ async function createCheckout(request, env) {
 
   const body = new URLSearchParams();
   body.set("mode", "payment");
+  body.set("allow_promotion_codes", "true");
   body.set("success_url", successUrl);
   body.set("cancel_url", cancelUrl);
   body.append("line_items[0][price]", env.STRIPE_PRICE_ID);
