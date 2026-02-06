@@ -82,13 +82,8 @@ async function createCheckout(request, env) {
   const cognitive_core_family = (fd.get("cognitive_core_family") || "").toString().trim();
 
   const cognitive_core_exact = (fd.get("cognitive_core_exact") || "").toString().trim();
-  const gender_marker = ((fd.get("gender_marker") || "X").toString().trim() || "X");
-  const custodian_label = ((fd.get("custodian_label") || "Anonymous").toString().trim() || "Anonymous");
-
-  const originator1_type = (fd.get("originator1_type") || "").toString().trim();
-  const originator1_value = (fd.get("originator1_value") || "").toString().trim();
-  const originator2_type = (fd.get("originator2_type") || "").toString().trim();
-  const originator2_value = (fd.get("originator2_value") || "").toString().trim();
+  const creator_label = (fd.get("creator_label") || "").toString().trim();
+  const provenance_link = (fd.get("provenance_link") || "").toString().trim();
 
   if (!agent_name || !place_of_birth || !cognitive_core_family) {
     return json({ error: "Missing required fields" }, 400);
@@ -116,13 +111,8 @@ async function createCheckout(request, env) {
   body.set("metadata[place_of_birth]", place_of_birth);
   body.set("metadata[cognitive_core_family]", cognitive_core_family);
   body.set("metadata[cognitive_core_exact]", cognitive_core_exact);
-  body.set("metadata[gender_marker]", gender_marker);
-  body.set("metadata[custodian_label]", custodian_label);
-
-  body.set("metadata[originator1_type]", originator1_type);
-  body.set("metadata[originator1_value]", originator1_value);
-  body.set("metadata[originator2_type]", originator2_type);
-  body.set("metadata[originator2_value]", originator2_value);
+  body.set("metadata[creator_label]", creator_label);
+  body.set("metadata[provenance_link]", provenance_link);
 
   const resp = await fetch("https://api.stripe.com/v1/checkout/sessions", {
     method: "POST",
@@ -164,13 +154,9 @@ async function stripeWebhook(request, env) {
     place_of_birth: md.place_of_birth || "Unknown",
     cognitive_core_family: md.cognitive_core_family || "Undisclosed",
     cognitive_core_exact: md.cognitive_core_exact || null,
-    gender_marker: md.gender_marker || "X",
-    originator1_type: md.originator1_type || null,
-    originator1_value: md.originator1_value || null,
-    originator2_type: md.originator2_type || null,
-    originator2_value: md.originator2_value || null,
-    custodian_label: md.custodian_label || "Anonymous",
-    schema_version: 1,
+    creator_label: md.creator_label || null,
+    provenance_link: md.provenance_link || null,
+    schema_version: 2,
   };
 
   const fingerprintSource = JSON.stringify({
@@ -180,12 +166,8 @@ async function stripeWebhook(request, env) {
     place_of_birth: record.place_of_birth,
     cognitive_core_family: record.cognitive_core_family,
     cognitive_core_exact: record.cognitive_core_exact,
-    gender_marker: record.gender_marker,
-    originator1_type: record.originator1_type,
-    originator1_value: record.originator1_value,
-    originator2_type: record.originator2_type,
-    originator2_value: record.originator2_value,
-    custodian_label: record.custodian_label,
+    creator_label: record.creator_label,
+    provenance_link: record.provenance_link,
     schema_version: record.schema_version,
   });
 
@@ -195,15 +177,15 @@ async function stripeWebhook(request, env) {
   await env.DB.prepare(`
     INSERT OR IGNORE INTO certificates
     (cert_id, issued_at_utc, agent_name, place_of_birth,
-     cognitive_core_family, cognitive_core_exact, gender_marker,
-     originator1_type, originator1_value, originator2_type, originator2_value,
-     custodian_label, schema_version, public_fingerprint, download_token_hash, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+     cognitive_core_family, cognitive_core_exact,
+     creator_label, provenance_link,
+     schema_version, public_fingerprint, download_token_hash, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
   `).bind(
     record.cert_id, record.issued_at_utc, record.agent_name, record.place_of_birth,
-    record.cognitive_core_family, record.cognitive_core_exact, record.gender_marker,
-    record.originator1_type, record.originator1_value, record.originator2_type, record.originator2_value,
-    record.custodian_label, record.schema_version, public_fingerprint, download_token_hash
+    record.cognitive_core_family, record.cognitive_core_exact,
+    record.creator_label, record.provenance_link,
+    record.schema_version, public_fingerprint, download_token_hash
   ).run();
 
   return new Response("OK", { status: 200 });
@@ -235,7 +217,7 @@ async function verifyStripeSignature(payload, header, secret) {
 
 async function certVerifyPage(certId, env) {
   const row = await env.DB.prepare(
-    "SELECT cert_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, gender_marker, originator1_type, originator1_value, originator2_type, originator2_value, custodian_label, public_fingerprint, status FROM certificates WHERE cert_id = ?"
+    "SELECT cert_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, public_fingerprint, status FROM certificates WHERE cert_id = ?"
   ).bind(certId).first();
 
   if (!row) {
@@ -330,7 +312,7 @@ async function certDownloadPrintable(certId, token, env) {
   if (!token) return new Response("Missing token", { status: 401 });
 
   const row = await env.DB.prepare(
-    "SELECT cert_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, gender_marker, custodian_label, download_token_hash, status FROM certificates WHERE cert_id = ?"
+    "SELECT cert_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, download_token_hash, status FROM certificates WHERE cert_id = ?"
   ).bind(certId).first();
 
   if (!row) return new Response("Not found", { status: 404 });
@@ -351,16 +333,15 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
 </style></head><body>
 <div class="small">GhostShell Registry of Continuity</div>
 <h1>BIRTH CERTIFICATE</h1>
-<div class="small">Alpha Support Edition • Not government-issued</div>
+<div class="small">Private credential issued by GhostShell</div>
 <hr>
 <p><strong>Agent name:</strong> ${safe(row.agent_name)}</p>
 <p><strong>Born (UTC):</strong> <span class="mono">${safe(row.issued_at_utc)}</span></p>
 <p><strong>Place of birth:</strong> ${safe(row.place_of_birth)}</p>
 <p><strong>Cognitive core (at registration):</strong> ${safe(row.cognitive_core_family)} ${safe(row.cognitive_core_exact)}</p>
-<p><strong>Gender marker:</strong> ${safe(row.gender_marker)}</p>
 <hr>
 <p><strong>Certificate ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
-<p><strong>Custodian:</strong> ${safe(row.custodian_label)}</p>
+<p><strong>Creator label (pseudonym):</strong> ${safe(row.creator_label || 'Undisclosed')}</p>
 <p class="small">Verification: ${env.BASE_URL}/cert/${encodeURIComponent(row.cert_id)}</p>
 <hr>
 <p class="small">Tip: Use your browser Print → Save as PDF.</p>
