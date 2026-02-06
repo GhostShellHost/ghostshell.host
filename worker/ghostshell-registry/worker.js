@@ -326,7 +326,8 @@ async function certDownloadPrintable(certId, token, env) {
   return html(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${safe(row.cert_id)} • Birth Certificate</title>
 <style>
-body{font-family:Georgia,serif;max-width:900px;margin:40px auto;padding:30px;border:2px solid #111}
+body{font-family:Georgia,serif;max-width:900px;margin:40px auto;padding:30px}
+#cert{border:2px solid #111;padding:30px;background:#fff}
 h1{margin:0 0 8px 0;letter-spacing:1px}
 .small{color:#333}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
@@ -339,7 +340,6 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
   <a class="tbtn" href="/cert/${encodeURIComponent(row.cert_id)}">← Back to verification</a>
   <span style="display:flex;gap:10px">
     <a class="tbtn" href="#" id="dlPng">Download PNG</a>
-    <a class="tbtn" href="#" onclick="window.print();return false;">Print / Save as PDF</a>
   </span>
 </div>
 
