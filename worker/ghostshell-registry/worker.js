@@ -331,7 +331,14 @@ h1{margin:0 0 8px 0;letter-spacing:1px}
 .small{color:#333}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
 hr{border:0;border-top:1px solid #ddd;margin:16px 0}
+.toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:16px}
+.tbtn{display:inline-block;padding:8px 10px;border:1px solid #ddd;border-radius:10px;background:#fff;font-size:13px;text-decoration:none;color:#111}
+@media print{.toolbar{display:none} body{margin:0;max-width:none;border:none;padding:0}}
 </style></head><body>
+<div class="toolbar">
+  <a class="tbtn" href="/cert/${encodeURIComponent(row.cert_id)}">← Back to verification</a>
+  <a class="tbtn" href="#" onclick="window.print();return false;">Print / Save as PDF</a>
+</div>
 <div class="small">GhostShell Registry of Continuity</div>
 <h1>BIRTH CERTIFICATE</h1>
 <div class="small">Private credential issued by GhostShell</div>
@@ -344,7 +351,5 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
 <p><strong>Certificate ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
 <p><strong>Creator label (pseudonym):</strong> ${safe(row.creator_label || 'Undisclosed')}</p>
 <p class="small">Verification: ${env.BASE_URL}/cert/${encodeURIComponent(row.cert_id)}</p>
-<hr>
-<p class="small">Tip: Use your browser Print → Save as PDF.</p>
 </body></html>`);
 }
