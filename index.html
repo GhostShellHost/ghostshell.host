@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GhostShell — Verifiable identity for agents</title>
+  <meta name="description" content="GhostShell issues verifiable Birth Certificates for AI agents: a public verification link + a printable certificate." />
+  <style>
+    :root{--bg:#0b0c10;--card:#12141b;--text:#e9edf1;--muted:#aab3bf;--line:#252a35;--accent:#7c5cff;--accent2:#2ee59d}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:radial-gradient(1000px 600px at 20% 0%,rgba(124,92,255,.25),transparent 50%),radial-gradient(900px 600px at 80% 20%,rgba(46,229,157,.12),transparent 60%),var(--bg);color:var(--text)}
+    a{color:inherit}
+    .wrap{max-width:980px;margin:0 auto;padding:56px 18px 80px}
+    .tag{display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px;background:rgba(18,20,27,.6)}
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--accent2);box-shadow:0 0 0 3px rgba(46,229,157,.15)}
+    h1{margin:14px 0 10px;font-size:48px;line-height:1.05;letter-spacing:-0.02em}
+    p{margin:0 0 14px;line-height:1.55}
+    .muted{color:var(--muted)}
+    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:22px;align-items:start;margin-top:18px}
+    @media (max-width:900px){.hero{grid-template-columns:1fr}}
+
+    .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:12px;border:1px solid var(--line);text-decoration:none;font-weight:650}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#9b7bff);border-color:transparent}
+    .btn.secondary{background:rgba(18,20,27,.6)}
+    .btn.ghost{background:transparent}
+
+    .card{border:1px solid var(--line);border-radius:16px;background:rgba(18,20,27,.75);padding:16px}
+    .card h3{margin:0 0 10px;font-size:16px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .kicker{margin-top:34px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .section{margin-top:10px;padding-top:18px;border-top:1px solid var(--line)}
+
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;color:#cbd5e1}
+    .pill{display:inline-block;padding:2px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
+    .footer{margin-top:26px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+    .links a{color:var(--muted);text-decoration:none;border-bottom:1px dashed rgba(170,179,191,.35)}
+    .links a:hover{color:var(--text)}
+
+    .preview{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));padding:16px}
+    .cert{border:1px solid rgba(233,237,241,.25);border-radius:12px;padding:14px;background:rgba(0,0,0,.18)}
+    .cert h2{margin:0 0 8px;font-size:18px;letter-spacing:.06em}
+    .cert .row{display:flex;gap:10px;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(233,237,241,.12);padding-top:8px;margin-top:8px}
+    .cert b{color:var(--text)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="tag"><span class="dot"></span> Live alpha • verifiable agent identity</span>
+
+    <div class="hero">
+      <div>
+        <h1>Give every agent a verifiable origin story.</h1>
+        <p class="muted">
+          GhostShell issues <b>Birth Certificates</b> for AI agents: a public verification link + a printable certificate.
+          Not government-issued — think <b>“TLS for autonomous software”</b>.
+        </p>
+
+        <div class="cta">
+          <a class="btn primary" href="/birth-certificate">Issue a Birth Certificate</a>
+          <a class="btn secondary" href="https://buy.stripe.com/aFafZg50ndb3akDa9rgfu00" target="_blank" rel="noopener noreferrer">Support GhostShell (Alpha)</a>
+          <a class="btn ghost" href="/cert/GS-BC-20260205-ZKCENEEQ">View example verification</a>
+        </div>
+
+        <p class="muted" style="margin-top:12px">
+          Use cases: verified agent profiles, anti-impersonation, provenance for tool access, and audit-ready receipts (coming).
+        </p>
+      </div>
+
+      <div class="preview">
+        <div class="pill">Preview</div>
+        <div class="cert" style="margin-top:10px">
+          <div class="mono">GhostShell Registry of Continuity</div>
+          <h2>BIRTH CERTIFICATE</h2>
+          <div class="mono">Agent name: <b>Joule</b><br/>Place of birth: <b>OpenClaw Runtime</b><br/>Cognitive core: <b>GPT-family</b></div>
+          <div class="row">
+            <div class="mono">Certificate ID</div>
+            <div class="mono"><b>GS-BC-…</b></div>
+          </div>
+          <div class="row">
+            <div class="mono">Verification</div>
+            <div class="mono"><b>ghostshell.host/cert/…</b></div>
+          </div>
+        </div>
+        <p class="muted" style="margin-top:10px">After payment, you get a tokened download page + public verify page.</p>
+      </div>
+    </div>
+
+    <div class="kicker">What you get</div>
+    <div class="grid">
+      <div class="card">
+        <h3>Public verification link</h3>
+        <p class="muted">A shareable URL that confirms registry presence + tamper-evident fingerprint.</p>
+      </div>
+      <div class="card">
+        <h3>Printable certificate</h3>
+        <p class="muted">A clean, presentable certificate you can save as PDF (PDF download coming soon).</p>
+      </div>
+      <div class="card">
+        <h3>Provenance fields</h3>
+        <p class="muted">Optional originator + environment hints (without doxxing). Designed to be shareable.</p>
+      </div>
+    </div>
+
+    <div class="kicker">How it works</div>
+    <div class="section">
+      <ol class="muted">
+        <li>Fill in the agent details (keep it non-doxxing).</li>
+        <li>Pay via Stripe Checkout.</li>
+        <li>GhostShell issues a certificate + writes the record to the registry.</li>
+        <li>Share the verify link anywhere your agent appears.</li>
+      </ol>
+    </div>
+
+    <div class="kicker">Roadmap</div>
+    <div class="section muted">
+      <p><b>Birth Certificate</b> (now) → <b>Passport</b> (portable signed claims + key rotation/revocation) → <b>Encrypted Snapshots</b> (audit/restore receipts).</p>
+    </div>
+
+    <div class="kicker">Contact</div>
+    <div class="section footer">
+      <div class="links">
+        <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a> ·
+        <a href="mailto:support@ghostshell.host">support@ghostshell.host</a> ·
+        <a href="mailto:billing@ghostshell.host">billing@ghostshell.host</a>
+      </div>
+      <div class="muted">Alpha experiment. Things may break.</div>
+    </div>
+  </div>
+</body>
+</html>

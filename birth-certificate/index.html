@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en" data-theme="notary">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>GhostShell &mdash; Issue a Birth Certificate</title>
+  <!--
+    CHANGES (v2):
+    - [x] Anti-PII guardrails: field hints warn "pseudonyms only", email/phone pattern detection
+    - [x] Confirmation checkbox: "I confirm no personal data" required before submit
+    - [x] Price anchor + "what you get" summary near submit button
+    - [x] Renamed: "Creator label (pseudonym)", "Custodian label (pseudonym)"
+    - [x] Originator fields replaced with single "Provenance link (certificate ID)" field
+    - [x] Removed defensive "Not government-issued" language from page body
+    - [x] Calm footer: "Private credential issued by GhostShell"
+    - [x] All variant skins preserved (Notary/Bureau/Ledger/Chancery/Signal)
+    - [x] Accessibility: for/id on all labels, focus-visible, reduced-motion
+
+    STILL NEEDS PORTING:
+    - Worker must accept new field names (creator_label, custodian_label, provenance_link)
+    - Worker should validate no-PII checkbox server-side
+    - Price should be pulled from Stripe or env var, not hardcoded
+  -->
+  <style>
+    /* ── Base tokens ── */
+    :root {
+      --bg: #09090b; --fg: #e9edf1; --muted: #aab3bf; --line: #252a35;
+      --card: rgba(18,20,27,.75); --accent: #b8964e;
+      --radius: 12px; --shadow: 0 24px 80px rgba(0,0,0,.45);
+      --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --serif: Georgia, "Times New Roman", Times, ui-serif, serif;
+      --input-bg: rgba(255,255,255,.04); --input-border: var(--line);
+      --warn: #f59e0b; --warn-bg: rgba(245,158,11,.06);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--fg); padding-bottom: 80px; line-height: 1.5; }
+    a { color: var(--accent); }
+    .wrap { max-width: 680px; margin: 0 auto; padding: 48px 20px 88px; }
+
+    /* ── Typography ── */
+    h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -.02em; line-height: 1.15; }
+    .sub { color: var(--muted); font-size: 15px; margin: 0 0 24px; }
+
+    /* ── Privacy notice ── */
+    .notice { padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); margin-bottom: 28px; }
+    .notice-title { display: flex; align-items: center; gap: 8px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+    .notice-title svg { flex: none; }
+    .notice p { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .notice ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+    /* ── PII warning toast ── */
+    .pii-warn { display: none; margin-top: 6px; padding: 8px 10px; border-radius: 6px; background: var(--warn-bg); border: 1px solid rgba(245,158,11,.2); color: var(--warn); font-size: 12px; line-height: 1.4; }
+    .pii-warn.show { display: block; }
+
+    /* ── Form ── */
+    .form-section { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
+    .form-section:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+    .section-label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+
+    label { display: block; margin-top: 16px; font-weight: 600; font-size: 14px; }
+    label:first-child { margin-top: 0; }
+    label .req { color: var(--accent); margin-left: 2px; }
+    label .hint { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 6px; }
+    .field-note { color: var(--muted); font-size: 12px; margin-top: 4px; line-height: 1.4; }
+
+    input, select {
+      display: block; width: 100%; max-width: 480px; padding: 10px 12px; margin-top: 6px;
+      border: 1px solid var(--input-border); border-radius: 8px;
+      background: var(--input-bg); color: var(--fg);
+      font: inherit; font-size: 15px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
+    input::placeholder { color: var(--muted); opacity: .6; }
+    input.pii-flagged { border-color: var(--warn); box-shadow: 0 0 0 3px var(--warn-bg); }
+    select { cursor: pointer; }
+    select option { background: var(--bg); color: var(--fg); }
+
+    .row { display: flex; gap: 16px; flex-wrap: wrap; }
+    .row > div { flex: 1; min-width: 200px; }
+
+    /* ── Confirmation checkbox ── */
+    .confirm-row { margin-top: 24px; padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); display: flex; gap: 12px; align-items: flex-start; }
+    .confirm-row input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex: none; accent-color: var(--accent); cursor: pointer; }
+    .confirm-row label { margin: 0; font-weight: 400; font-size: 14px; line-height: 1.45; cursor: pointer; }
+
+    /* ── Price summary ── */
+    .price-summary { margin-top: 24px; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+    .price-summary .price-row { display: flex; justify-content: space-between; align-items: baseline; }
+    .price-summary .price { font-size: 24px; font-weight: 700; }
+    .price-summary .price-note { color: var(--muted); font-size: 12px; }
+    .price-summary .what-you-get { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .price-summary .what-you-get li { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-top: 20px; padding: 14px 24px; border-radius: var(--radius);
+      background: var(--accent); color: #000; border: none;
+      font: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
+      transition: filter .12s, opacity .12s;
+      width: 100%; max-width: 480px;
+    }
+    .btn:hover { filter: brightness(1.1); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; filter: none; }
+
+    /* ── Footer ── */
+    .foot { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .foot a { color: var(--muted); }
+
+    /* ── Bottom nav (variant switcher) ── */
+    .nav { position: fixed; left: 0; right: 0; bottom: 0; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; }
+    .navInner { max-width: 680px; margin: 0 auto; padding: 10px 14px; display: flex; gap: 10px; align-items: center; }
+    .navLabel { margin: 0; color: var(--muted); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; flex: none; }
+    .tabsWrap { position: relative; flex: 1; min-width: 0; }
+    .tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 30px 2px 0; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tabsWrap::after { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 30px; pointer-events: none; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--bg) 82%, transparent)); }
+    .tab { font: inherit; font-size: 13px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--fg); padding: 8px 12px; cursor: pointer; transition: background .12s; }
+    .tab:hover { background: rgba(255,255,255,.08); }
+    .tab[data-on] { background: rgba(255,255,255,.12); font-weight: 600; }
+    .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .navBtn { flex: none; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--fg); padding: 8px 10px; border-radius: 999px; cursor: pointer; font-size: 12px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
+    }
+
+    /* ═══════ VARIANT 1: NOTARY ═══════ */
+    html[data-theme="notary"] {
+      --bg: #09090b; --fg: #f5f0e8; --muted: #a89f8f; --line: rgba(184,150,78,.18);
+      --card: rgba(184,150,78,.04); --accent: #b8964e;
+      --input-bg: rgba(184,150,78,.04); --input-border: rgba(184,150,78,.2);
+      --radius: 2px; --shadow: none;
+    }
+    html[data-theme="notary"] h1 { font-family: var(--serif); font-weight: 400; }
+    html[data-theme="notary"] .notice { border-left: 3px solid var(--accent); }
+    html[data-theme="notary"] .btn { background: linear-gradient(135deg, #b8964e, #d4b96a); border-radius: 2px; }
+
+    /* ═══════ VARIANT 2: BUREAU ═══════ */
+    html[data-theme="bureau"] {
+      --bg: #e4e4e7; --fg: #18181b; --muted: #52525b; --line: rgba(0,0,0,.15);
+      --card: #fff; --accent: #c0392b;
+      --input-bg: #fff; --input-border: rgba(0,0,0,.2);
+      --radius: 0px; --shadow: none;
+    }
+    html[data-theme="bureau"] h1 { font-weight: 900; text-transform: uppercase; font-size: 24px; letter-spacing: .04em; }
+    html[data-theme="bureau"] .notice { border: 2px solid #18181b; }
+    html[data-theme="bureau"] input, html[data-theme="bureau"] select { border-radius: 0; }
+    html[data-theme="bureau"] .btn { background: #18181b; color: #fff; border-radius: 0; }
+    html[data-theme="bureau"] .section-label { color: var(--accent); font-weight: 700; }
+
+    /* ═══════ VARIANT 3: LEDGER ═══════ */
+    html[data-theme="ledger"] {
+      --bg: #000; --fg: #fff; --muted: #888; --line: rgba(255,255,255,.1);
+      --card: rgba(0,255,136,.03); --accent: #00ff88;
+      --input-bg: rgba(0,255,136,.03); --input-border: rgba(0,255,136,.15);
+      --radius: 4px; --shadow: none;
+    }
+    html[data-theme="ledger"] body { font-family: var(--mono); }
+    html[data-theme="ledger"] h1 { font-family: var(--sans); font-size: 24px; font-weight: 400; }
+    html[data-theme="ledger"] .notice { border-color: rgba(0,255,136,.15); }
+    html[data-theme="ledger"] input, html[data-theme="ledger"] select { font-family: var(--mono); font-size: 14px; border-radius: 3px; }
+    html[data-theme="ledger"] .btn { background: var(--accent); color: #000; font-family: var(--mono); border-radius: 3px; }
+    html[data-theme="ledger"] .section-label { color: var(--accent); }
+
+    /* ═══════ VARIANT 4: CHANCERY ═══════ */
+    html[data-theme="chancery"] {
+      --bg: #1a1a1a; --fg: #faf6f1; --muted: #a8998a; --line: rgba(196,117,110,.18);
+      --card: rgba(196,117,110,.04); --accent: #c4756e;
+      --input-bg: rgba(196,117,110,.03); --input-border: rgba(196,117,110,.2);
+      --radius: 3px; --shadow: none;
+    }
+    html[data-theme="chancery"] h1 { font-family: var(--serif); font-weight: 400; }
+    html[data-theme="chancery"] .notice { border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent); border-left: none; border-right: none; border-radius: 0; }
+    html[data-theme="chancery"] .form-section { border-top-color: var(--accent); }
+    html[data-theme="chancery"] .btn { background: var(--accent); color: #1a1a1a; border-radius: 2px; }
+
+    /* ═══════ VARIANT 5: SIGNAL ═══════ */
+    html[data-theme="signal"] {
+      --bg: #0c0c0e; --fg: #d4d4d8; --muted: #71717a; --line: rgba(245,158,11,.15);
+      --card: rgba(245,158,11,.03); --accent: #f59e0b;
+      --input-bg: rgba(245,158,11,.02); --input-border: rgba(245,158,11,.15);
+      --radius: 0px; --shadow: none;
+    }
+    html[data-theme="signal"] h1 { font-weight: 800; text-transform: uppercase; font-size: 22px; letter-spacing: .03em; }
+    html[data-theme="signal"] .notice { border: 1px dashed rgba(245,158,11,.3); }
+    html[data-theme="signal"] input, html[data-theme="signal"] select { border-radius: 0; }
+    html[data-theme="signal"] .btn { background: var(--accent); color: #0c0c0e; border-radius: 0; }
+    html[data-theme="signal"] .section-label { color: var(--accent); font-weight: 700; }
+    html[data-theme="signal"] label { text-transform: uppercase; font-size: 12px; letter-spacing: .06em; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Issue a Birth Certificate</h1>
+    <p class="sub">Register an agent in the GhostShell Registry of Continuity. One-time payment, instant delivery.</p>
+
+    <div class="notice">
+      <div class="notice-title">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7.25 5h1.5v1.5h-1.5V5zm0 3h1.5v3h-1.5V8z" fill="currentColor"/></svg>
+        Privacy &mdash; pseudonyms only
+      </div>
+      <p>All fields on your certificate are publicly visible on the verification page. To protect your privacy:</p>
+      <ul>
+        <li>Use pseudonyms, handles, or labels &mdash; never real names</li>
+        <li>No email addresses, phone numbers, or physical addresses</li>
+        <li>Agent names and labels should be shareable without risk</li>
+      </ul>
+    </div>
+
+    <form id="certForm" method="POST" action="https://ghostshell-registry.jason-v-butler-9f5.workers.dev/api/cert/create-checkout">
+
+      <!-- Section 1: Agent Identity -->
+      <div class="form-section">
+        <div class="section-label">Agent identity</div>
+
+        <label for="agent_name">Agent name <span class="req">*</span></label>
+        <input id="agent_name" name="agent_name" required placeholder="e.g., Joule, RunnerX-7, etc." autocomplete="off" />
+        <div class="field-note">The public name for this agent. Use a pseudonym or project name.</div>
+        <div class="pii-warn" id="warn_agent_name">This looks like it may contain personal information. Please use a pseudonym instead.</div>
+
+        <label for="place_of_birth">Place of birth <span class="req">*</span></label>
+        <select id="place_of_birth" name="place_of_birth" required>
+          <option value="OpenClaw Runtime">OpenClaw Runtime</option>
+          <option value="Local Host">Local Host</option>
+          <option value="Cloud Instance">Cloud Instance</option>
+          <option value="Browser Session">Browser Session</option>
+          <option value="Unknown">Unknown</option>
+        </select>
+
+        <label for="cognitive_core_family">Cognitive core <span class="req">*</span></label>
+        <select id="cognitive_core_family" name="cognitive_core_family" required>
+          <option value="Undisclosed">Undisclosed</option>
+          <option value="GPT-family">GPT-family</option>
+          <option value="Claude-family">Claude-family</option>
+          <option value="Gemini-family">Gemini-family</option>
+          <option value="Local model">Local model</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <label for="cognitive_core_exact">Exact model <span class="hint">optional</span></label>
+        <input id="cognitive_core_exact" name="cognitive_core_exact" placeholder="e.g., gpt-5.2, claude-3.x" autocomplete="off" />
+      </div>
+
+      <!-- Section 2: Labels -->
+      <div class="form-section">
+        <div class="section-label">Labels &amp; classification</div>
+
+        <div class="row">
+          <div>
+            <label for="gender_marker">Gender marker <span class="hint">optional</span></label>
+            <select id="gender_marker" name="gender_marker">
+              <option value="X" selected>X (Not specified)</option>
+              <option value="N/A">N/A</option>
+              <option value="Synthetic">Synthetic</option>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="custodian_label">Custodian label <span class="hint">pseudonym</span></label>
+            <input id="custodian_label" name="custodian_label" placeholder="e.g., anon, labX, etc." autocomplete="off" />
+            <div class="pii-warn" id="warn_custodian">This looks like personal information. Use a pseudonym or handle instead.</div>
+          </div>
+        </div>
+
+        <label for="creator_label">Creator label <span class="hint">pseudonym</span></label>
+        <input id="creator_label" name="creator_label" placeholder="e.g., builder-9, jv, etc." autocomplete="off" />
+        <div class="field-note">A pseudonym for who created this agent. Visible on the certificate.</div>
+        <div class="pii-warn" id="warn_creator">This looks like personal information. Use a pseudonym or handle instead.</div>
+      </div>
+
+      <!-- Section 3: Provenance -->
+      <div class="form-section">
+        <div class="section-label">Provenance <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">&mdash; optional</span></div>
+
+        <label for="provenance_link">Linked certificate <span class="hint">optional</span></label>
+        <input id="provenance_link" name="provenance_link" placeholder="e.g., GS-BC-20260205-ZKCENEEQ" autocomplete="off" />
+        <div class="field-note">If this agent descends from another registered agent, enter that certificate ID here.</div>
+      </div>
+
+      <!-- Confirmation -->
+      <div class="confirm-row">
+        <input type="checkbox" id="no_pii" name="no_pii" required />
+        <label for="no_pii">I confirm that I have not included real names, email addresses, phone numbers, or other personally identifying information in any field above.</label>
+      </div>
+
+      <!-- Price + summary -->
+      <div class="price-summary">
+        <div class="price-row">
+          <div>
+            <div class="price">$5</div>
+            <div class="price-note">One-time &middot; no subscription</div>
+          </div>
+        </div>
+        <ul class="what-you-get">
+          <li>Public verification page at <b>ghostshell.host/cert/&hellip;</b></li>
+          <li>Printable certificate (PDF-ready download page)</li>
+          <li>SHA-256 fingerprint for tamper detection</li>
+          <li>Permanent registry entry (immutable after issuance)</li>
+        </ul>
+      </div>
+
+      <button class="btn" type="submit" id="submitBtn" disabled>Continue to payment</button>
+    </form>
+
+    <div class="foot">
+      <p>Private credential issued by <a href="/">GhostShell</a>. This is not a government-issued identity document. All certificate fields are publicly visible on the verification page. Digital product; see <a href="/#faq">FAQ</a> for refund policy.</p>
+      <p style="margin-top:8px"><a href="/style-lab">&larr; Style Lab</a></p>
+    </div>
+  </div>
+
+  <nav class="nav" aria-label="Form style variants">
+    <div class="navInner">
+      <p class="navLabel" id="tLabel">Variant</p>
+      <button class="navBtn" type="button" id="prevBtn" aria-label="Scroll variants left">&#9664;</button>
+      <div class="tabsWrap">
+        <div class="tabs" role="tablist" aria-labelledby="tLabel" id="tabs"></div>
+      </div>
+      <button class="navBtn" type="button" id="nextBtn" aria-label="Scroll variants right">&#9654;</button>
+    </div>
+  </nav>
+
+  <script>
+    // ── Theme switcher ──
+    const THEMES = [
+      ['notary','Notary'],['bureau','Bureau'],['ledger','Ledger'],['chancery','Chancery'],['signal','Signal'],
+    ];
+    const KEY = 'ghostshell.formTheme';
+    const html = document.documentElement;
+    const tabs = document.getElementById('tabs');
+    function setTheme(id, persist) {
+      html.setAttribute('data-theme', id);
+      [...tabs.children].forEach(b => b.toggleAttribute('data-on', b.dataset.theme === id));
+      if (persist !== false) localStorage.setItem(KEY, id);
+    }
+    function scrollTabs(dir) {
+      tabs.scrollBy({ left: dir * Math.max(180, Math.floor((tabs.clientWidth||600)*.55)), behavior: 'smooth' });
+    }
+    THEMES.forEach(([id, label]) => {
+      const b = document.createElement('button');
+      b.className = 'tab'; b.type = 'button'; b.dataset.theme = id; b.textContent = label;
+      b.addEventListener('click', () => setTheme(id));
+      tabs.appendChild(b);
+    });
+    setTheme(localStorage.getItem(KEY) || 'notary', false);
+    document.getElementById('prevBtn')?.addEventListener('click', () => scrollTabs(-1));
+    document.getElementById('nextBtn')?.addEventListener('click', () => scrollTabs(1));
+
+    // ── Anti-PII detection ──
+    const PII_PATTERNS = [
+      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/,  // email
+      /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/,                 // US phone
+      /\+\d{1,3}[-.\s]?\d{4,}/,                             // intl phone
+      /\b\d{1,5}\s+\w+\s+(st|street|ave|avenue|rd|road|blvd|dr|drive|ln|lane|ct|court)\b/i, // address
+    ];
+    function checkPII(inputEl, warnEl) {
+      const v = inputEl.value;
+      const hasPII = PII_PATTERNS.some(p => p.test(v));
+      warnEl.classList.toggle('show', hasPII);
+      inputEl.classList.toggle('pii-flagged', hasPII);
+    }
+    const piiFields = [
+      ['agent_name', 'warn_agent_name'],
+      ['custodian_label', 'warn_custodian'],
+      ['creator_label', 'warn_creator'],
+    ];
+    piiFields.forEach(([fid, wid]) => {
+      const inp = document.getElementById(fid);
+      const warn = document.getElementById(wid);
+      if (inp && warn) inp.addEventListener('input', () => checkPII(inp, warn));
+    });
+
+    // ── Checkbox gates submit ──
+    const checkbox = document.getElementById('no_pii');
+    const submitBtn = document.getElementById('submitBtn');
+    checkbox?.addEventListener('change', () => {
+      submitBtn.disabled = !checkbox.checked;
+    });
+  </script>
+</body>
+</html>

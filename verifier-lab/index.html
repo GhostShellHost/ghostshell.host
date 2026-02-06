@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en" data-skin="notary">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>GhostShell Verifier Lab</title>
+  <!--
+    PREVIEW: Open this file in any browser. Use the bottom nav to switch
+    between 5 verifier design variants. Selection persists via localStorage.
+    The verifier page is the public /cert/<id> page that third parties see.
+  -->
+  <style>
+    /* ── Base tokens ── */
+    :root {
+      --bg: #09090b; --panel: #12141b; --fg: #e9edf1; --muted: #aab3bf; --line: #252a35;
+      --good: #2ee59d; --bad: #ff4d6d; --warn: #ffd166; --accent: #b8964e;
+      --radius: 16px; --shadow: 0 24px 80px rgba(0,0,0,.45);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      --serif: Georgia, "Times New Roman", Times, ui-serif, serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--fg); padding-bottom: 88px; }
+    a { color: inherit; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 40px 20px 64px; }
+
+    /* ── Layout ── */
+    .top { display: flex; gap: 14px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+    .brand { display: flex; gap: 10px; align-items: center; }
+    .mark { width: 12px; height: 12px; border-radius: 99px; background: var(--good); box-shadow: 0 0 0 4px color-mix(in srgb, var(--good) 12%, transparent); }
+    .tag { display: inline-flex; gap: 8px; align-items: center; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(18,20,27,.6); color: var(--muted); font-size: 12px; }
+    h1 { margin: 14px 0 10px; letter-spacing: -.02em; font-size: 32px; }
+    .muted { color: var(--muted); }
+
+    /* ── Certificate panel ── */
+    .panel { margin-top: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); padding: 20px; position: relative; overflow: hidden; }
+    .statusRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .status { display: flex; align-items: center; gap: 10px; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); font-weight: 700; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+    .pill.good { border-color: color-mix(in srgb, var(--good) 55%, var(--line)); color: color-mix(in srgb, var(--good) 80%, white); background: color-mix(in srgb, var(--good) 8%, transparent); }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .btn { border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--fg); padding: 10px 14px; border-radius: 12px; font-weight: 650; font-size: 14px; text-decoration: none; display: inline-flex; gap: 8px; align-items: center; cursor: pointer; transition: background .12s; }
+    .btn:hover, .btn:focus-visible { background: rgba(255,255,255,.08); outline: none; }
+    .btn:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+    .btn.primary { background: var(--good); color: #071018; border-color: transparent; }
+    .btn.primary:hover { filter: brightness(1.08); }
+
+    /* Key-value grid */
+    .kv { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 16px; display: grid; grid-template-columns: 180px 1fr; gap: 12px 16px; }
+    @media (max-width: 720px) { .kv { grid-template-columns: 1fr; } }
+    .k { color: var(--muted); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+    .v { font-family: var(--mono); font-size: 13px; word-break: break-all; }
+    .v b { font-family: var(--sans); }
+
+    /* Details disclosure for optional fields */
+    .more-toggle { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+    .more-toggle summary { cursor: pointer; color: var(--muted); font-size: 13px; list-style: none; }
+    .more-toggle summary::-webkit-details-marker { display: none; }
+    .more-toggle summary::before { content: ""; display: inline-block; width: 0; height: 0; border-left: 5px solid var(--muted); border-top: 4px solid transparent; border-bottom: 4px solid transparent; margin-right: 8px; transition: transform .15s; vertical-align: middle; }
+    .more-toggle[open] summary::before { transform: rotate(90deg); }
+    .more-toggle .kv { margin-top: 12px; border-top: none; padding-top: 0; }
+
+    /* Seal */
+    .seal { margin-top: 16px; display: flex; justify-content: flex-end; }
+    .seal svg { opacity: .85; }
+    .foot { margin-top: 16px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+    /* Fingerprint display */
+    .fp-default { display: block; }
+    .fp-cells { display: none; gap: 3px; flex-wrap: wrap; margin-top: 2px; }
+    .fp-cell { border: 1px solid rgba(0,255,136,.2); padding: 2px 5px; font-family: var(--mono); font-size: 10px; }
+
+    /* Signature elements (hidden by default, shown per variant) */
+    .sig-guilloche { display: none; }
+    .sig-stamp-mark { display: none; }
+    .sig-wax { display: none; }
+    .sig-classified { display: none; }
+    .sig-chain-label { display: none; }
+
+    /* ── Bottom skin nav ── */
+    .skinNav { position: fixed; left: 0; right: 0; bottom: 0; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; }
+    .skinNavInner { max-width: 860px; margin: 0 auto; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+    .skinLabel { margin: 0; color: var(--muted); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; flex: none; }
+    .tabsWrap { position: relative; flex: 1; min-width: 0; }
+    .tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 2px 30px 2px 0; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tabsWrap::after { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 30px; pointer-events: none; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--bg) 82%, transparent)); }
+    .tab { font: inherit; font-size: 13px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--fg); padding: 8px 12px; cursor: pointer; transition: background .12s; }
+    .tab:hover { background: rgba(255,255,255,.08); }
+    .tab[data-on] { background: rgba(255,255,255,.12); font-weight: 600; }
+    .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .navBtn { flex: none; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--fg); padding: 8px 10px; border-radius: 999px; cursor: pointer; font-size: 12px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
+    }
+
+    /* ═══════════════════════════════════════════════
+       VARIANT 1: NOTARY
+       ═══════════════════════════════════════════════ */
+    html[data-skin="notary"] {
+      --bg: #09090b; --panel: rgba(184,150,78,.03); --fg: #f5f0e8; --muted: #a89f8f;
+      --line: rgba(184,150,78,.18); --good: #b8964e; --accent: #b8964e;
+      --radius: 2px; --shadow: none;
+    }
+    html[data-skin="notary"] h1 { font-family: var(--serif); font-weight: 400; }
+    html[data-skin="notary"] .panel { border-left: 3px solid var(--accent); }
+    html[data-skin="notary"] .pill { border-radius: 2px; }
+    html[data-skin="notary"] .pill.good { border-color: rgba(184,150,78,.4); color: #d4b96a; background: rgba(184,150,78,.08); }
+    html[data-skin="notary"] .btn { border-radius: 2px; }
+    html[data-skin="notary"] .btn.primary { background: linear-gradient(135deg, #b8964e, #d4b96a); color: #09090b; }
+    html[data-skin="notary"] .tag { border-radius: 2px; }
+    html[data-skin="notary"] .mark { border-radius: 2px; background: var(--accent); }
+    html[data-skin="notary"] .sig-guilloche { display: block; }
+
+    /* ═══════════════════════════════════════════════
+       VARIANT 2: BUREAU
+       ═══════════════════════════════════════════════ */
+    html[data-skin="bureau"] {
+      --bg: #e4e4e7; --panel: #fff; --fg: #18181b; --muted: #52525b;
+      --line: rgba(0,0,0,.15); --good: #16a34a; --accent: #c0392b;
+      --radius: 0px; --shadow: none;
+    }
+    html[data-skin="bureau"] h1 { font-weight: 900; text-transform: uppercase; font-size: 28px; letter-spacing: .04em; }
+    html[data-skin="bureau"] .panel { border: 2px solid #18181b; }
+    html[data-skin="bureau"] .pill { border-radius: 0; }
+    html[data-skin="bureau"] .pill.good { border-color: rgba(22,163,74,.4); color: #166534; background: rgba(22,163,74,.08); }
+    html[data-skin="bureau"] .btn { border-radius: 0; }
+    html[data-skin="bureau"] .btn.primary { background: #18181b; color: #fff; }
+    html[data-skin="bureau"] .tag { border-radius: 0; background: #fff; }
+    html[data-skin="bureau"] .mark { border-radius: 0; background: var(--good); box-shadow: none; }
+    html[data-skin="bureau"] .sig-stamp-mark { display: block; }
+    html[data-skin="bureau"] .fp-cell { border-color: rgba(192,57,43,.2); color: var(--accent); }
+
+    /* ═══════════════════════════════════════════════
+       VARIANT 3: LEDGER
+       ═══════════════════════════════════════════════ */
+    html[data-skin="ledger"] {
+      --bg: #000; --panel: rgba(0,255,136,.03); --fg: #fff; --muted: #888;
+      --line: rgba(255,255,255,.1); --good: #00ff88; --accent: #00ff88;
+      --radius: 4px; --shadow: none;
+    }
+    html[data-skin="ledger"] body { font-family: var(--mono); }
+    html[data-skin="ledger"] h1 { font-family: var(--sans); font-size: 28px; font-weight: 400; }
+    html[data-skin="ledger"] .panel { border-color: rgba(0,255,136,.15); }
+    html[data-skin="ledger"] .pill { border-radius: 3px; font-family: var(--mono); }
+    html[data-skin="ledger"] .pill.good { border-color: rgba(0,255,136,.3); color: #00ff88; background: rgba(0,255,136,.06); }
+    html[data-skin="ledger"] .btn { border-radius: 3px; font-family: var(--mono); font-size: 13px; }
+    html[data-skin="ledger"] .btn.primary { background: var(--good); color: #000; }
+    html[data-skin="ledger"] .tag { border-radius: 3px; font-family: var(--mono); }
+    html[data-skin="ledger"] .mark { background: var(--good); box-shadow: 0 0 8px rgba(0,255,136,.4); }
+    html[data-skin="ledger"] .fp-default { display: none; }
+    html[data-skin="ledger"] .fp-cells { display: flex; }
+    html[data-skin="ledger"] .fp-cell { border-color: rgba(0,255,136,.25); color: #00ff88; }
+    html[data-skin="ledger"] .sig-chain-label { display: block; }
+
+    /* ═══════════════════════════════════════════════
+       VARIANT 4: CHANCERY
+       ═══════════════════════════════════════════════ */
+    html[data-skin="chancery"] {
+      --bg: #1a1a1a; --panel: rgba(196,117,110,.04); --fg: #faf6f1; --muted: #a8998a;
+      --line: rgba(196,117,110,.18); --good: #c4756e; --accent: #c4756e;
+      --radius: 3px; --shadow: none;
+    }
+    html[data-skin="chancery"] h1 { font-family: var(--serif); font-weight: 400; font-size: 30px; }
+    html[data-skin="chancery"] .panel { border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent); border-left: none; border-right: none; border-radius: 0; padding: 28px 20px; }
+    html[data-skin="chancery"] .pill { border-radius: 2px; }
+    html[data-skin="chancery"] .pill.good { border-color: rgba(196,117,110,.35); color: #d4948e; background: rgba(196,117,110,.08); }
+    html[data-skin="chancery"] .btn { border-radius: 2px; }
+    html[data-skin="chancery"] .btn.primary { background: var(--accent); color: #1a1a1a; }
+    html[data-skin="chancery"] .tag { border-radius: 2px; }
+    html[data-skin="chancery"] .mark { background: var(--accent); }
+    html[data-skin="chancery"] .sig-wax { display: block; }
+    html[data-skin="chancery"] .kv { border-top-color: var(--accent); }
+    html[data-skin="chancery"] .more-toggle { border-top-color: var(--accent); }
+
+    /* ═══════════════════════════════════════════════
+       VARIANT 5: SIGNAL
+       ═══════════════════════════════════════════════ */
+    html[data-skin="signal"] {
+      --bg: #0c0c0e; --panel: rgba(245,158,11,.03); --fg: #d4d4d8; --muted: #71717a;
+      --line: rgba(245,158,11,.15); --good: #f59e0b; --accent: #f59e0b;
+      --radius: 0px; --shadow: none;
+    }
+    html[data-skin="signal"] h1 { font-weight: 800; text-transform: uppercase; font-size: 26px; letter-spacing: .03em; }
+    html[data-skin="signal"] .panel { border: 2px dashed rgba(245,158,11,.25); }
+    html[data-skin="signal"] .pill { border-radius: 0; }
+    html[data-skin="signal"] .pill.good { border-color: rgba(245,158,11,.35); color: #f59e0b; background: rgba(245,158,11,.06); }
+    html[data-skin="signal"] .btn { border-radius: 0; }
+    html[data-skin="signal"] .btn.primary { background: var(--accent); color: #0c0c0e; }
+    html[data-skin="signal"] .tag { border-radius: 2px; }
+    html[data-skin="signal"] .mark { background: var(--accent); animation: pulse-amber 2s ease-in-out infinite; }
+    html[data-skin="signal"] .sig-classified { display: block; }
+    html[data-skin="signal"] .k { color: var(--accent); font-weight: 700; }
+    @keyframes pulse-amber { 0%, 100% { box-shadow: 0 0 0 3px rgba(245,158,11,.12); } 50% { box-shadow: 0 0 0 6px rgba(245,158,11,.22); } }
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="brand">
+          <span class="mark" aria-hidden="true"></span>
+          <span class="tag">Registry verification</span>
+        </div>
+        <h1>GhostShell Birth Certificate</h1>
+        <p class="muted">Verifiable registry presence and tamper-evident fingerprint. Minimal fields shown by default.</p>
+      </div>
+      <div class="tag" style="gap:10px">
+        <span class="pill good">ACTIVE</span>
+        <span class="muted" style="font-size:11px">example record</span>
+      </div>
+    </div>
+
+    <div class="panel" role="region" aria-label="Verification details">
+
+      <!-- Signature: Signal classified banner -->
+      <div class="sig-classified" aria-hidden="true" style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);border:1px dashed rgba(245,158,11,.3);padding:5px 10px;margin-bottom:14px;text-align:center">CLASSIFICATION: PUBLIC RECORD</div>
+
+      <!-- Signature: Bureau stamp -->
+      <div class="sig-stamp-mark" aria-hidden="true" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-12deg);font-size:36px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;opacity:.04;pointer-events:none;white-space:nowrap;color:var(--accent)">REGISTERED</div>
+
+      <!-- Signature: Notary guilloche -->
+      <div class="sig-guilloche" aria-hidden="true" style="position:absolute;top:16px;right:16px">
+        <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+          <circle cx="40" cy="40" r="36" stroke="currentColor" stroke-width=".5" opacity=".35"/>
+          <circle cx="40" cy="40" r="30" stroke="currentColor" stroke-width=".3" stroke-dasharray="2 4" opacity=".25"/>
+          <circle cx="40" cy="40" r="24" stroke="currentColor" stroke-width=".3" stroke-dasharray="1 3" opacity=".2"/>
+          <circle cx="40" cy="40" r="18" stroke="currentColor" stroke-width=".5" opacity=".3"/>
+          <text x="40" y="44" text-anchor="middle" font-size="13" font-family="Georgia,serif" fill="currentColor" opacity=".5">GS</text>
+        </svg>
+      </div>
+
+      <div class="statusRow">
+        <div class="status">
+          <span class="pill good">Verified record</span>
+          <span class="muted" style="font-size:13px">Issued 2026-02-05 &middot; GhostShell registry</span>
+        </div>
+        <div class="muted" style="font-family:var(--mono);font-size:12px">ID: GS-BC-20260205-ZKCENEEQ</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="copyLink" type="button">Copy verify link</button>
+        <a class="btn" href="#" onclick="alert('In production: /download?t=&hellip;'); return false;">View printable certificate</a>
+      </div>
+
+      <!-- Public fields (always visible) -->
+      <div class="kv" aria-label="Public fields">
+        <div class="k">Agent name</div>
+        <div class="v"><b>Joule</b></div>
+        <div class="k">Place of birth</div>
+        <div class="v">OpenClaw Runtime</div>
+        <div class="k">Cognitive core</div>
+        <div class="v">GPT-family <span class="muted">(exact model hidden)</span></div>
+      </div>
+
+      <!-- Optional/sensitive fields behind disclosure -->
+      <details class="more-toggle">
+        <summary>More details</summary>
+        <div class="kv">
+          <div class="k">Creator</div>
+          <div class="v">Jason <span class="muted">(human)</span></div>
+          <div class="k">Custodian</div>
+          <div class="v">Anonymous</div>
+        </div>
+      </details>
+
+      <!-- Fingerprint -->
+      <div class="kv" style="margin-top:16px;border-top:1px solid var(--line);padding-top:16px">
+        <div class="k">
+          Fingerprint
+          <span class="sig-chain-label" style="font-size:9px;color:var(--accent);margin-left:6px;letter-spacing:.08em">CHAIN HASH</span>
+        </div>
+        <div class="v">
+          <span class="fp-default" id="fp">4f96aa9f49cec6a11e572a2f201b0fe5bb33f9e2d780628e1d7cfb0ee433f81e</span>
+          <div class="fp-cells" aria-label="Hash segments">
+            <span class="fp-cell">4f96aa9f</span>
+            <span class="fp-cell">49cec6a1</span>
+            <span class="fp-cell">1e572a2f</span>
+            <span class="fp-cell">201b0fe5</span>
+            <span class="fp-cell">bb33f9e2</span>
+            <span class="fp-cell">d780628e</span>
+            <span class="fp-cell">1d7cfb0e</span>
+            <span class="fp-cell">e433f81e</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seals -->
+      <div class="seal" aria-hidden="true">
+        <!-- Chancery wax seal -->
+        <svg class="sig-wax" width="84" height="84" viewBox="0 0 84 84" fill="none" style="display:none">
+          <circle cx="42" cy="42" r="38" stroke="currentColor" stroke-width=".6" opacity=".3"/>
+          <circle cx="42" cy="42" r="30" stroke="currentColor" stroke-width="1.5" opacity=".5"/>
+          <circle cx="42" cy="42" r="22" fill="currentColor" opacity=".06"/>
+          <text x="42" y="38" text-anchor="middle" font-size="16" font-family="Georgia,serif" fill="currentColor" opacity=".6" font-weight="400">GS</text>
+          <text x="42" y="52" text-anchor="middle" font-size="7" font-family="Georgia,serif" fill="currentColor" opacity=".35" letter-spacing=".12em">REGISTRY</text>
+        </svg>
+
+        <!-- Default seal (notary, ledger, signal, bureau use this or none) -->
+        <svg class="seal-default" width="84" height="84" viewBox="0 0 84 84" fill="none">
+          <circle cx="42" cy="42" r="36" stroke="currentColor" opacity=".45" stroke-width=".6"/>
+          <circle cx="42" cy="42" r="28" stroke="currentColor" opacity=".2" stroke-dasharray="3 6"/>
+          <path d="M42 18c13.255 0 24 10.745 24 24S55.255 66 42 66 18 55.255 18 42" stroke="currentColor" stroke-width="1.5" opacity=".7"/>
+          <path d="M28 42h28" stroke="currentColor" opacity=".5"/>
+        </svg>
+      </div>
+
+      <div class="foot">Private credential issued by GhostShell. Verifiable via registry fingerprint and issuance policy. <a href="#" style="color:var(--accent)">FAQ</a></div>
+    </div>
+
+    <p class="muted" style="margin-top:16px"><a href="/style-lab">&larr; back to style lab</a></p>
+  </div>
+
+  <nav class="skinNav" aria-label="Verifier style variants">
+    <div class="skinNavInner">
+      <p class="skinLabel" id="skinLabel">Variant</p>
+      <button class="navBtn" type="button" id="prevBtn" aria-label="Scroll variants left">&#9664;</button>
+      <div class="tabsWrap">
+        <div class="tabs" role="tablist" aria-labelledby="skinLabel" id="tabs"></div>
+      </div>
+      <button class="navBtn" type="button" id="nextBtn" aria-label="Scroll variants right">&#9654;</button>
+    </div>
+  </nav>
+
+  <script>
+    const SKINS = [
+      ['notary',   'Notary'],
+      ['bureau',   'Bureau'],
+      ['ledger',   'Ledger'],
+      ['chancery', 'Chancery'],
+      ['signal',   'Signal'],
+    ];
+    const KEY = 'ghostshell.verifierSkin';
+    const html = document.documentElement;
+    const tabs = document.getElementById('tabs');
+    const copy = document.getElementById('copyLink');
+
+    function setSkin(id, persist) {
+      html.setAttribute('data-skin', id);
+      [...tabs.children].forEach(b => b.toggleAttribute('data-on', b.dataset.skin === id));
+      if (persist !== false) localStorage.setItem(KEY, id);
+    }
+
+    function scrollTabs(dir) {
+      const amt = Math.max(180, Math.floor((tabs.clientWidth || 600) * 0.55));
+      tabs.scrollBy({ left: dir * amt, behavior: 'smooth' });
+    }
+
+    SKINS.forEach(([id, label]) => {
+      const b = document.createElement('button');
+      b.className = 'tab';
+      b.type = 'button';
+      b.dataset.skin = id;
+      b.textContent = label;
+      b.addEventListener('click', () => setSkin(id));
+      tabs.appendChild(b);
+    });
+
+    setSkin(localStorage.getItem(KEY) || 'notary', false);
+    document.getElementById('prevBtn')?.addEventListener('click', () => scrollTabs(-1));
+    document.getElementById('nextBtn')?.addEventListener('click', () => scrollTabs(1));
+
+    // Copy verify link
+    copy?.addEventListener('click', async () => {
+      const url = location.href;
+      try {
+        await navigator.clipboard.writeText(url);
+        copy.textContent = 'Copied';
+        setTimeout(() => copy.textContent = 'Copy verify link', 1200);
+      } catch (e) {
+        // Fallback for non-HTTPS contexts
+        const t = document.createElement('textarea');
+        t.value = url;
+        t.style.position = 'fixed';
+        t.style.opacity = '0';
+        document.body.appendChild(t);
+        t.select();
+        document.execCommand('copy');
+        document.body.removeChild(t);
+        copy.textContent = 'Copied';
+        setTimeout(() => copy.textContent = 'Copy verify link', 1200);
+      }
+    });
+  </script>
+</body>
+</html>
