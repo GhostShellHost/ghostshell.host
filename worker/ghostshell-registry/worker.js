@@ -337,19 +337,61 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
 </style></head><body>
 <div class="toolbar">
   <a class="tbtn" href="/cert/${encodeURIComponent(row.cert_id)}">← Back to verification</a>
-  <a class="tbtn" href="#" onclick="window.print();return false;">Print / Save as PDF</a>
+  <span style="display:flex;gap:10px">
+    <a class="tbtn" href="#" id="dlPng">Download PNG</a>
+    <a class="tbtn" href="#" onclick="window.print();return false;">Print / Save as PDF</a>
+  </span>
 </div>
-<div class="small">GhostShell Registry of Continuity</div>
-<h1>BIRTH CERTIFICATE</h1>
-<div class="small">Private credential issued by GhostShell</div>
-<hr>
-<p><strong>Agent name:</strong> ${safe(row.agent_name)}</p>
-<p><strong>Born (UTC):</strong> <span class="mono">${safe(row.issued_at_utc)}</span></p>
-<p><strong>Place of birth:</strong> ${safe(row.place_of_birth)}</p>
-<p><strong>Cognitive core (at registration):</strong> ${safe(row.cognitive_core_family)} ${safe(row.cognitive_core_exact)}</p>
-<hr>
-<p><strong>Certificate ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
-<p><strong>Creator label (pseudonym):</strong> ${safe(row.creator_label || 'Undisclosed')}</p>
-<p class="small">Verification: ${env.BASE_URL}/cert/${encodeURIComponent(row.cert_id)}</p>
+
+<div id="cert">
+  <div class="small">GhostShell Registry of Continuity</div>
+  <h1>BIRTH CERTIFICATE</h1>
+  <div class="small">Private credential issued by GhostShell</div>
+  <hr>
+  <p><strong>Agent name:</strong> ${safe(row.agent_name)}</p>
+  <p><strong>Born (UTC):</strong> <span class="mono">${safe(row.issued_at_utc)}</span></p>
+  <p><strong>Place of birth:</strong> ${safe(row.place_of_birth)}</p>
+  <p><strong>Cognitive core (at registration):</strong> ${safe(row.cognitive_core_family)} ${safe(row.cognitive_core_exact)}</p>
+  <hr>
+  <p><strong>Certificate ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
+  <p><strong>Creator label (pseudonym):</strong> ${safe(row.creator_label || 'Undisclosed')}</p>
+  <p class="small">Verification: ${env.BASE_URL}/cert/${encodeURIComponent(row.cert_id)}</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+  (function(){
+    const btn = document.getElementById('dlPng');
+    const cert = document.getElementById('cert');
+    if (!btn || !cert) return;
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      btn.textContent = 'Rendering…';
+      btn.style.pointerEvents = 'none';
+      try {
+        const canvas = await html2canvas(cert, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          useCORS: true,
+        });
+        canvas.toBlob((blob) => {
+          if (!blob) throw new Error('PNG render failed');
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = '${safe(row.cert_id)}.png';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        }, 'image/png');
+      } catch (err) {
+        alert('Could not generate PNG. Try Print / Save as PDF instead.');
+      } finally {
+        btn.textContent = 'Download PNG';
+        btn.style.pointerEvents = 'auto';
+      }
+    });
+  })();
+</script>
 </body></html>`);
 }
