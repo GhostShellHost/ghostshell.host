@@ -4,8 +4,11 @@
 //
 // Deploy steps: see /WORKER-DEPLOY.md
 //
-// NOTE: This file was added after initial Cloudflare-only edits. Paste the current
-// Cloudflare `worker.js` here (full file) to lock parity, then edit via commits.
+// VERSION: 2026-02-07.001 (manual paste deploy)
+// If you paste this into Cloudflare, you should see this version string at the top.
+//
+export const WORKER_VERSION = "2026-02-07.001";
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
