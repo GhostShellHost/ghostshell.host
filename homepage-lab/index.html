@@ -83,6 +83,24 @@
     }
 
     /* ═══════════════════════════════════════════════
+       VARIANT 0: ORIGINAL (matches live /index.html vibe)
+       Neon aurora gradients, rounded cards, modern sans.
+       ═══════════════════════════════════════════════ */
+    html[data-theme="original"] {
+      --bg:#0b0c10;--fg:#e9edf1;--muted:#aab3bf;--line:#252a35;
+      --card:rgba(18,20,27,.75);--accent:#7c5cff;--accent2:#2ee59d;
+      --radius:16px;--shadow:0 24px 80px rgba(0,0,0,.45);
+    }
+    html[data-theme="original"] body{
+      background:
+        radial-gradient(1000px 600px at 20% 0%,rgba(124,92,255,.25),transparent 50%),
+        radial-gradient(900px 600px at 80% 20%,rgba(46,229,157,.12),transparent 60%),
+        var(--bg);
+    }
+    html[data-theme="original"] .dot{background:var(--accent2);box-shadow:0 0 0 3px rgba(46,229,157,.15)}
+    html[data-theme="original"] .btn.primary{background:linear-gradient(90deg,var(--accent),#9b7bff);color:#fff;border-color:transparent}
+
+    /* ═══════════════════════════════════════════════
        VARIANT 1: NOTARY
        Government-grade document. Guilloche seal. Serif headings.
        ═══════════════════════════════════════════════ */
@@ -189,7 +207,10 @@
       <div class="voteRow">
         <a class="btn small" id="voteOriginal" href="#">Vote: Original</a>
         <a class="btn small" id="voteNotary" href="#">Vote: Notary</a>
+        <a class="btn small" id="voteBureau" href="#">Vote: Bureau</a>
         <a class="btn small" id="voteLedger" href="#">Vote: Ledger</a>
+        <a class="btn small" id="voteChancery" href="#">Vote: Chancery</a>
+        <a class="btn small" id="voteSignal" href="#">Vote: Signal</a>
         <button class="btn small" id="copyVariantLink" type="button">Copy link to this variant</button>
       </div>
       <div class="voteNote">
@@ -283,6 +304,7 @@
 
   <script>
     const THEMES = [
+      ['original', 'Original'],
       ['notary',   'Notary'],
       ['bureau',   'Bureau'],
       ['ledger',   'Ledger'],
@@ -328,7 +350,10 @@
       // Once the Discussion exists, we can switch these to point at anchors / instructions.
       setHref('voteOriginal', DISCUSS_GITHUB_URL);
       setHref('voteNotary', DISCUSS_GITHUB_URL);
+      setHref('voteBureau', DISCUSS_GITHUB_URL);
       setHref('voteLedger', DISCUSS_GITHUB_URL);
+      setHref('voteChancery', DISCUSS_GITHUB_URL);
+      setHref('voteSignal', DISCUSS_GITHUB_URL);
       setHref('discussGithub', DISCUSS_GITHUB_URL);
       setHref('discussMoltbook', DISCUSS_MOLTBOOK_URL);
 
