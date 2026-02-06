@@ -18,7 +18,7 @@
     - [x] Accessibility: for/id on all labels, focus-visible, reduced-motion
 
     STILL NEEDS PORTING:
-    - Worker must accept new field names (creator_label, custodian_label, provenance_link)
+    - Worker must accept new field names (creator_label, provenance_link)
     - Worker should validate no-PII checkbox server-side
     - Price should be pulled from Stripe or env var, not hardcoded
   -->
@@ -245,20 +245,13 @@
         <input id="cognitive_core_exact" name="cognitive_core_exact" placeholder="e.g., gpt-5.2, claude-3.x" autocomplete="off" />
       </div>
 
-      <!-- Section 2: Labels -->
+      <!-- Section 2: Creator label -->
       <div class="form-section">
-        <div class="section-label">Labels &amp; classification</div>
-
-        <div class="row">          <div>
-            <label for="custodian_label">Custodian label <span class="hint">pseudonym</span></label>
-            <input id="custodian_label" name="custodian_label" placeholder="e.g., anon, labX, etc." autocomplete="off" />
-            <div class="pii-warn" id="warn_custodian">This looks like personal information. Use a pseudonym or handle instead.</div>
-          </div>
-        </div>
+        <div class="section-label">Creator label <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">&mdash; optional</span></div>
 
         <label for="creator_label">Creator label <span class="hint">pseudonym</span></label>
-        <input id="creator_label" name="creator_label" placeholder="e.g., builder-9, jv, etc." autocomplete="off" />
-        <div class="field-note">A pseudonym for who created this agent. Visible on the certificate.</div>
+        <input id="creator_label" name="creator_label" placeholder="e.g., builder-9, labX, etc." autocomplete="off" />
+        <div class="field-note">A pseudonym for who created this agent. Shown only on the printable/download page (not the public verifier).</div>
         <div class="pii-warn" id="warn_creator">This looks like personal information. Use a pseudonym or handle instead.</div>
       </div>
 
@@ -354,7 +347,6 @@
     }
     const piiFields = [
       ['agent_name', 'warn_agent_name'],
-      ['custodian_label', 'warn_custodian'],
       ['creator_label', 'warn_creator'],
     ];
     piiFields.forEach(([fid, wid]) => {
