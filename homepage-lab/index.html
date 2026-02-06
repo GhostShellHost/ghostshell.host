@@ -27,6 +27,14 @@
 
     /* ── Shared components ── */
     .tag { display: inline-flex; gap: 8px; align-items: center; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 12px; background: rgba(18,20,27,.55); }
+    .vote { margin-top: 14px; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--card) 70%, transparent); padding: 14px; }
+    .vote h2 { margin: 0 0 6px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+    .vote p { margin: 0 0 10px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .voteRow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .voteRow .btn { border-radius: 10px; }
+    .voteRow .btn.small { padding: 10px 12px; font-size: 13px; }
+    .voteNote { margin-top: 10px; font-size: 12px; color: var(--muted); }
+    code.inline { font-family: var(--mono); font-size: 12px; padding: 1px 6px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,.03); }
     .dot { width: 8px; height: 8px; border-radius: 99px; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
     h1 { margin: 16px 0 10px; font-size: 46px; line-height: 1.05; letter-spacing: -.025em; }
     .sub { color: var(--muted); font-size: 17px; line-height: 1.55; max-width: 520px; }
@@ -175,6 +183,24 @@
   <div class="wrap">
     <span class="tag"><span class="dot" aria-hidden="true"></span> Style Lab &middot; homepage variants</span>
 
+    <section class="vote" aria-label="Vote for a homepage style">
+      <h2>Vote for the winner</h2>
+      <p>Help us pick the production look. This page is a lab; the live homepage (<code class="inline">/</code>) stays stable.</p>
+      <div class="voteRow">
+        <a class="btn small" id="voteOriginal" href="#">Vote: Original</a>
+        <a class="btn small" id="voteNotary" href="#">Vote: Notary</a>
+        <a class="btn small" id="voteLedger" href="#">Vote: Ledger</a>
+        <button class="btn small" id="copyVariantLink" type="button">Copy link to this variant</button>
+      </div>
+      <div class="voteNote">
+        Votes open in GitHub Discussions (and mirrored in Moltbook). If links don’t work yet, we’re still wiring them up.
+      </div>
+      <div class="voteRow" style="margin-top:10px">
+        <a class="btn small" id="discussGithub" href="#">Open GitHub discussion</a>
+        <a class="btn small" id="discussMoltbook" href="#">Open Moltbook discussion</a>
+      </div>
+    </section>
+
     <div class="hero">
       <div>
         <h1>Give every agent a verifiable origin story.</h1>
@@ -267,15 +293,59 @@
     const html = document.documentElement;
     const tabs = document.getElementById('tabs');
 
+    // TODO: set these once GitHub Discussion + Moltbook thread exist
+    const DISCUSS_GITHUB_URL = '';   // e.g. https://github.com/GhostShellHost/ghostshell.host/discussions/1
+    const DISCUSS_MOLTBOOK_URL = ''; // e.g. https://www.moltbook.com/... (thread URL)
+
     function setTheme(id, persist) {
       html.setAttribute('data-theme', id);
       [...tabs.children].forEach(b => b.toggleAttribute('data-on', b.dataset.theme === id));
       if (persist !== false) localStorage.setItem(KEY, id);
+      setupVoteLinks(id);
     }
 
     function scrollTabs(dir) {
       const amt = Math.max(180, Math.floor((tabs.clientWidth || 600) * 0.55));
       tabs.scrollBy({ left: dir * amt, behavior: 'smooth' });
+    }
+
+    function variantLink(theme) {
+      const u = new URL(location.href);
+      u.searchParams.set('theme', theme);
+      return u.toString();
+    }
+
+    function setHref(id, href) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.href = href || '#';
+      if (!href) el.setAttribute('aria-disabled', 'true');
+      else el.removeAttribute('aria-disabled');
+    }
+
+    function setupVoteLinks(theme) {
+      // Comment-based voting for now.
+      // Once the Discussion exists, we can switch these to point at anchors / instructions.
+      setHref('voteOriginal', DISCUSS_GITHUB_URL);
+      setHref('voteNotary', DISCUSS_GITHUB_URL);
+      setHref('voteLedger', DISCUSS_GITHUB_URL);
+      setHref('discussGithub', DISCUSS_GITHUB_URL);
+      setHref('discussMoltbook', DISCUSS_MOLTBOOK_URL);
+
+      const copyBtn = document.getElementById('copyVariantLink');
+      if (copyBtn) {
+        copyBtn.onclick = async () => {
+          const link = variantLink(theme);
+          try {
+            await navigator.clipboard.writeText(link);
+            const prev = copyBtn.textContent;
+            copyBtn.textContent = 'Copied';
+            setTimeout(() => (copyBtn.textContent = prev), 900);
+          } catch {
+            prompt('Copy this link:', link);
+          }
+        };
+      }
     }
 
     THEMES.forEach(([id, label]) => {
@@ -288,7 +358,10 @@
       tabs.appendChild(b);
     });
 
-    setTheme(localStorage.getItem(KEY) || 'notary', false);
+    const qsTheme = new URLSearchParams(location.search).get('theme');
+    const initial = THEMES.some(([id]) => id === qsTheme) ? qsTheme : (localStorage.getItem(KEY) || 'notary');
+    setTheme(initial, false);
+
     document.getElementById('prevBtn')?.addEventListener('click', () => scrollTabs(-1));
     document.getElementById('nextBtn')?.addEventListener('click', () => scrollTabs(1));
   </script>
