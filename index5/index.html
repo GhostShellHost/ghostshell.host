@@ -17,7 +17,7 @@
       color:var(--text)
     }
     a{color:inherit}
-    .wrap{max-width:980px;margin:0 auto;padding:56px 18px 110px}
+    .wrap{max-width:980px;margin:0 auto;padding:92px 18px 110px}
 
     .tag{display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border:1px solid rgba(0,255,136,.18);border-radius:999px;color:var(--muted);font-size:12px;background:rgba(255,255,255,.02)}
     .dot{width:8px;height:8px;border-radius:99px;background:var(--accent);box-shadow:0 0 10px rgba(0,255,136,.35)}
@@ -61,18 +61,33 @@
     .kv{border:1px solid rgba(0,255,136,.14);border-radius:10px;background:rgba(255,255,255,.02);padding:12px}
     .k{color:var(--muted);font-size:11px;letter-spacing:.16em;text-transform:uppercase}
     .v{margin-top:6px;font-size:13px}
+    /* ── Variant sliver (top) ── */
+    .topnav{position:fixed;left:0;right:0;top:0;z-index:80;border-bottom:1px solid var(--line);background:color-mix(in srgb, var(--bg) 72%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+    .topnav__inner{max-width:980px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .topnav__label{color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+    .topnav__links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .topnav__links a{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;border:1px solid rgba(170,179,191,.22);background:rgba(255,255,255,.03);color:var(--muted);text-decoration:none;font-size:12px}
+    .topnav__links a:hover{color:var(--text);border-color:rgba(233,237,241,.35)}
+    .topnav__links a[aria-current="page"]{color:var(--text);border-color:rgba(46,229,157,.35);outline:2px solid rgba(46,229,157,.18);outline-offset:2px}
+    @media (max-width:560px){.topnav__inner{padding:10px 10px}.topnav__label{display:none}}
 
-    /* ── Variant ring ── */
-    .ring{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);width:190px;height:190px;border-radius:999px;border:1px solid rgba(0,255,136,.22);background:rgba(0,0,0,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:50;box-shadow:0 18px 60px rgba(0,0,0,.55)}
-    .ring a{text-decoration:none}
-    .ring__center{position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;width:78px;height:78px;border-radius:999px;border:1px solid rgba(0,255,136,.24);background:rgba(0,255,136,.06);font-weight:850;color:var(--text)}
-    .ring__link{position:absolute;left:50%;top:50%;--r:78px;--a:calc((var(--i) - 1) * 60deg - 90deg);transform:translate(-50%,-50%) rotate(var(--a)) translate(var(--r)) rotate(calc(-1 * var(--a)));padding:7px 10px;border-radius:999px;border:1px solid rgba(0,255,136,.18);background:rgba(0,255,136,.03);color:var(--muted);font-size:12px}
-    .ring__link:hover{color:var(--text);border-color:rgba(0,255,136,.35)}
-    .ring__center[aria-current="page"]{outline:2px solid rgba(0,255,136,.22);outline-offset:2px}
-    @media (max-width:560px){.ring{width:auto;height:auto;border-radius:14px;padding:8px 10px;display:flex;gap:6px;align-items:center;justify-content:center}.ring__center{position:static;transform:none;width:auto;height:auto;padding:8px 10px}.ring__link{position:static;transform:none}}
   </style>
 </head>
 <body>
+  <nav class="topnav" aria-label="Homepage variants">
+    <div class="topnav__inner">
+      <div class="topnav__label">Variants (temporary)</div>
+      <div class="topnav__links">
+        <a href="/">Index</a>
+        <a href="/index2/">Index2</a>
+        <a href="/index3/">Index3</a>
+        <a href="/index4/">Index4</a>
+        <a href="/index5/" aria-current="page">Index5</a>
+        <a href="/index6/">Index6</a>
+      </div>
+    </div>
+  </nav>
+
   <div class="wrap">
     <span class="tag"><span class="dot"></span> live alpha • ledger/verification aesthetic</span>
 
@@ -154,14 +169,5 @@
       <div class="muted">Alpha experiment. Things may break.</div>
     </div>
   </div>
-
-  <nav class="ring" aria-label="Homepage variants">
-    <a class="ring__center" href="/index5/" aria-current="page">Index5</a>
-    <a class="ring__link" style="--i:1" href="/">Index</a>
-    <a class="ring__link" style="--i:2" href="/index2/">Index2</a>
-    <a class="ring__link" style="--i:3" href="/index3/">Index3</a>
-    <a class="ring__link" style="--i:4" href="/index4/">Index4</a>
-    <a class="ring__link" style="--i:5" href="/index6/">Index6</a>
-  </nav>
 </body>
 </html>
