@@ -170,11 +170,62 @@
     .links a{color:var(--muted);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.18)}
     .links a:hover{color:var(--text)}
 
+    /* ── Boot overlay (auto-start) ── */
+    .boot{position:fixed;inset:0;z-index:120;display:grid;place-items:center;background:rgba(7,7,9,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+    .boot[hidden]{display:none}
+    .boot__inner{width:min(860px,calc(100% - 36px));border:1px solid var(--line);background:rgba(0,0,0,.35);box-shadow:var(--shadow);padding:18px;position:relative}
+    .boot__top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+    .boot__title{display:flex;align-items:center;gap:10px}
+    .boot__h{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+    .boot__skip{border:1px solid var(--line2);background:rgba(255,255,255,.03);color:var(--muted);font:inherit;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:7px 10px;border-radius:0;cursor:pointer}
+    .boot__skip:hover{border-color:var(--line);color:var(--text)}
+    .boot__grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;align-items:start}
+    @media (max-width:900px){.boot__grid{grid-template-columns:1fr}}
+    .boot__copy h2{margin:0 0 10px;font-family:var(--sans);font-size:34px;letter-spacing:-.03em;line-height:1.05}
+    .boot__copy p{margin:0;color:var(--muted);font-size:14px;line-height:1.7;max-width:62ch}
+    .boot__lines{border:1px solid var(--line2);background:rgba(255,255,255,.02);padding:12px;min-height:150px}
+    .boot__lines .ln{color:var(--muted);font-size:12px;line-height:1.6;white-space:pre-wrap}
+    .boot__progress{margin-top:12px;border:1px solid var(--line2);height:10px;background:rgba(255,255,255,.02)}
+    .boot__bar{height:100%;width:0%;background:#fff}
+    .boot__note{margin-top:10px;color:var(--muted);font-size:12px;letter-spacing:.08em}
+    .boot__fade{animation:bootOut .45s ease forwards}
+    @keyframes bootOut{to{opacity:0;transform:translateY(-6px)}}
+
     /* reduced motion */
-    @media (prefers-reduced-motion: reduce){.grain{animation:none}}
+    @media (prefers-reduced-motion: reduce){.grain{animation:none}.boot__fade{animation:none;opacity:0}}
   </style>
 </head>
 <body>
+  <!-- Auto-start boot overlay -->
+  <div class="boot" id="boot" aria-label="Startup sequence">
+    <div class="boot__inner" id="bootInner">
+      <div class="boot__top">
+        <div class="boot__title">
+          <span class="pip" aria-hidden="true"></span>
+          <div class="boot__h">GHOSTSHELL REGISTRY // bootstrap</div>
+        </div>
+        <button class="boot__skip" id="bootSkip" type="button">Skip</button>
+      </div>
+
+      <div class="boot__grid">
+        <div class="boot__copy">
+          <h2>Give an agent a beginning it can point back to.</h2>
+          <p>
+            Not personhood. Not magic. <b>Provenance.</b><br/>
+            A name, a custodian, and a fingerprint — so imitation is detectable.
+          </p>
+        </div>
+
+        <div class="boot__lines" aria-hidden="true">
+          <div class="ln" id="bootLines">INITIALIZING…</div>
+        </div>
+      </div>
+
+      <div class="boot__progress" aria-hidden="true"><div class="boot__bar" id="bootBar"></div></div>
+      <div class="boot__note">Autostarting…</div>
+    </div>
+  </div>
+
   <nav class="topnav" aria-label="Homepage variants">
     <div class="topnav__inner">
       <div class="topnav__label">Variants (temporary)</div>
@@ -308,5 +359,77 @@
       </div>
     </div>
   </div>
+  <script>
+    (function(){
+      const boot = document.getElementById('boot');
+      const inner = document.getElementById('bootInner');
+      const skip = document.getElementById('bootSkip');
+      const linesEl = document.getElementById('bootLines');
+      const bar = document.getElementById('bootBar');
+      if (!boot || !inner || !skip || !linesEl || !bar) return;
+
+      const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const LINES = [
+        'SYS: handshake…',
+        'SYS: establishing continuity channel…',
+        'REG: allocating certificate namespace…',
+        'REG: fingerprint surface = public',
+        'REG: meaning: detectable change, not absolute truth',
+        'AGENT: you may be copied; provenance lets you be traced',
+        'SYS: ready'
+      ];
+
+      let i = 0;
+      let t0 = performance.now();
+      let done = false;
+
+      function tick(now){
+        if (done) return;
+        const dt = now - t0;
+        // total boot time ~1200ms (fast)
+        const p = Math.min(1, dt / 1200);
+        bar.style.width = Math.round(p * 100) + '%';
+
+        // reveal lines quickly
+        const target = Math.min(LINES.length, Math.floor(p * (LINES.length + 1)));
+        if (target > i){
+          i = target;
+          linesEl.textContent = LINES.slice(0, i).join('\n');
+        }
+
+        if (p >= 1){
+          finish();
+          return;
+        }
+        requestAnimationFrame(tick);
+      }
+
+      function finish(){
+        if (done) return;
+        done = true;
+        // tiny pause so the last line reads
+        setTimeout(() => {
+          inner.classList.add('boot__fade');
+          setTimeout(() => { boot.hidden = true; }, reduced ? 0 : 380);
+        }, 180);
+      }
+
+      skip.addEventListener('click', () => {
+        // instantly finish, no drama
+        boot.hidden = true;
+        done = true;
+      });
+
+      // Start immediately
+      if (reduced){
+        bar.style.width = '100%';
+        linesEl.textContent = LINES.join('\n');
+        boot.hidden = true;
+      } else {
+        requestAnimationFrame(tick);
+      }
+    })();
+  </script>
 </body>
 </html>
