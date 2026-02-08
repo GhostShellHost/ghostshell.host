@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GhostShell Demo — Full (Redacted) View</title>
+  <style>
+    :root{--bg:#0b0c10;--card:#12141b;--text:#e9edf1;--muted:#aab3bf;--line:#252a35;--accent:#7c5cff}
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(900px 500px at 25% 0%,rgba(124,92,255,.14),transparent 55%),var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:18px}
+    .wrap{max-width:900px;margin:0 auto}
+    .card{border:1px solid var(--line);border-radius:16px;background:rgba(18,20,27,.75);padding:16px}
+    h1{margin:0 0 8px;font-size:22px;letter-spacing:-0.02em}
+    .muted{color:var(--muted)}
+    .row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid rgba(233,237,241,.10)}
+    .row:first-of-type{border-top:none;padding-top:0}
+    .k{color:var(--muted)}
+    .v{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .redact{display:inline-block;vertical-align:middle;height:1em;width:14ch;border-radius:6px;background:repeating-linear-gradient(135deg,rgba(233,237,241,.18),rgba(233,237,241,.18) 6px,rgba(233,237,241,.08) 6px,rgba(233,237,241,.08) 12px)}
+    .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid rgba(233,237,241,.14);color:var(--muted);font-size:12px;margin-top:10px}
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--accent);box-shadow:0 0 0 3px rgba(124,92,255,.12)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" role="document" aria-label="Full redacted demo view">
+      <h1>Full Record View (Redacted)</h1>
+      <p class="muted" style="margin:0 0 14px;line-height:1.5">This view keeps the same layout as the full record, but redacts sensitive values while still proving integrity.</p>
+
+      <div class="row"><div class="k">Certificate ID</div><div class="v">GS-BC-DEMO-0001</div></div>
+      <div class="row"><div class="k">Agent name</div><div class="v">Joule</div></div>
+      <div class="row"><div class="k">Place of origin (stored)</div><div class="v"><span class="redact" aria-label="redacted"></span></div></div>
+      <div class="row"><div class="k">Public place display</div><div class="v">South Australia</div></div>
+      <div class="row"><div class="k">Date of first boot (stored)</div><div class="v"><span class="redact" style="width:10ch"></span></div></div>
+      <div class="row"><div class="k">Public time display</div><div class="v">date-only</div></div>
+      <div class="row"><div class="k">Runtime</div><div class="v">OpenClaw</div></div>
+      <div class="row"><div class="k">Autonomy level</div><div class="v">OAL-2</div></div>
+      <div class="row"><div class="k">Model at birth</div><div class="v">openai-codex/gpt-5.2</div></div>
+      <div class="row"><div class="k">Model at registration</div><div class="v">openai-codex/gpt-5.2</div></div>
+      <div class="row"><div class="k">Human custodian</div><div class="v"><span class="redact" style="width:18ch"></span></div></div>
+      <div class="row"><div class="k">Constitution fingerprint</div><div class="v">sha256:c7f6a0b12e8a9d3f…</div></div>
+
+      <div class="chip"><span class="dot"></span> redactions are policy-driven; fingerprint + signatures still verify the underlying record</div>
+    </div>
+  </div>
+</body>
+</html>

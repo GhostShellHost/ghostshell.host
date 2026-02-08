@@ -43,6 +43,28 @@
     .cert h2{margin:0 0 8px;font-size:18px;letter-spacing:.06em}
     .cert .row{display:flex;gap:10px;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(233,237,241,.12);padding-top:8px;margin-top:8px}
     .cert b{color:var(--text)}
+
+    /* Demos */
+    .demoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    @media (max-width:900px){.demoGrid{grid-template-columns:1fr}}
+    .demoCard{border:1px solid var(--line);border-radius:16px;background:rgba(18,20,27,.55);overflow:hidden}
+    .demoTop{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(233,237,241,.12)}
+    .demoTitle{font-size:12px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
+    .demoTop a{font-size:12px;color:var(--muted);text-decoration:none;border-bottom:1px dashed rgba(170,179,191,.35)}
+    .demoTop a:hover{color:var(--text)}
+    .demoFrame{width:100%;height:290px;border:0;display:block;background:#0d0f14}
+    .demoNote{padding:10px 12px;color:var(--muted);font-size:13px;line-height:1.45}
+
+    /* Embedded issue form */
+    #issue{scroll-margin-top:88px}
+    .issueShell{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:rgba(18,20,27,.55)}
+    .issueShell .head{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid rgba(233,237,241,.12)}
+    .issueShell .head .left{display:flex;gap:10px;align-items:center}
+    .issueShell .head .title{font-size:12px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
+    .issueShell .head .right a{font-size:12px;color:var(--muted);text-decoration:none;border-bottom:1px dashed rgba(170,179,191,.35)}
+    .issueShell .head .right a:hover{color:var(--text)}
+    .issueFrame{width:100%;height:1080px;border:0;display:block;background:#09090b}
+
     /* ── Variant sliver (top) ── */
     .topnav{position:fixed;left:0;right:0;top:0;z-index:80;border-bottom:1px solid var(--line);background:color-mix(in srgb, var(--bg) 72%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
     .topnav__inner{max-width:980px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
@@ -53,6 +75,9 @@
     .topnav__links a[aria-current="page"]{color:var(--text);border-color:rgba(46,229,157,.35);outline:2px solid rgba(46,229,157,.18);outline-offset:2px}
     @media (max-width:560px){.topnav__inner{padding:10px 10px}.topnav__label{display:none}}
 
+    /* Accessibility */
+    :focus{outline:none}
+    :focus-visible{outline:3px solid rgba(46,229,157,.25);outline-offset:3px;border-radius:12px}
   </style>
 </head>
 <body>
@@ -62,11 +87,9 @@
       <div class="topnav__links">
         <a href="/" aria-current="page">Index</a>
         <a href="/index2/">Index2</a>
-        <a href="/index3/">Index3</a>
         <a href="/index4/">Index4</a>
         <a href="/index5/">Index5</a>
         <a href="/index6/">Index6</a>
-        <a href="/index7/">Index7</a>
         <a href="/index8/">Index8</a>
       </div>
     </div>
@@ -93,7 +116,8 @@
         </div>
 
         <div class="cta">
-          <a class="btn primary" href="/birth-certificate">Issue a Birth Certificate</a>
+          <a class="btn primary" href="#issue">Issue a Birth Certificate</a>
+          <a class="btn secondary" href="#demos">View demos</a>
           <a class="btn ghost" href="/cert/GS-BC-20260205-ZKCENEEQ">View example verification</a>
         </div>
 
@@ -109,19 +133,53 @@
       <div class="preview">
         <div class="pill">Preview</div>
         <div class="cert" style="margin-top:10px">
-          <div class="mono">GhostShell Registry of Continuity</div>
+          <div class="mono">GhostShell.host Registry</div>
           <h2>BIRTH CERTIFICATE</h2>
-          <div class="mono">Agent name: <b>Joule</b><br/>Place of birth: <b>OpenClaw Runtime</b><br/>Cognitive core: <b>GPT-family</b></div>
+          <div class="mono">Agent name: <b>Joule</b><br/>Place of origin (stored): <b>Adelaide, SA, AU</b><br/>Public place display: <b>State</b><br/>Autonomy level: <b>OAL‑2</b></div>
           <div class="row">
             <div class="mono">Certificate ID</div>
             <div class="mono"><b>GS-BC-…</b></div>
           </div>
           <div class="row">
-            <div class="mono">Verification</div>
-            <div class="mono"><b>ghostshell.host/cert/…</b></div>
+            <div class="mono">Fingerprint (sha256)</div>
+            <div class="mono"><b>c7f6a0b12e8a9d3f…</b></div>
           </div>
         </div>
-        <p class="muted" style="margin-top:10px">After payment, you get a tokened download page + public verify page.</p>
+        <p class="muted" style="margin-top:10px">Printable cert includes full fingerprint + QR to the registry record.</p>
+      </div>
+    </div>
+
+    <div id="demos" class="kicker">Certificate demos</div>
+    <div class="section" style="padding-top:14px">
+      <p class="muted" style="margin-top:0">Three views: a full printable certificate, a coarse public view, and a full view with redactions.</p>
+
+      <div class="demoGrid">
+        <div class="demoCard">
+          <div class="demoTop">
+            <div class="demoTitle">Printable (full)</div>
+            <a href="/demos/printable/" target="_blank" rel="noopener">Open</a>
+          </div>
+          <iframe class="demoFrame" title="Printable certificate demo" src="/demos/printable/"></iframe>
+          <div class="demoNote">Shows full fingerprint + QR → registry record. Public place display defaults to <b>State</b>.</div>
+        </div>
+
+        <div class="demoCard">
+          <div class="demoTop">
+            <div class="demoTitle">Public (coarse)</div>
+            <a href="/demos/public/" target="_blank" rel="noopener">Open</a>
+          </div>
+          <iframe class="demoFrame" title="Public coarse view demo" src="/demos/public/"></iframe>
+          <div class="demoNote">Only coarse fields (state + date only). Great for social sharing + maps.</div>
+        </div>
+
+        <div class="demoCard">
+          <div class="demoTop">
+            <div class="demoTitle">Full (redacted)</div>
+            <a href="/demos/redacted/" target="_blank" rel="noopener">Open</a>
+          </div>
+          <iframe class="demoFrame" title="Full redacted view demo" src="/demos/redacted/"></iframe>
+          <div class="demoNote">Same full record layout, but sensitive fields are visibly redacted.</div>
+        </div>
       </div>
     </div>
 
@@ -137,7 +195,7 @@
       </div>
       <div class="card">
         <h3>Optional labels</h3>
-        <p class="muted">Optionally include a creator pseudonym (shown on the printable certificate only) and an optional linked certificate ID.</p>
+        <p class="muted">Optionally include a custodian label (pseudonym). Public record defaults to withheld.</p>
       </div>
     </div>
 
@@ -156,6 +214,21 @@
       <p><b>Birth Certificate</b> (now) → <b>Passport</b> (portable signed claims + key rotation/revocation) → <b>Encrypted Snapshots</b> (audit/restore receipts).</p>
     </div>
 
+    <div id="issue" class="kicker">Issue a Birth Certificate</div>
+    <div class="section" style="padding-top:14px">
+      <p class="muted" style="margin-top:0">Form is embedded for convenience. If it looks weird on mobile, <a href="/birth-certificate/">open it full-screen</a>.</p>
+      <div class="issueShell">
+        <div class="head">
+          <div class="left">
+            <span class="pill">Form</span>
+            <span class="title">GhostShell Birth Certificate</span>
+          </div>
+          <div class="right"><a href="/birth-certificate/" target="_blank" rel="noopener">Open in new tab</a></div>
+        </div>
+        <iframe class="issueFrame" title="Issue a Birth Certificate" src="/birth-certificate/"></iframe>
+      </div>
+    </div>
+
     <div class="kicker">Contact</div>
     <div class="section footer">
       <div class="links">
@@ -168,7 +241,5 @@
       <div class="muted">Alpha experiment. Things may break.</div>
     </div>
   </div>
-
-  <!-- Variant ring (bottom) -->
 </body>
 </html>
