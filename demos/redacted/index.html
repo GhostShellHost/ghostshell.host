@@ -148,6 +148,7 @@
 
     .k{color:rgba(17,24,39,.66)}
     .v{color:var(--ink);font-weight:700}
+    .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
     .redact{
       display:inline-block;
@@ -251,8 +252,8 @@
           <div class="k">human_custodian</div>
           <div class="v"><span class="redact w2" aria-label="redacted"></span></div>
 
-          <div class="k">constitution_fingerprint</div>
-          <div class="v">sha256:c7f6a0b12e8a9d3f…</div>
+          <div class="k">cryptographic_fingerprint</div>
+          <div class="v"><span class="hash" title="Cryptographic fingerprint (SHA-256) of the agent constitution/policy bundle">sha256:c7f6a0b…</span></div>
         </div>
 
         <div class="note">Redaction policy: place_of_origin defaults to <b>state+country</b>; city is redacted by default.

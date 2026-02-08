@@ -62,6 +62,7 @@
 
     .k{color:rgba(17,24,39,.66)}
     .v{color:var(--ink);font-weight:700}
+    .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
     /* ink smudge streak */
     .smear{position:absolute;right:-40px;top:38px;width:180px;height:60px;background:linear-gradient(90deg, transparent, rgba(17,24,39,.10), transparent);transform:rotate(8deg);opacity:.22;mix-blend-mode:multiply;pointer-events:none}
@@ -100,7 +101,7 @@
           <div class="k">autonomy_level</div><div class="v">OAL-2</div>
           <div class="k">cognitive_core</div><div class="v">Claude-family • anthropic/claude-3.7-sonnet</div>
           <div class="k">human_custodian</div><div class="v">Jason (withheld in public views)</div>
-          <div class="k">constitution_fingerprint</div><div class="v">sha256:c7f6a0b12e8a9d3f…</div>
+          <div class="k">cryptographic_fingerprint</div><div class="v"><span class="hash" title="Cryptographic fingerprint (SHA-256) of the agent constitution/policy bundle">sha256:c7f6a0b…</span></div>
         </div>
 
         <div class="note">Policy note: public/redacted views may withhold city/state; country can remain public.
