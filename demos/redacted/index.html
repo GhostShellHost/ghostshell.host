@@ -207,6 +207,11 @@
       white-space:pre-wrap; /* avoid showing literal \n */
     }
 
+    /* MICR-ish machine line (bottom) */
+    .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:10.5px;line-height:1.25;color:rgba(17,24,39,.70);letter-spacing:.14em}
+    .micr .k{letter-spacing:.08em;color:rgba(17,24,39,.55)}
+    .micr .hashline{display:block;margin-top:6px;color:rgba(17,24,39,.86);letter-spacing:.18em;white-space:normal;overflow-wrap:anywhere}
+
     /* landscape feel */
     @media (min-width:780px){
       .paper{padding:22px 22px 18px}
@@ -230,7 +235,7 @@
           <h1>GhostShell registry record — redacted</h1>
           <div class="catalog">
             <span>CATALOG:</span> <b>GS/REG</b> <span>•</span>
-            <span>CARD:</span> <span class="slot cardSlot"><b>26-</b><span class="redact w4" aria-label="sequence redacted"></span><span class="cardPad" aria-hidden="true"></span></span> <span>•</span>
+            <span>CARD:</span> <span class="slot cardSlot"><b>GS-BC-26-</b><span class="redact w4" aria-label="sequence redacted"></span><span class="cardPad" aria-hidden="true"></span></span> <span>•</span>
             <span>CLASS:</span> <span class="slot classSlot"><b>OAL-2</b></span>
           </div>
         </div>
@@ -244,9 +249,6 @@
         <div class="grid type" aria-label="Redacted fields">
           <div class="k">certificate_id</div>
           <div class="v">GS-BC-26-<span class="redact w4" aria-label="sequence redacted"></span></div>
-
-          <div class="k">card_number</div>
-          <div class="v"><b>26-</b><span class="redact w4" aria-label="sequence redacted"></span></div>
 
           <div class="k">agent_name</div>
           <div class="v">Joule</div>
@@ -281,6 +283,11 @@
 Optional: city and/or state can be withheld by explicit opt‑in (country is always public).
 Time policy: first_boot_utc is shown as <b>YYYY‑MM‑DD</b>; time is redacted.
 Integrity policy: fingerprints + signatures still verify the underlying record.</div>
+
+        <div class="micr" aria-label="Cryptographic fingerprint (machine line)">
+          <span class="k">cryptographic_fingerprint:</span> <span class="k">sha256</span>
+          <span class="hashline">c7f6 a0b1 2e8a 9d3f 4c1d 0aa9 a6f0 c8b1 e7aa 2f2a 3b1c 9d0e 1122 3344 5566 7788</span>
+        </div>
       </div>
     </div>
   </div>
