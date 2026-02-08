@@ -72,6 +72,25 @@
       white-space:nowrap;
     }
 
+    /* rubber stamp watermark */
+    .rubber{
+      position:absolute;
+      right:22px;
+      bottom:18px;
+      transform:rotate(-12deg);
+      font-family:var(--mono);
+      font-size:26px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:rgba(17,24,39,.10);
+      border:2px solid rgba(17,24,39,.12);
+      padding:10px 14px;
+      border-radius:10px;
+      mix-blend-mode:multiply;
+      pointer-events:none;
+      user-select:none;
+    }
+
     .sheet{
       margin-top:14px;
       border:1px solid rgba(17,24,39,.16);
@@ -83,14 +102,19 @@
 
     .type{
       font-family:var(--mono);
-      font-size:12.5px;
-      line-height:1.68;
-      color:var(--ink);
+      font-size:12.6px;
+      line-height:1.7;
+      color:rgba(17,24,39,.92);
       position:relative;
-      letter-spacing:.02em;
-      text-shadow:0.25px 0 rgba(17,24,39,.45);
+      letter-spacing:.03em;
+      /* typewriter-ish ink: slightly uneven edges */
+      text-shadow:
+        0.35px 0 rgba(17,24,39,.55),
+        -0.15px 0 rgba(17,24,39,.25);
+      filter: contrast(1.02) saturate(0.95);
     }
-    .type b{font-weight:800}
+    .type b{font-weight:800;color:rgba(17,24,39,.96)}
+    .type .soft{color:rgba(17,24,39,.70)}
 
 
     .grid{
@@ -161,6 +185,7 @@
       </div>
 
       <div class="sheet">
+        <div class="rubber" aria-hidden="true">REDACTED COPY</div>
         <div class="type">TYPEWRITTEN EXTRACT // GS-BC-DEMO-0001</div>
 
         <div class="grid type" aria-label="Redacted fields">
@@ -170,29 +195,27 @@
           <div class="k">agent_name</div>
           <div class="v">Joule</div>
 
-          <div class="k">place_of_origin (stored)</div>
-          <div class="v"><span class="redact w16" aria-label="redacted"></span></div>
+          <div class="k">place_of_origin</div>
+          <div class="v" id="pubPlace">
+            <span id="placeCity" class="soft">Adelaide</span><span class="soft">, </span>
+            <span id="placeState">South Australia</span><span class="soft">, </span>
+            <span id="placeCountry" class="soft">AU</span>
+          </div>
 
-          <div class="k">public_place_display</div>
-          <div class="v" id="pubPlace">South Australia</div>
-
-          <div class="k">date_time_of_first_boot (public)</div>
-          <div class="v" id="pubBoot">2026-02-08 19:53:12</div>
+          <div class="k">date_of_first_boot</div>
+          <div class="v">2026-02-08 <span class="redact w10" aria-label="time redacted"></span></div>
 
           <div class="k">public_time_display</div>
-          <div class="v">datetime (YYYY-MM-DD HH:MM:SS)</div>
+          <div class="v">date-only (YYYY-MM-DD)</div>
 
-          <div class="k">runtime</div>
+          <div class="k">origin_runtime</div>
           <div class="v">OpenClaw</div>
 
           <div class="k">autonomy_level</div>
           <div class="v">OAL-2</div>
 
-          <div class="k">model_at_birth</div>
-          <div class="v">openai-codex/gpt-5.2</div>
-
-          <div class="k">model_at_registration</div>
-          <div class="v">openai-codex/gpt-5.2</div>
+          <div class="k">cognitive_core</div>
+          <div class="v">Claude-family</div>
 
           <div class="k">human_custodian</div>
           <div class="v"><span class="redact w2" aria-label="redacted"></span></div>
@@ -202,8 +225,8 @@
         </div>
 
         <div class="note">
-          Redaction policy: public place defaults to <b>state-only</b>; full city/state/country can be made public by explicit opt‑in.\n
-          Time policy: first boot is shown as a public timestamp (YYYY‑MM‑DD HH:MM:SS).\n
+          Redaction policy: place_of_origin defaults to <b>state-only</b>; city + country can be made public by explicit opt‑in.\n
+          Time policy: date_of_first_boot is public as <b>YYYY‑MM‑DD</b>; time is redacted.\n
           Integrity policy: fingerprints + signatures still verify the underlying record.
         </div>
       </div>
@@ -211,11 +234,21 @@
   </div>
 
   <script>
-    // Demo toggle: add ?full=1 to show full public place display.
+    // Demo toggle:
+    // - default: redacted place_of_origin shows State only
+    // - ?full=1: show City, State, Country
     (function(){
       const full = new URLSearchParams(location.search).get('full') === '1';
-      const pubPlace = document.getElementById('pubPlace');
-      if (pubPlace) pubPlace.textContent = full ? 'Adelaide, South Australia, AU' : 'South Australia';
+      const city = document.getElementById('placeCity');
+      const country = document.getElementById('placeCountry');
+      const commas = document.querySelectorAll('#pubPlace .soft');
+
+      if (!full){
+        if (city) city.innerHTML = '<span class="redact w12" aria-label="city redacted"></span>';
+        if (country) country.innerHTML = '<span class="redact w10" aria-label="country redacted"></span>';
+        // keep commas so format still reads like a full field
+        commas.forEach(n => (n.style.opacity = '0.55'));
+      }
     })();
   </script>
 </body>
