@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GhostShell Demo — Redacted Record (Paper)</title>
   <style>
-    /* Paper/typewriter demo: landscape card with redactions */
+    /* Paper/typewriter demo: old library index card + hand redactions */
     :root{
       --desk:#0b0c10;
-      --paper:#fbfaf6;
+      --paper:#fbf7ea; /* slightly aged */
+      --paper2:#f6f0dd;
       --ink:#111827;
       --muted:#4b5563;
       --line:rgba(17,24,39,.18);
@@ -30,7 +31,7 @@
 
     .paper{
       color:var(--ink);
-      background:var(--paper);
+      background:linear-gradient(180deg,var(--paper),var(--paper2));
       border:1px solid rgba(255,255,255,.08);
       box-shadow:var(--shadow);
       border-radius:14px;
@@ -38,6 +39,12 @@
       position:relative;
       overflow:hidden;
     }
+    /* catalog notch */
+    .paper::after{content:"";position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:92px;height:24px;border:1px solid rgba(17,24,39,.22);border-bottom:none;border-radius:0 0 14px 14px;background:linear-gradient(180deg,var(--paper2),var(--paper));opacity:.75}
+    /* ruled lines like an index card */
+    .rules{position:absolute;inset:0;pointer-events:none;opacity:.55;background:repeating-linear-gradient(180deg, rgba(17,24,39,.05) 0 1px, transparent 1px 24px)}
+    .margin{position:absolute;left:28px;top:0;bottom:0;width:1px;background:rgba(255,106,42,.28);pointer-events:none}
+
     /* subtle paper grain */
     .paper::before{
       content:"";
@@ -67,9 +74,9 @@
 
     .sheet{
       margin-top:14px;
-      border:1px solid var(--line);
+      border:1px solid rgba(17,24,39,.16);
       border-radius:12px;
-      background:rgba(255,255,255,.65);
+      background:rgba(255,255,255,.42);
       padding:14px;
       position:relative;
     }
@@ -77,10 +84,14 @@
     .type{
       font-family:var(--mono);
       font-size:12.5px;
-      line-height:1.65;
+      line-height:1.68;
       color:var(--ink);
       position:relative;
+      letter-spacing:.02em;
+      text-shadow:0.25px 0 rgba(17,24,39,.45);
     }
+    .type b{font-weight:800}
+
 
     .grid{
       margin-top:10px;
@@ -103,10 +114,21 @@
       width:18ch;
       vertical-align:middle;
       background:#0b0c10;
-      border-radius:4px;
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);
+      border-radius:3px;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.10),
+        0 0.5px 0 rgba(0,0,0,.35);
+      transform:rotate(-.4deg);
+      position:relative;
+      overflow:hidden;
     }
-    .redact.light{background:linear-gradient(90deg,#0b0c10,#0b0c10);}
+    /* marker bleed */
+    .redact::before{content:"";position:absolute;inset:-2px;background:radial-gradient(18px 10px at 20% 30%, rgba(255,255,255,.10), transparent 60%),radial-gradient(16px 10px at 70% 60%, rgba(255,255,255,.08), transparent 62%);opacity:.12;mix-blend-mode:overlay}
+    .redact.w2{width:22ch}
+    .redact.w10{width:10ch}
+    .redact.w12{width:12ch}
+    .redact.w16{width:16ch}
+
 
     .note{
       margin-top:12px;
@@ -128,6 +150,8 @@
 <body>
   <div class="wrap">
     <div class="paper" role="document" aria-label="Redacted record demo on paper">
+      <div class="rules" aria-hidden="true"></div>
+      <div class="margin" aria-hidden="true"></div>
       <div class="header">
         <div>
           <h1>GhostShell registry record — redacted</h1>
@@ -147,16 +171,16 @@
           <div class="v">Joule</div>
 
           <div class="k">place_of_origin (stored)</div>
-          <div class="v"><span class="redact" aria-label="redacted"></span></div>
+          <div class="v"><span class="redact w16" aria-label="redacted"></span></div>
 
           <div class="k">public_place_display</div>
-          <div class="v">South Australia</div>
+          <div class="v" id="pubPlace">South Australia</div>
 
-          <div class="k">date_of_first_boot (stored)</div>
-          <div class="v">2026-02-08 <span class="redact" style="width:10ch" aria-label="time redacted"></span></div>
+          <div class="k">date_time_of_first_boot (public)</div>
+          <div class="v" id="pubBoot">2026-02-08 19:53:12</div>
 
           <div class="k">public_time_display</div>
-          <div class="v">date-only (YYYY-MM-DD)</div>
+          <div class="v">datetime (YYYY-MM-DD HH:MM:SS)</div>
 
           <div class="k">runtime</div>
           <div class="v">OpenClaw</div>
@@ -171,18 +195,28 @@
           <div class="v">openai-codex/gpt-5.2</div>
 
           <div class="k">human_custodian</div>
-          <div class="v"><span class="redact" style="width:22ch" aria-label="redacted"></span></div>
+          <div class="v"><span class="redact w2" aria-label="redacted"></span></div>
 
           <div class="k">constitution_fingerprint</div>
           <div class="v">sha256:c7f6a0b12e8a9d3f…</div>
         </div>
 
         <div class="note">
-          Redaction policy: reveal only what is safe to publish.\n
+          Redaction policy: public place defaults to <b>state-only</b>; full city/state/country can be made public by explicit opt‑in.\n
+          Time policy: first boot is shown as a public timestamp (YYYY‑MM‑DD HH:MM:SS).\n
           Integrity policy: fingerprints + signatures still verify the underlying record.
         </div>
       </div>
     </div>
   </div>
+
+  <script>
+    // Demo toggle: add ?full=1 to show full public place display.
+    (function(){
+      const full = new URLSearchParams(location.search).get('full') === '1';
+      const pubPlace = document.getElementById('pubPlace');
+      if (pubPlace) pubPlace.textContent = full ? 'Adelaide, South Australia, AU' : 'South Australia';
+    })();
+  </script>
 </body>
 </html>
