@@ -95,14 +95,14 @@
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);position:relative;letter-spacing:.03em;text-shadow:0.35px 0 rgba(17,24,39,.55),-0.15px 0 rgba(17,24,39,.25);filter:contrast(1.02) saturate(0.95)}
     .type b{font-weight:800;color:rgba(17,24,39,.96)}
 
-    .grid{margin-top:10px;display:grid;grid-template-columns:220px 1fr;gap:8px 16px;align-items:baseline}
+    .grid{margin-top:10px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px 16px;align-items:baseline}
     .grid > div:nth-child(4n+2){transform:translateX(.5px)}
     .grid > div:nth-child(6n+1){transform:translateX(-.4px)}
     .grid > div:nth-child(7n+0){transform:translateY(.3px)}
     @media (max-width:720px){.grid{grid-template-columns:1fr;gap:6px 0}.k{margin-top:8px}}
 
     .k{color:rgba(17,24,39,.66)}
-    .v{color:var(--ink);font-weight:700;min-width:0}
+    .v{color:var(--ink);font-weight:700;min-width:0;white-space:nowrap}
     .v.clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
     .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
