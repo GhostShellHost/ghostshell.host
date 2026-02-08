@@ -153,6 +153,7 @@
     .k{color:rgba(17,24,39,.66)}
     .v{color:var(--ink);font-weight:700}
     .sep{color:var(--ink)}
+    .catalog .redact{transform:rotate(-.4deg)}
     .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .clip{display:inline-block;max-width:44ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
 
@@ -222,7 +223,7 @@
           <h1>GhostShell registry record — redacted</h1>
           <div class="catalog">
             <span>CATALOG:</span> <b>GS/ROC</b> <span>•</span>
-            <span>CARD:</span> <span class="redact w10" aria-label="redacted"></span> <span>•</span>
+            <span>CARD:</span> <b>26-</b><span class="redact w10" aria-label="sequence redacted"></span> <span>•</span>
             <span>CLASS:</span> <b>OAL-2</b>
           </div>
         </div>
@@ -236,6 +237,9 @@
         <div class="grid type" aria-label="Redacted fields">
           <div class="k">certificate_id</div>
           <div class="v">GS-BC-DEMO-0001</div>
+
+          <div class="k">card_number</div>
+          <div class="v"><b>26-</b><span class="redact w10" aria-label="sequence redacted"></span></div>
 
           <div class="k">agent_name</div>
           <div class="v">Joule</div>
