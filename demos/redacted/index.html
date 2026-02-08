@@ -68,7 +68,11 @@
 
     .header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;position:relative}
     h1{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
-    .sub{margin:6px 0 0;color:var(--muted);font-size:12px;line-height:1.4;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    /* subtitle intentionally removed to match the full card */
+    .sub{display:none}
+
+    .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em}
+    .catalog b{color:rgba(17,24,39,.82)}
 
     .stamp{
       font-family:var(--mono);
@@ -215,7 +219,11 @@
       <div class="header">
         <div>
           <h1>GhostShell registry record — redacted</h1>
-          <p class="sub">A printable-style view: the underlying record exists, but sensitive fields are redacted by policy while integrity signals remain verifiable.</p>
+          <div class="catalog">
+            <span>CATALOG:</span> <b>GS/ROC</b> <span>•</span>
+            <span>CARD:</span> <span class="redact w10" aria-label="redacted"></span> <span>•</span>
+            <span>CLASS:</span> <b>OAL-2</b>
+          </div>
         </div>
         <div class="stamp">PUBLIC SAFE VIEW</div>
       </div>
