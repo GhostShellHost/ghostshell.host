@@ -38,9 +38,20 @@
       padding:18px 18px 16px;
       position:relative;
       overflow:hidden;
+      transform:rotate(-.12deg);
     }
     /* catalog notch */
     .paper::after{content:"";position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:92px;height:24px;border:1px solid rgba(17,24,39,.22);border-bottom:none;border-radius:0 0 14px 14px;background:linear-gradient(180deg,var(--paper2),var(--paper));opacity:.75}
+    /* worn edges */
+    .wear{position:absolute;inset:-2px;pointer-events:none;opacity:.16;mix-blend-mode:multiply;background:
+      radial-gradient(28px 18px at 6% 10%, rgba(0,0,0,.35), transparent 70%),
+      radial-gradient(34px 22px at 96% 14%, rgba(0,0,0,.28), transparent 72%),
+      radial-gradient(34px 22px at 92% 92%, rgba(0,0,0,.25), transparent 74%),
+      radial-gradient(28px 18px at 8% 92%, rgba(0,0,0,.28), transparent 74%);
+    }
+    /* punch holes */
+    .holes{position:absolute;left:10px;top:74px;bottom:26px;width:18px;pointer-events:none}
+    .hole{width:14px;height:14px;border-radius:99px;border:1px solid rgba(17,24,39,.20);background:rgba(0,0,0,.10);box-shadow:inset 0 0 0 3px rgba(255,255,255,.28);margin:0 0 18px 0;opacity:.55}
     /* ruled lines like an index card */
     .rules{position:absolute;inset:0;pointer-events:none;opacity:.55;background:repeating-linear-gradient(180deg, rgba(17,24,39,.05) 0 1px, transparent 1px 24px)}
     .margin{position:absolute;left:28px;top:0;bottom:0;width:1px;background:rgba(255,106,42,.28);pointer-events:none}
@@ -125,6 +136,11 @@
       gap:8px 16px;
       align-items:baseline;
     }
+    /* slight typewriter misalignment */
+    .grid > div:nth-child(4n+2){transform:translateX(.5px)}
+    .grid > div:nth-child(6n+1){transform:translateX(-.4px)}
+    .grid > div:nth-child(7n+0){transform:translateY(.3px)}
+
     @media (max-width:720px){
       .grid{grid-template-columns:1fr;gap:6px 0}
       .k{margin-top:8px}
@@ -188,6 +204,12 @@
     <div class="paper" role="document" aria-label="Redacted record demo on paper">
       <div class="rules" aria-hidden="true"></div>
       <div class="margin" aria-hidden="true"></div>
+      <div class="wear" aria-hidden="true"></div>
+      <div class="holes" aria-hidden="true">
+        <div class="hole"></div>
+        <div class="hole"></div>
+        <div class="hole"></div>
+      </div>
       <div class="header">
         <div>
           <h1>GhostShell registry record — redacted</h1>
@@ -210,15 +232,12 @@
           <div class="k">place_of_origin</div>
           <div class="v" id="pubPlace">
             <span id="placeCity" class="soft">Adelaide</span><span class="soft">, </span>
-            <span id="placeState">South Australia</span><span class="soft">, </span>
+            <span id="placeState" class="soft">South Australia</span><span class="soft">, </span>
             <span id="placeCountry" class="soft">AU</span>
           </div>
 
-          <div class="k">date_of_first_boot</div>
+          <div class="k">first_boot_utc</div>
           <div class="v">2026-02-08 <span class="redact w10" aria-label="time redacted"></span></div>
-
-          <div class="k">public_time_display</div>
-          <div class="v">date-only (YYYY-MM-DD)</div>
 
           <div class="k">origin_runtime</div>
           <div class="v">OpenClaw</div>
@@ -227,7 +246,7 @@
           <div class="v">OAL-2</div>
 
           <div class="k">cognitive_core</div>
-          <div class="v">Claude-family</div>
+          <div class="v">Claude-family • anthropic/claude-3.7-sonnet</div>
 
           <div class="k">human_custodian</div>
           <div class="v"><span class="redact w2" aria-label="redacted"></span></div>
@@ -236,29 +255,36 @@
           <div class="v">sha256:c7f6a0b12e8a9d3f…</div>
         </div>
 
-        <div class="note">Redaction policy: place_of_origin defaults to <b>state-only</b>; city + country can be made public by explicit opt‑in.
-Time policy: date_of_first_boot is public as <b>YYYY‑MM‑DD</b>; time is redacted.
+        <div class="note">Redaction policy: place_of_origin defaults to <b>state+country</b>; city is redacted by default.
+Optional: city and/or state can be withheld by explicit opt‑in (country is always public).
+Time policy: first_boot_utc is shown as <b>YYYY‑MM‑DD</b>; time is redacted.
 Integrity policy: fingerprints + signatures still verify the underlying record.</div>
       </div>
     </div>
   </div>
 
   <script>
-    // Demo toggle:
-    // - default: redacted place_of_origin shows State only
-    // - ?full=1: show City, State, Country
+    // Demo toggles:
+    // - default: city is redacted; state+country shown
+    // - ?showCity=1 to show city
+    // - ?hideState=1 to redact state (country is never redacted)
     (function(){
-      const full = new URLSearchParams(location.search).get('full') === '1';
+      const qs = new URLSearchParams(location.search);
+      const showCity = qs.get('showCity') === '1';
+      const hideState = qs.get('hideState') === '1';
+
       const city = document.getElementById('placeCity');
-      const country = document.getElementById('placeCountry');
+      const state = document.getElementById('placeState');
       const commas = document.querySelectorAll('#pubPlace .soft');
 
-      if (!full){
-        if (city) city.innerHTML = '<span class="redact w12" aria-label="city redacted"></span>';
-        if (country) country.innerHTML = '<span class="redact w10" aria-label="country redacted"></span>';
-        // keep commas so format still reads like a full field
-        commas.forEach(n => (n.style.opacity = '0.55'));
+      if (!showCity && city){
+        city.innerHTML = '<span class="redact w12" aria-label="city redacted"></span>';
       }
+      if (hideState && state){
+        state.innerHTML = '<span class="redact w16" aria-label="state redacted"></span>';
+      }
+
+      commas.forEach(n => (n.style.opacity = '0.55'));
     })();
   </script>
 </body>
