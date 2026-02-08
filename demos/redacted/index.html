@@ -152,8 +152,9 @@
 
     .k{color:rgba(17,24,39,.66)}
     .v{color:var(--ink);font-weight:700}
+    .sep{color:var(--ink)}
     .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .clip{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .clip{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
 
     .redact{
       display:inline-block;
@@ -241,9 +242,9 @@
 
           <div class="k">place_of_origin</div>
           <div class="v" id="pubPlace">
-            <span id="placeCity" class="soft">Adelaide</span><span class="soft">, </span>
-            <span id="placeState" class="soft">South Australia</span><span class="soft">, </span>
-            <span id="placeCountry" class="soft">AU</span>
+            <span id="placeCity">Adelaide</span><span class="sep">, </span>
+            <span id="placeState">South Australia</span><span class="sep">, </span>
+            <span id="placeCountry">Australia</span>
           </div>
 
           <div class="k">first_boot_utc</div>
@@ -285,7 +286,7 @@ Integrity policy: fingerprints + signatures still verify the underlying record.<
 
       const city = document.getElementById('placeCity');
       const state = document.getElementById('placeState');
-      const commas = document.querySelectorAll('#pubPlace .soft');
+      const commas = document.querySelectorAll('#pubPlace .sep');
 
       if (!showCity && city){
         city.innerHTML = '<span class="redact w12" aria-label="city redacted"></span>';
@@ -294,7 +295,7 @@ Integrity policy: fingerprints + signatures still verify the underlying record.<
         state.innerHTML = '<span class="redact w16" aria-label="state redacted"></span>';
       }
 
-      commas.forEach(n => (n.style.opacity = '0.55'));
+      // keep separators the same ink tone as the record (no dimming)
     })();
   </script>
 </body>
