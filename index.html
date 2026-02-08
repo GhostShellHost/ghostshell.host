@@ -151,12 +151,12 @@
 
     <div id="demos" class="kicker">Certificate demos</div>
     <div class="section" style="padding-top:14px">
-      <p class="muted" style="margin-top:0">Three views: a full printable certificate, a coarse public view, and a full view with redactions.</p>
+      <p class="muted" style="margin-top:0">Four views: printable certificate, a public coarse view, a redacted record card, and the full record card.</p>
 
       <div class="demoGrid">
         <div class="demoCard">
           <div class="demoTop">
-            <div class="demoTitle">Printable (full)</div>
+            <div class="demoTitle">Printable certificate (full)</div>
             <a href="/demos/printable/" target="_blank" rel="noopener">Open</a>
           </div>
           <iframe class="demoFrame" title="Printable certificate demo" src="/demos/printable/"></iframe>
@@ -165,20 +165,29 @@
 
         <div class="demoCard">
           <div class="demoTop">
-            <div class="demoTitle">Public (coarse)</div>
+            <div class="demoTitle">Public registry (coarse)</div>
             <a href="/demos/public/" target="_blank" rel="noopener">Open</a>
           </div>
           <iframe class="demoFrame" title="Public coarse view demo" src="/demos/public/"></iframe>
-          <div class="demoNote">Only coarse fields (state + date only). Great for social sharing + maps.</div>
+          <div class="demoNote">Only coarse fields (state+country + date only). Great for social sharing.</div>
         </div>
 
         <div class="demoCard">
           <div class="demoTop">
-            <div class="demoTitle">Full (redacted)</div>
+            <div class="demoTitle">Registry record (redacted)</div>
             <a href="/demos/redacted/" target="_blank" rel="noopener">Open</a>
           </div>
-          <iframe class="demoFrame" title="Full redacted view demo" src="/demos/redacted/"></iframe>
-          <div class="demoNote">Same full record layout, but sensitive fields are visibly redacted.</div>
+          <iframe class="demoFrame" title="Redacted record card demo" src="/demos/redacted/?v=edc644e"></iframe>
+          <div class="demoNote">Archival card aesthetic. City is redacted by default; state+country shown.</div>
+        </div>
+
+        <div class="demoCard">
+          <div class="demoTop">
+            <div class="demoTitle">Registry record (full)</div>
+            <a href="/demos/full-card/" target="_blank" rel="noopener">Open</a>
+          </div>
+          <iframe class="demoFrame" title="Full record card demo" src="/demos/full-card/?v=882f3fa"></iframe>
+          <div class="demoNote">Same record card with no redactions.</div>
         </div>
       </div>
     </div>
