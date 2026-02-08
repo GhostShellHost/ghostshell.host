@@ -63,7 +63,8 @@
     .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
     .catalog b{color:rgba(17,24,39,.82)}
     .slot{display:inline-block}
-    .cardSlot{min-width:12ch;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
+    .cardSlot{display:inline-flex;align-items:baseline;min-width:18ch;max-width:24ch;white-space:nowrap;vertical-align:baseline}
+    .cardPad{flex:1 1 auto}
     .classSlot{min-width:7ch}
 
 
@@ -126,7 +127,7 @@
       <div class="header">
         <div>
           <h1>GhostShell registry record — full</h1>
-          <div class="catalog"><span>CATALOG:</span> <b>GS/ROC</b> <span>•</span> <span>CARD:</span> <span class="slot cardSlot"><b>26-1H</b></span> <span>•</span> <span>CLASS:</span> <span class="slot classSlot"><b>OAL-2</b></span></div>
+          <div class="catalog"><span>CATALOG:</span> <b>GS/ROC</b> <span>•</span> <span>CARD:</span> <span class="slot cardSlot"><b>26-1H</b><span class="cardPad" aria-hidden="true"></span></span> <span>•</span> <span>CLASS:</span> <span class="slot classSlot"><b>OAL-2</b></span></div>
         </div>
         <div class="stamp">FULL RECORD</div>
       </div>

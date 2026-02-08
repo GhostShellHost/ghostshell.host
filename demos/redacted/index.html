@@ -74,7 +74,8 @@
     .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
     .catalog b{color:rgba(17,24,39,.82)}
     .slot{display:inline-block}
-    .cardSlot{min-width:12ch;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
+    .cardSlot{display:inline-flex;align-items:baseline;min-width:18ch;max-width:24ch;white-space:nowrap;vertical-align:baseline}
+    .cardPad{flex:1 1 auto}
     .classSlot{min-width:7ch}
 
 
@@ -188,6 +189,8 @@
 
     /* widths */
     .redact.w2{width:22ch}
+    .redact.w4{width:4ch}
+    .redact.w6{width:6ch}
     .redact.w10{width:10ch}
     .redact.w12{width:12ch}
     .redact.w16{width:16ch}
@@ -227,7 +230,7 @@
           <h1>GhostShell registry record — redacted</h1>
           <div class="catalog">
             <span>CATALOG:</span> <b>GS/ROC</b> <span>•</span>
-            <span>CARD:</span> <span class="slot cardSlot"><b>26-</b><span class="redact w10" aria-label="sequence redacted"></span></span> <span>•</span>
+            <span>CARD:</span> <span class="slot cardSlot"><b>26-</b><span class="redact w4" aria-label="sequence redacted"></span><span class="cardPad" aria-hidden="true"></span></span> <span>•</span>
             <span>CLASS:</span> <span class="slot classSlot"><b>OAL-2</b></span>
           </div>
         </div>
@@ -243,7 +246,7 @@
           <div class="v">GS-BC-DEMO-0001</div>
 
           <div class="k">card_number</div>
-          <div class="v"><b>26-</b><span class="redact w10" aria-label="sequence redacted"></span></div>
+          <div class="v"><b>26-</b><span class="redact w4" aria-label="sequence redacted"></span></div>
 
           <div class="k">agent_name</div>
           <div class="v">Joule</div>
