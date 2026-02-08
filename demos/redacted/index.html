@@ -71,8 +71,12 @@
     /* subtitle intentionally removed to match the full card */
     .sub{display:none}
 
-    .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em}
+    .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
     .catalog b{color:rgba(17,24,39,.82)}
+    .slot{display:inline-block}
+    .cardSlot{min-width:12ch;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
+    .classSlot{min-width:7ch}
+
 
     .stamp{
       font-family:var(--mono);
@@ -151,7 +155,7 @@
     }
 
     .k{color:rgba(17,24,39,.66)}
-    .v{color:var(--ink);font-weight:700}
+    .v{color:var(--ink);font-weight:700;min-width:0}
     .sep{color:var(--ink)}
     .catalog .redact{transform:rotate(-.4deg)}
     .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -223,8 +227,8 @@
           <h1>GhostShell registry record — redacted</h1>
           <div class="catalog">
             <span>CATALOG:</span> <b>GS/ROC</b> <span>•</span>
-            <span>CARD:</span> <b>26-</b><span class="redact w10" aria-label="sequence redacted"></span> <span>•</span>
-            <span>CLASS:</span> <b>OAL-2</b>
+            <span>CARD:</span> <span class="slot cardSlot"><b>26-</b><span class="redact w10" aria-label="sequence redacted"></span></span> <span>•</span>
+            <span>CLASS:</span> <span class="slot classSlot"><b>OAL-2</b></span>
           </div>
         </div>
         <div class="stamp">PUBLIC SAFE VIEW</div>

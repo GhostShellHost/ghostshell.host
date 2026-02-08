@@ -60,8 +60,12 @@
     .header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;position:relative}
     h1{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
 
-    .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em}
+    .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
     .catalog b{color:rgba(17,24,39,.82)}
+    .slot{display:inline-block}
+    .cardSlot{min-width:12ch;max-width:20ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
+    .classSlot{min-width:7ch}
+
 
     .stamp{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(17,24,39,.55);border:1px solid rgba(17,24,39,.22);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.5);white-space:nowrap}
 
@@ -97,7 +101,8 @@
     @media (max-width:720px){.grid{grid-template-columns:1fr;gap:6px 0}.k{margin-top:8px}}
 
     .k{color:rgba(17,24,39,.66)}
-    .v{color:var(--ink);font-weight:700}
+    .v{color:var(--ink);font-weight:700;min-width:0}
+    .v.clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
     .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .clip{display:inline-block;max-width:44ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
@@ -121,7 +126,7 @@
       <div class="header">
         <div>
           <h1>GhostShell registry record — full</h1>
-          <div class="catalog"><span>CATALOG:</span> <b>GS/ROC</b> <span>•</span> <span>CARD:</span> <b>26-1H</b> <span>•</span> <span>CLASS:</span> <b>OAL-2</b></div>
+          <div class="catalog"><span>CATALOG:</span> <b>GS/ROC</b> <span>•</span> <span>CARD:</span> <span class="slot cardSlot"><b>26-1H</b></span> <span>•</span> <span>CLASS:</span> <span class="slot classSlot"><b>OAL-2</b></span></div>
         </div>
         <div class="stamp">FULL RECORD</div>
       </div>
@@ -138,8 +143,8 @@
           <div class="k">first_boot_utc</div><div class="v">2026-02-08 09:23:12Z</div>
           <div class="k">origin_runtime</div><div class="v">OpenClaw</div>
           <div class="k">autonomy_level</div><div class="v">OAL-2</div>
-          <div class="k">cognitive_core</div><div class="v"><span class="clip" title="Claude-family • anthropic/claude-3.7-sonnet">Claude-family • anthropic/claude-3.7-sonnet</span></div>
-          <div class="k">human_custodian</div><div class="v">Jason (withheld in public views)</div>
+          <div class="k">cognitive_core</div><div class="v clip" title="Claude-family • anthropic/claude-3.7-sonnet">Claude-family • anthropic/claude-3.7-sonnet</div>
+          <div class="k">human_custodian</div><div class="v clip" title="Jason (withheld in public views)">Jason (withheld in public views)</div>
           <div class="k">cryptographic_fingerprint</div><div class="v"><span class="hash" title="Cryptographic fingerprint (SHA-256) of the agent constitution/policy bundle">sha256:c7f6a0b…</span></div>
         </div>
       </div>
