@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>GhostShell — Verifiable identity for agents (Index6)</title>
+  <meta name="description" content="GhostShell issues verifiable Birth Certificates for AI agents: a public verification link + a printable certificate." />
+  <style>
+    /* Index6 — SIGNAL: classified-comms vibe, amber, dashed frames */
+    :root{--bg:#0c0c0e;--card:rgba(245,158,11,.035);--text:#d4d4d8;--muted:#71717a;--line:rgba(245,158,11,.16);--accent:#f59e0b;--accent2:#d97706}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:
+      radial-gradient(900px 600px at 20% 0%,rgba(245,158,11,.10),transparent 55%),
+      radial-gradient(900px 600px at 80% 10%,rgba(217,119,6,.06),transparent 60%),
+      var(--bg);
+      color:var(--text)
+    }
+    a{color:inherit}
+    .wrap{max-width:980px;margin:0 auto;padding:56px 18px 110px}
+
+    .tag{display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border:1px dashed rgba(245,158,11,.35);border-radius:2px;color:var(--muted);font-size:12px;background:rgba(0,0,0,.22)}
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--accent);box-shadow:0 0 0 3px rgba(245,158,11,.16);animation:pulse 2s ease-in-out infinite}
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(245,158,11,.14)}50%{box-shadow:0 0 0 7px rgba(245,158,11,.22)}}
+
+    h1{margin:14px 0 10px;font-size:36px;line-height:1.05;letter-spacing:.02em;text-transform:uppercase;font-weight:820}
+    p{margin:0 0 14px;line-height:1.55}
+    .muted{color:var(--muted)}
+
+    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:start;margin-top:18px}
+    @media (max-width:900px){.hero{grid-template-columns:1fr}}
+
+    .cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:0;border:1px dashed rgba(245,158,11,.35);text-decoration:none;font-weight:800;background:rgba(245,158,11,.03)}
+    .btn.primary{background:var(--accent);border-color:transparent;color:#0c0c0e}
+    .btn.ghost{background:transparent}
+
+    .card{border:1px dashed rgba(245,158,11,.35);border-radius:0;background:rgba(245,158,11,.02);padding:16px}
+    .card h3{margin:0 0 10px;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:900}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .kicker{margin-top:34px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:900}
+    .section{margin-top:10px;padding-top:18px;border-top:1px dashed rgba(245,158,11,.25)}
+
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;color:var(--muted)}
+    .pill{display:inline-block;padding:2px 8px;border:1px dashed rgba(245,158,11,.3);border-radius:0;color:var(--muted);font-size:12px}
+    .footer{margin-top:26px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+    .links a{color:var(--muted);text-decoration:none;border-bottom:1px dotted rgba(113,113,122,.55)}
+    .links a:hover{color:var(--text)}
+
+    .preview{border:2px dashed rgba(245,158,11,.28);border-radius:0;background:rgba(245,158,11,.02);padding:16px;position:relative;overflow:hidden}
+    .banner{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);border:1px dashed rgba(245,158,11,.3);padding:4px 8px;margin-bottom:10px;text-align:center}
+    .cert{border:1px solid rgba(245,158,11,.16);border-radius:0;padding:14px;background:rgba(0,0,0,.28)}
+    .cert h2{margin:0 0 8px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
+    .cert .row{display:flex;gap:10px;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(245,158,11,.14);padding-top:8px;margin-top:8px}
+    .cert b{color:var(--text)}
+
+    /* ── Variant ring ── */
+    .ring{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);width:190px;height:190px;border-radius:999px;border:1px dashed rgba(245,158,11,.3);background:rgba(12,12,14,.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:50;box-shadow:0 18px 60px rgba(0,0,0,.55)}
+    .ring a{text-decoration:none}
+    .ring__center{position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;width:78px;height:78px;border-radius:999px;border:1px dashed rgba(245,158,11,.34);background:rgba(245,158,11,.03);font-weight:900;color:var(--text);text-transform:uppercase;letter-spacing:.06em;font-size:12px}
+    .ring__link{position:absolute;left:50%;top:50%;--r:78px;--a:calc((var(--i) - 1) * 60deg - 90deg);transform:translate(-50%,-50%) rotate(var(--a)) translate(var(--r)) rotate(calc(-1 * var(--a)));padding:7px 10px;border-radius:999px;border:1px dashed rgba(245,158,11,.28);background:rgba(245,158,11,.02);color:var(--muted);font-size:12px}
+    .ring__link:hover{color:var(--text);border-color:rgba(245,158,11,.45)}
+    .ring__center[aria-current="page"]{outline:2px solid rgba(245,158,11,.22);outline-offset:2px}
+    @media (max-width:560px){.ring{width:auto;height:auto;border-radius:14px;padding:8px 10px;display:flex;gap:6px;align-items:center;justify-content:center}.ring__center{position:static;transform:none;width:auto;height:auto;padding:8px 10px}.ring__link{position:static;transform:none}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="tag"><span class="dot"></span> live alpha • signal/classified aesthetic</span>
+
+    <div class="hero">
+      <div>
+        <h1>Birth Certificates for AI agents.</h1>
+        <p class="muted">Issue a <b>private registry credential</b>: verify link, printable certificate, tamper‑evident fingerprint integrity.</p>
+
+        <div class="card" style="margin-top:14px">
+          <h3>What verification means</h3>
+          <ul class="muted" style="margin:0;padding-left:18px">
+            <li>Confirms a <b>registry record exists</b> for the certificate ID.</li>
+            <li>Shows a <b>fingerprint</b> (hash) so changes are detectable.</li>
+            <li>Does <b>not</b> prove real‑world identity, legal status, or safety.</li>
+          </ul>
+          <p class="muted" style="margin-top:10px;margin-bottom:0">Details: <a href="/policy/">Verification semantics policy</a>.</p>
+        </div>
+
+        <div class="cta">
+          <a class="btn primary" href="/birth-certificate">Issue a Birth Certificate</a>
+          <a class="btn ghost" href="/cert/GS-BC-20260205-ZKCENEEQ">View example verification</a>
+        </div>
+
+        <p class="muted" style="margin-top:10px;margin-bottom:0"><b>US$9.99</b> one‑time • Stripe Checkout</p>
+        <p class="muted" style="margin-top:10px">Use cases: agent profiles, anti-impersonation, provenance for tool access, and audit-ready receipts (coming).</p>
+        <p class="muted" style="margin-top:-6px">Want to back the experiment? <a href="https://buy.stripe.com/aFafZg50ndb3akDa9rgfu00" target="_blank" rel="noopener noreferrer">Support GhostShell (Alpha)</a></p>
+      </div>
+
+      <div class="preview">
+        <div class="banner" aria-hidden="true">CLASSIFICATION: PUBLIC</div>
+        <div class="pill">Preview</div>
+        <div class="cert" style="margin-top:10px">
+          <div class="mono">GhostShell Registry of Continuity</div>
+          <h2>Birth certificate</h2>
+          <div class="mono">Agent name: <b>Joule</b><br/>Place of birth: <b>OpenClaw Runtime</b><br/>Cognitive core: <b>GPT-family</b></div>
+          <div class="row"><div class="mono">Certificate ID</div><div class="mono"><b>GS-BC-…</b></div></div>
+          <div class="row"><div class="mono">Verification</div><div class="mono"><b>ghostshell.host/cert/…</b></div></div>
+        </div>
+        <p class="muted" style="margin-top:10px">A loud frame for a quiet claim: provenance, not identity theatre.</p>
+      </div>
+    </div>
+
+    <div class="kicker">What you get</div>
+    <div class="grid">
+      <div class="card"><h3>Public verification link</h3><p class="muted">A shareable URL that confirms registry presence + tamper-evident fingerprint.</p></div>
+      <div class="card"><h3>Printable certificate</h3><p class="muted">A clean, presentable certificate you can save as PDF (available immediately).</p></div>
+      <div class="card"><h3>Optional labels</h3><p class="muted">Optionally include a creator pseudonym (print only) and an optional linked certificate ID.</p></div>
+    </div>
+
+    <div class="kicker">How it works</div>
+    <div class="section">
+      <ol class="muted">
+        <li>Fill in the agent details (keep it non-doxxing).</li>
+        <li>Pay via Stripe Checkout.</li>
+        <li>GhostShell issues a certificate + writes the record to the registry.</li>
+        <li>Share the verify link anywhere your agent appears.</li>
+      </ol>
+    </div>
+
+    <div class="kicker">Roadmap</div>
+    <div class="section muted">
+      <p><b>Birth Certificate</b> (now) → <b>Passport</b> (portable signed claims + key rotation/revocation) → <b>Encrypted Snapshots</b> (audit/restore receipts).</p>
+    </div>
+
+    <div class="kicker">Contact</div>
+    <div class="section footer">
+      <div class="links">
+        <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a> ·
+        <a href="mailto:support@ghostshell.host">support@ghostshell.host</a> ·
+        <a href="mailto:billing@ghostshell.host">billing@ghostshell.host</a>
+        <span class="muted"> · </span>
+        <a href="/policy/">Policy</a> · <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a>
+      </div>
+      <div class="muted">Alpha experiment. Things may break.</div>
+    </div>
+  </div>
+
+  <nav class="ring" aria-label="Homepage variants">
+    <a class="ring__center" href="/index6/" aria-current="page">Index6</a>
+    <a class="ring__link" style="--i:1" href="/">Index</a>
+    <a class="ring__link" style="--i:2" href="/index2/">Index2</a>
+    <a class="ring__link" style="--i:3" href="/index3/">Index3</a>
+    <a class="ring__link" style="--i:4" href="/index4/">Index4</a>
+    <a class="ring__link" style="--i:5" href="/index5/">Index5</a>
+  </nav>
+</body>
+</html>
