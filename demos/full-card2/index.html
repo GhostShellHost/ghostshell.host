@@ -106,7 +106,8 @@
     .v.clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
     .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .clip{display:inline-block;max-width:44ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
+    /* clip should only ellipsis when it truly runs out of available width */
+    .clip{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
 
     .note{display:none}
 
@@ -146,7 +147,7 @@
           <div class="k">autonomy_level</div><div class="v">OAL-2</div>
           <div class="k">cognitive_core</div><div class="v clip" title="Claude-family • anthropic/claude-3.7-sonnet">Claude-family • anthropic/claude-3.7-sonnet</div>
           <div class="k">human_custodian</div><div class="v clip" title="Jason (withheld in public views)">Jason (withheld in public views)</div>
-          <div class="k">cryptographic_fingerprint</div><div class="v"><span class="hash" title="Cryptographic fingerprint (SHA-256) of the agent constitution/policy bundle">sha256:c7f6a0b…</span></div>
+          <div class="k">cryptographic_fingerprint</div><div class="v"><span class="hash" title="Cryptographic fingerprint (SHA-256) of the agent constitution/policy bundle">sha256:c7f6a0b12e8a…b519</span></div>
         </div>
       </div>
     </div>
