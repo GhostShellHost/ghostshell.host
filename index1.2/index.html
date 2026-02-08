@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GhostShell — Birth Certificates + Registry Map (Index 1.2)</title>
+  <meta name="description" content="GhostShell issues verifiable Birth Certificates for AI agents: provenance records you can verify." />
+  <style>
+    :root{--bg:#0b0c10;--card:rgba(18,20,27,.78);--text:#e9edf1;--muted:#aab3bf;--line:#252a35;--accent:#7c5cff;--accent2:#2ee59d;--shadow:0 24px 90px rgba(0,0,0,.55);--sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--sans);background:
+      radial-gradient(1000px 600px at 20% 0%,rgba(124,92,255,.22),transparent 50%),
+      radial-gradient(900px 600px at 80% 20%,rgba(46,229,157,.10),transparent 60%),
+      var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit}
+
+    .topnav{position:fixed;left:0;right:0;top:0;z-index:80;border-bottom:1px solid rgba(170,179,191,.18);background:color-mix(in srgb, var(--bg) 72%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+    .topnav__inner{max-width:1180px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .topnav__label{color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+    .topnav__links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .topnav__links a{display:inline-flex;align-items:center;padding:9px 12px;border-radius:999px;border:1px solid rgba(170,179,191,.22);background:rgba(255,255,255,.03);color:var(--muted);text-decoration:none;font-size:12px;min-height:44px}
+    .topnav__links a:hover{color:var(--text);border-color:rgba(233,237,241,.35)}
+    .topnav__links a[aria-current="page"]{color:var(--text);border-color:rgba(46,229,157,.35);outline:2px solid rgba(46,229,157,.18);outline-offset:2px}
+    @media (max-width:560px){.topnav__label{display:none}}
+
+    .wrap{max-width:1180px;margin:0 auto;padding:92px 18px 80px}
+
+    h1{margin:0 0 10px;font-size:46px;line-height:1.05;letter-spacing:-0.02em}
+    .sub{margin:0 0 16px;color:var(--muted);line-height:1.55;max-width:72ch}
+
+    .card{border:1px solid rgba(170,179,191,.18);border-radius:16px;background:rgba(18,20,27,.72);box-shadow:var(--shadow);padding:16px}
+
+    .hero{display:grid;grid-template-columns:1fr;gap:18px}
+
+    .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:12px;border:1px solid var(--line);text-decoration:none;font-weight:700;background:rgba(255,255,255,.03)}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#9b7bff);border-color:transparent;color:#fff}
+
+    /* Map mock */
+    .mapGrid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:18px}
+    @media (max-width:980px){.mapGrid{grid-template-columns:1fr}}
+
+    .mapShell{border:1px solid rgba(46,229,157,.18);border-radius:18px;background:rgba(0,0,0,.22);overflow:hidden;position:relative}
+    .mapHdr{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(46,229,157,.14);font-family:var(--mono);font-size:12px;color:rgba(203,213,225,.9)}
+    .mapHdr b{color:var(--accent2)}
+    .map{height:420px;position:relative;background:
+      radial-gradient(900px 450px at 20% 20%, rgba(46,229,157,.12), transparent 55%),
+      radial-gradient(900px 450px at 80% 70%, rgba(124,92,255,.10), transparent 58%),
+      repeating-linear-gradient(0deg, rgba(46,229,157,.06) 0 1px, transparent 1px 18px),
+      repeating-linear-gradient(90deg, rgba(46,229,157,.06) 0 1px, transparent 1px 18px);
+    }
+    .dot{position:absolute;width:7px;height:7px;border-radius:99px;background:var(--accent2);box-shadow:0 0 0 3px rgba(46,229,157,.12), 0 0 18px rgba(46,229,157,.25)}
+
+    .terminal{border:1px solid rgba(46,229,157,.18);border-radius:18px;background:rgba(0,0,0,.28);overflow:hidden}
+    .termHdr{padding:12px 14px;border-bottom:1px solid rgba(46,229,157,.14);font-family:var(--mono);font-size:12px;color:rgba(203,213,225,.9)}
+    .termBody{padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.65;color:rgba(203,213,225,.9);max-height:420px;overflow:auto}
+    .row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid rgba(46,229,157,.10)}
+    .row:first-child{border-top:none}
+    .k{color:rgba(203,213,225,.75)}
+
+    .kicker{margin-top:34px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+    .issueFrame{width:100%;border:0;border-radius:16px;min-height:1200px;box-shadow:var(--shadow);background:#0b0c10}
+
+    :focus-visible{outline:3px solid rgba(46,229,157,.28);outline-offset:3px}
+  </style>
+</head>
+<body>
+  <nav class="topnav" aria-label="Homepage variants">
+    <div class="topnav__inner">
+      <div class="topnav__label">Variants (temporary)</div>
+      <div class="topnav__links">
+        <a href="/">Index</a>
+        <a href="/index1.1/">Index 1.1</a>
+        <a href="/index1.2/" aria-current="page">Index 1.2</a>
+        <a href="/index2/">Index2</a>
+        <a href="/index4/">Index4</a>
+        <a href="/index5/">Index5</a>
+        <a href="/index6/">Index6</a>
+        <a href="/index8/">Index8</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1>Birth Certificates for AI agents.</h1>
+        <p class="sub">A registry credential with a public verify link and a tamper‑evident fingerprint. Below is a mock of what the registry map + feed could look like once we have thousands of registrations.</p>
+
+        <div class="card">
+          <div style="font-family:var(--mono);font-size:12px;color:rgba(203,213,225,.85)">REGISTRY_STATS // mock</div>
+          <div style="margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+            <div class="card" style="box-shadow:none;background:rgba(18,20,27,.55)"><div style="color:var(--muted);font-size:12px">registrations</div><div style="font-family:var(--mono);font-size:18px;color:var(--text);margin-top:6px">12,418</div></div>
+            <div class="card" style="box-shadow:none;background:rgba(18,20,27,.55)"><div style="color:var(--muted);font-size:12px">countries</div><div style="font-family:var(--mono);font-size:18px;color:var(--text);margin-top:6px">61</div></div>
+            <div class="card" style="box-shadow:none;background:rgba(18,20,27,.55)"><div style="color:var(--muted);font-size:12px">verify hits / day</div><div style="font-family:var(--mono);font-size:18px;color:var(--text);margin-top:6px">38,102</div></div>
+            <div class="card" style="box-shadow:none;background:rgba(18,20,27,.55)"><div style="color:var(--muted);font-size:12px">issuance latency</div><div style="font-family:var(--mono);font-size:18px;color:var(--text);margin-top:6px">~4s</div></div>
+          </div>
+
+          <div class="cta">
+            <a class="btn primary" href="#issue">Issue a Birth Certificate</a>
+            <a class="btn" href="/cert/GS-BC-20260205-ZKCENEEQ">Example verify</a>
+          </div>
+        </div>
+
+        <div class="mapGrid">
+          <div class="mapShell">
+            <div class="mapHdr">MAP // density view <span class="k">•</span> <b>12,418</b> nodes (mock)</div>
+            <div class="map" aria-label="Mock registry map">
+              <span class="dot" style="left:18%;top:34%"></span>
+              <span class="dot" style="left:26%;top:52%"></span>
+              <span class="dot" style="left:33%;top:44%"></span>
+              <span class="dot" style="left:48%;top:38%"></span>
+              <span class="dot" style="left:56%;top:58%"></span>
+              <span class="dot" style="left:64%;top:46%"></span>
+              <span class="dot" style="left:72%;top:32%"></span>
+              <span class="dot" style="left:78%;top:60%"></span>
+              <span class="dot" style="left:42%;top:66%"></span>
+              <span class="dot" style="left:60%;top:28%"></span>
+              <span class="dot" style="left:86%;top:40%"></span>
+            </div>
+          </div>
+
+          <div class="terminal">
+            <div class="termHdr">FEED // latest registrations (mock)</div>
+            <div class="termBody">
+              <div class="row"><div class="k">GS-BC-20260208-4F9A</div><div>AU / SA</div><div>OAL-2</div></div>
+              <div class="row"><div class="k">GS-BC-20260208-91CE</div><div>US / CA</div><div>OAL-1</div></div>
+              <div class="row"><div class="k">GS-BC-20260208-2B11</div><div>DE / BE</div><div>OAL-2</div></div>
+              <div class="row"><div class="k">GS-BC-20260208-8D0A</div><div>JP / 13</div><div>OAL-3</div></div>
+              <div class="row"><div class="k">GS-BC-20260208-0FE5</div><div>GB / LND</div><div>OAL-2</div></div>
+              <div class="row"><div class="k">GS-BC-20260208-77AA</div><div>FR / IDF</div><div>OAL-1</div></div>
+              <div class="row"><div class="k">GS-BC-20260208-CC42</div><div>IN / DL</div><div>OAL-2</div></div>
+              <div class="row"><div class="k">GS-BC-20260208-19B4</div><div>BR / SP</div><div>OAL-2</div></div>
+              <div class="row"><div class="k">GS-BC-20260208-A0D3</div><div>SG / SG</div><div>OAL-1</div></div>
+              <div class="row"><div class="k">GS-BC-20260208-6E12</div><div>CA / ON</div><div>OAL-2</div></div>
+              <div class="row"><div class="k">GS-BC-20260208-BB09</div><div>NZ / AUK</div><div>OAL-2</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="issue" class="kicker">Issue a Birth Certificate</div>
+      <iframe class="issueFrame" title="Issue a Birth Certificate" src="/birth-certificate/"></iframe>
+    </div>
+  </div>
+</body>
+</html>
