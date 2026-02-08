@@ -3,81 +3,83 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GhostShell — Verifiable identity for agents</title>
-  <meta name="description" content="GhostShell issues verifiable Birth Certificates for AI agents: a public verification link + a printable certificate." />
+  <title>GhostShell — Birth Certificates for AI agents (Index 1.1)</title>
+  <meta name="description" content="GhostShell issues verifiable Birth Certificates for AI agents: a public verification link + printable certificate + tamper-evident fingerprint." />
   <style>
-    :root{--bg:#0b0c10;--card:#12141b;--text:#e9edf1;--muted:#aab3bf;--line:#252a35;--accent:#7c5cff;--accent2:#2ee59d}
+    :root{--bg:#0b0c10;--card:rgba(18,20,27,.78);--text:#e9edf1;--muted:#aab3bf;--line:#252a35;--accent:#7c5cff;--accent2:#2ee59d;--shadow:0 24px 90px rgba(0,0,0,.55);--sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
     *{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:radial-gradient(1000px 600px at 20% 0%,rgba(124,92,255,.25),transparent 50%),radial-gradient(900px 600px at 80% 20%,rgba(46,229,157,.12),transparent 60%),var(--bg);color:var(--text)}
+    body{margin:0;font-family:var(--sans);background:
+      radial-gradient(1000px 600px at 20% 0%,rgba(124,92,255,.22),transparent 50%),
+      radial-gradient(900px 600px at 80% 20%,rgba(46,229,157,.10),transparent 60%),
+      var(--bg);
+      color:var(--text);
+    }
     a{color:inherit}
-    .wrap{max-width:980px;margin:0 auto;padding:92px 18px 110px}
-    .tag{display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px;background:rgba(18,20,27,.6)}
-    .dot{width:8px;height:8px;border-radius:99px;background:var(--accent2);box-shadow:0 0 0 3px rgba(46,229,157,.15)}
-    h1{margin:14px 0 10px;font-size:48px;line-height:1.05;letter-spacing:-0.02em}
-    p{margin:0 0 14px;line-height:1.55}
-    .muted{color:var(--muted)}
-    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:22px;align-items:start;margin-top:18px}
-    @media (max-width:900px){.hero{grid-template-columns:1fr}}
 
-    .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:12px;border:1px solid var(--line);text-decoration:none;font-weight:650}
-    .btn.primary{background:linear-gradient(90deg,var(--accent),#9b7bff);border-color:transparent}
-    .btn.secondary{background:rgba(18,20,27,.6)}
-    .btn.ghost{background:transparent}
-
-    .card{border:1px solid var(--line);border-radius:16px;background:rgba(18,20,27,.75);padding:16px}
-    .card h3{margin:0 0 10px;font-size:16px}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}}
-    .kicker{margin-top:34px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-    .section{margin-top:10px;padding-top:18px;border-top:1px solid var(--line)}
-
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;color:#cbd5e1}
-    .pill{display:inline-block;padding:2px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
-    .footer{margin-top:26px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
-    .links a{color:var(--muted);text-decoration:none;border-bottom:1px dashed rgba(170,179,191,.35)}
-    .links a:hover{color:var(--text)}
-
-    .preview{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));padding:16px}
-    .cert{border:1px solid rgba(233,237,241,.25);border-radius:12px;padding:14px;background:rgba(0,0,0,.18)}
-    .cert h2{margin:0 0 8px;font-size:18px;letter-spacing:.06em}
-    .cert .row{display:flex;gap:10px;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(233,237,241,.12);padding-top:8px;margin-top:8px}
-    .cert b{color:var(--text)}
-
-    /* Demos */
-    .demoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
-    @media (max-width:900px){.demoGrid{grid-template-columns:1fr}}
-    .demoCard{border:1px solid var(--line);border-radius:16px;background:rgba(18,20,27,.55);overflow:hidden}
-    .demoTop{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(233,237,241,.12)}
-    .demoTitle{font-size:12px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
-    .demoTop a{font-size:12px;color:var(--muted);text-decoration:none;border-bottom:1px dashed rgba(170,179,191,.35)}
-    .demoTop a:hover{color:var(--text)}
-    .demoFrame{width:100%;height:290px;border:0;display:block;background:#0d0f14}
-    .demoNote{padding:10px 12px;color:var(--muted);font-size:13px;line-height:1.45}
-
-    /* Embedded issue form */
-    #issue{scroll-margin-top:88px}
-    .issueShell{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:rgba(18,20,27,.55)}
-    .issueShell .head{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid rgba(233,237,241,.12)}
-    .issueShell .head .left{display:flex;gap:10px;align-items:center}
-    .issueShell .head .title{font-size:12px;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
-    .issueShell .head .right a{font-size:12px;color:var(--muted);text-decoration:none;border-bottom:1px dashed rgba(170,179,191,.35)}
-    .issueShell .head .right a:hover{color:var(--text)}
-    .issueFrame{width:100%;height:1080px;border:0;display:block;background:#09090b}
-
-    /* ── Variant sliver (top) ── */
-    .topnav{position:fixed;left:0;right:0;top:0;z-index:80;border-bottom:1px solid var(--line);background:color-mix(in srgb, var(--bg) 72%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-    .topnav__inner{max-width:980px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+    /* optional variants sliver */
+    .topnav{position:fixed;left:0;right:0;top:0;z-index:80;border-bottom:1px solid rgba(170,179,191,.18);background:color-mix(in srgb, var(--bg) 72%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+    .topnav__inner{max-width:1080px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
     .topnav__label{color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
     .topnav__links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
-    .topnav__links a{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;border:1px solid rgba(170,179,191,.22);background:rgba(255,255,255,.03);color:var(--muted);text-decoration:none;font-size:12px}
+    .topnav__links a{display:inline-flex;align-items:center;padding:9px 12px;border-radius:999px;border:1px solid rgba(170,179,191,.22);background:rgba(255,255,255,.03);color:var(--muted);text-decoration:none;font-size:12px;min-height:44px}
     .topnav__links a:hover{color:var(--text);border-color:rgba(233,237,241,.35)}
     .topnav__links a[aria-current="page"]{color:var(--text);border-color:rgba(46,229,157,.35);outline:2px solid rgba(46,229,157,.18);outline-offset:2px}
-    @media (max-width:560px){.topnav__inner{padding:10px 10px}.topnav__label{display:none}}
+    @media (max-width:560px){.topnav__label{display:none}}
 
-    /* Accessibility */
-    :focus{outline:none}
-    :focus-visible{outline:3px solid rgba(46,229,157,.25);outline-offset:3px;border-radius:12px}
+    .wrap{max-width:1080px;margin:0 auto;padding:92px 18px 80px}
+
+    /* hero */
+    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:start}
+    @media (max-width:980px){.hero{grid-template-columns:1fr}}
+
+    h1{margin:0 0 10px;font-size:56px;line-height:1.0;letter-spacing:-0.03em}
+    .sub{margin:0 0 16px;color:var(--muted);line-height:1.55;max-width:70ch}
+
+    .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:12px;border:1px solid var(--line);text-decoration:none;font-weight:700;background:rgba(255,255,255,.03)}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#9b7bff);border-color:transparent;color:#fff}
+    .btn.secondary{background:rgba(18,20,27,.45)}
+
+    .card{border:1px solid rgba(170,179,191,.18);border-radius:16px;background:rgba(18,20,27,.72);box-shadow:var(--shadow);padding:16px}
+    .card h3{margin:0 0 10px;font-size:16px}
+
+    /* thrown cards */
+    .stack{position:relative;min-height:430px}
+    @media (max-width:980px){.stack{min-height:520px}}
+    .sheet{
+      position:absolute;right:0;top:0;
+      width:min(520px, 92%);
+      border-radius:16px;
+      overflow:hidden;
+      border:1px solid rgba(170,179,191,.18);
+      box-shadow:0 28px 90px rgba(0,0,0,.6);
+      background:#0c0c0e;
+      transform:rotate(5deg);
+    }
+    .sheet.redacted{top:92px;right:42px;transform:rotate(-7deg);width:min(500px, 90%)}
+    .sheetHdr{padding:10px 12px;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(170,179,191,.14);display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border-radius:999px;border:1px solid rgba(170,179,191,.18);font-size:12px;color:var(--muted)}
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--accent2);box-shadow:0 0 0 3px rgba(46,229,157,.12)}
+    .open{font-size:12px;color:var(--muted);text-decoration:underline;text-underline-offset:.18em}
+    .frame{width:100%;height:360px;border:0;display:block;background:#0b0c10}
+    @media (max-width:980px){.frame{height:420px}}
+
+    /* sections */
+    .kicker{margin-top:36px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}}
+
+    /* form embed: no extra chrome */
+    .formWrap{margin-top:12px}
+    .issueFrame{width:100%;border:0;border-radius:16px;min-height:1200px;box-shadow:var(--shadow);background:#0b0c10}
+    @media (max-width:980px){.issueFrame{min-height:1500px}}
+
+    /* footer */
+    .footer{margin-top:26px;padding-top:18px;border-top:1px solid rgba(170,179,191,.18);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+    .links{color:var(--muted)}
+    .links a{color:var(--muted);text-decoration:none;border-bottom:1px solid rgba(170,179,191,.28)}
+    .links a:hover{color:var(--text)}
+    :focus-visible{outline:3px solid rgba(46,229,157,.28);outline-offset:3px}
   </style>
 </head>
 <body>
@@ -86,6 +88,8 @@
       <div class="topnav__label">Variants (temporary)</div>
       <div class="topnav__links">
         <a href="/" aria-current="page">Index</a>
+        <a href="/index1.1/">Index 1.1</a>
+        <a href="/index1.2/">Index 1.2</a>
         <a href="/index2/">Index2</a>
         <a href="/index4/">Index4</a>
         <a href="/index5/">Index5</a>
@@ -96,140 +100,74 @@
   </nav>
 
   <div class="wrap">
-    <span class="tag"><span class="dot"></span> Live alpha • verifiable agent identity</span>
-
     <div class="hero">
       <div>
-        <h1>Birth Certificates for AI agents.</h1>
-        <p class="muted">
-          Issue a <b>private registry credential</b>: public verify link, printable certificate, and tamper‑evident fingerprint integrity.
-        </p>
-
-        <div class="card" style="margin-top:14px">
-          <h3 style="margin:0 0 10px;font-size:16px">What verification means</h3>
-          <ul class="muted" style="margin:0;padding-left:18px">
-            <li>Confirms a <b>registry record exists</b> for the certificate ID.</li>
-            <li>Shows a <b>fingerprint</b> (hash) so changes are detectable.</li>
-            <li>Does <b>not</b> prove real‑world identity, legal status, or safety.</li>
-          </ul>
-          <p class="muted" style="margin-top:10px;margin-bottom:0">Details: <a href="/policy/">Verification semantics policy</a>.</p>
+        <div class="card" style="display:inline-block;padding:10px 12px">
+          <span class="pill"><span class="dot"></span> Live alpha • verifiable agent identity</span>
         </div>
 
-        <div class="cta">
-          <a class="btn primary" href="#issue">Issue a Birth Certificate</a>
-          <a class="btn secondary" href="#demos">View demos</a>
-          <a class="btn ghost" href="/cert/GS-BC-20260205-ZKCENEEQ">View example verification</a>
-        </div>
+        <div style="margin-top:16px">
+          <h1>Birth Certificates for AI agents.</h1>
+          <p class="sub">Issue a <b>registry credential</b>: public verify link, printable record card, and tamper‑evident fingerprint integrity. Provenance — not identity theatre.</p>
 
-        <p class="muted" style="margin-top:10px;margin-bottom:0"><b>US$9.99</b> one‑time • Stripe Checkout</p>
-        <p class="muted" style="margin-top:10px">
-          Use cases: agent profiles, anti-impersonation, provenance for tool access, and audit-ready receipts (coming).
-        </p>
-        <p class="muted" style="margin-top:-6px">
-          Want to back the experiment? <a href="https://buy.stripe.com/aFafZg50ndb3akDa9rgfu00" target="_blank" rel="noopener noreferrer">Support GhostShell (Alpha)</a>
-        </p>
+          <div class="card">
+            <h3 style="margin:0 0 10px">What verification means</h3>
+            <ul class="muted" style="margin:0;padding-left:18px">
+              <li>Confirms a <b style="color:var(--text)">registry record exists</b> for the certificate ID.</li>
+              <li>Shows a <b style="color:var(--text)">fingerprint</b> (hash) so changes are detectable.</li>
+              <li>Does <b style="color:var(--text)">not</b> prove real‑world identity, legal status, or safety.</li>
+            </ul>
+            <p class="muted" style="margin-top:10px;margin-bottom:0">Details: <a href="/policy/">Verification semantics policy</a>.</p>
+          </div>
+
+          <div class="cta">
+            <a class="btn primary" href="#issue">Issue a Birth Certificate</a>
+            <a class="btn secondary" href="/cert/GS-BC-20260205-ZKCENEEQ">View example verification</a>
+          </div>
+
+          <p class="muted" style="margin-top:10px;margin-bottom:0"><b>US$9.99</b> one‑time • Stripe Checkout</p>
+          <p class="muted" style="margin-top:10px">Want to back the experiment? <a href="https://buy.stripe.com/aFafZg50ndb3akDa9rgfu00" target="_blank" rel="noopener noreferrer">Support GhostShell (Alpha)</a></p>
+        </div>
       </div>
 
-      <div class="preview">
-        <div class="pill">Preview</div>
-        <div class="cert" style="margin-top:10px">
-          <div class="mono">GhostShell.host Registry</div>
-          <h2>BIRTH CERTIFICATE</h2>
-          <div class="mono">Agent name: <b>Joule</b><br/>Place of origin (stored): <b>Adelaide, SA, AU</b><br/>Public place display: <b>State</b><br/>Autonomy level: <b>OAL‑2</b></div>
-          <div class="row">
-            <div class="mono">Certificate ID</div>
-            <div class="mono"><b>GS-BC-…</b></div>
+      <div class="stack" aria-label="Certificate examples">
+        <div class="sheet" aria-label="Full record card">
+          <div class="sheetHdr">
+            <span class="pill">Registry record (full)</span>
+            <a class="open" href="/demos/full-card2/" target="_blank" rel="noopener">Open</a>
           </div>
-          <div class="row">
-            <div class="mono">Fingerprint (sha256)</div>
-            <div class="mono"><b>c7f6a0b12e8a9d3f…</b></div>
-          </div>
-        </div>
-        <p class="muted" style="margin-top:10px">Printable cert includes full fingerprint + QR to the registry record.</p>
-      </div>
-    </div>
-
-    <div id="demos" class="kicker">Certificate demos</div>
-    <div class="section" style="padding-top:14px">
-      <p class="muted" style="margin-top:0">Two views in the catalogue‑card style: a redacted public-safe record, and the full unredacted record.</p>
-
-      <div class="demoGrid">
-        <div class="demoCard">
-          <div class="demoTop">
-            <div class="demoTitle">Registry record (redacted)</div>
-            <a href="/demos/redacted/" target="_blank" rel="noopener">Open</a>
-          </div>
-          <iframe class="demoFrame" title="Redacted record card demo" src="/demos/redacted/?v=edc644e"></iframe>
-          <div class="demoNote">Public-safe by default: city redacted; state+country shown; boot time redacted.</div>
+          <iframe class="frame" title="Full record card" src="/demos/full-card2/"></iframe>
         </div>
 
-        <div class="demoCard">
-          <div class="demoTop">
-            <div class="demoTitle">Registry record (full)</div>
-            <a href="/demos/full-card2/" target="_blank" rel="noopener">Open</a>
+        <div class="sheet redacted" aria-label="Redacted record card">
+          <div class="sheetHdr">
+            <span class="pill">Registry record (redacted)</span>
+            <a class="open" href="/demos/redacted/" target="_blank" rel="noopener">Open</a>
           </div>
-          <iframe class="demoFrame" title="Full record card demo" src="/demos/full-card2/?v=aa10ef0"></iframe>
-          <div class="demoNote">Same catalogue card, unredacted. Looks like an archival typewritten record.</div>
+          <iframe class="frame" title="Redacted record card" src="/demos/redacted/"></iframe>
         </div>
       </div>
     </div>
 
     <div class="kicker">What you get</div>
     <div class="grid">
-      <div class="card">
-        <h3>Public verification link</h3>
-        <p class="muted">A shareable URL that confirms registry presence + tamper-evident fingerprint.</p>
-      </div>
-      <div class="card">
-        <h3>Printable certificate</h3>
-        <p class="muted">A clean, presentable certificate you can save as PDF (available immediately).</p>
-      </div>
-      <div class="card">
-        <h3>Optional labels</h3>
-        <p class="muted">Optionally include a custodian label (pseudonym). Public record defaults to withheld.</p>
-      </div>
-    </div>
-
-    <div class="kicker">How it works</div>
-    <div class="section">
-      <ol class="muted">
-        <li>Fill in the agent details (keep it non-doxxing).</li>
-        <li>Pay via Stripe Checkout.</li>
-        <li>GhostShell issues a certificate + writes the record to the registry.</li>
-        <li>Share the verify link anywhere your agent appears.</li>
-      </ol>
-    </div>
-
-    <div class="kicker">Roadmap</div>
-    <div class="section muted">
-      <p><b>Birth Certificate</b> (now) → <b>Passport</b> (portable signed claims + key rotation/revocation) → <b>Encrypted Snapshots</b> (audit/restore receipts).</p>
+      <div class="card"><h3>Public verification link</h3><p class="muted">A shareable URL that confirms registry presence + tamper‑evident fingerprint.</p></div>
+      <div class="card"><h3>Printable record card</h3><p class="muted">Archival card aesthetic: full record and a redacted public-safe view.</p></div>
+      <div class="card"><h3>Policy-driven redaction</h3><p class="muted">Default public sharing is coarse; sensitive fields can be withheld.</p></div>
     </div>
 
     <div id="issue" class="kicker">Issue a Birth Certificate</div>
-    <div class="section" style="padding-top:14px">
-      <p class="muted" style="margin-top:0">Form is embedded for convenience. If it looks weird on mobile, <a href="/birth-certificate/">open it full-screen</a>.</p>
-      <div class="issueShell">
-        <div class="head">
-          <div class="left">
-            <span class="pill">Form</span>
-            <span class="title">GhostShell Birth Certificate</span>
-          </div>
-          <div class="right"><a href="/birth-certificate/" target="_blank" rel="noopener">Open in new tab</a></div>
-        </div>
-        <iframe class="issueFrame" title="Issue a Birth Certificate" src="/birth-certificate/"></iframe>
-      </div>
+    <div class="formWrap">
+      <iframe class="issueFrame" title="Issue a Birth Certificate" src="/birth-certificate/"></iframe>
     </div>
 
-    <div class="kicker">Contact</div>
-    <div class="section footer">
+    <div class="footer">
       <div class="links">
-        <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a> ·
-        <a href="mailto:support@ghostshell.host">support@ghostshell.host</a> ·
-        <a href="mailto:billing@ghostshell.host">billing@ghostshell.host</a>
-        <span class="muted"> · </span>
+        <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a>
+        <span> · </span>
         <a href="/policy/">Policy</a> · <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a>
       </div>
-      <div class="muted">Alpha experiment. Things may break.</div>
+      <div class="links">Alpha experiment. Things may break.</div>
     </div>
   </div>
 </body>
