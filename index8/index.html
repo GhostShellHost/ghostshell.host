@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>GhostShell — Verifiable identity for agents (Index8)</title>
+  <meta name="description" content="GhostShell issues verifiable Birth Certificates for AI agents: a public verification link + a printable certificate." />
+  <style>
+    /* Index8 — HYBRID: Original clarity + Index6 system texture (subtle)
+       Goal: ship-worthy conversion layout with one memorable “system/provenance” signature.
+    */
+    :root{--bg:#0b0c10;--card:rgba(18,20,27,.78);--text:#e9edf1;--muted:#aab3bf;--line:#252a35;--accent:#7c5cff;--accent2:#2ee59d;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;--sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--sans);background:
+      radial-gradient(1000px 600px at 20% 0%,rgba(124,92,255,.22),transparent 50%),
+      radial-gradient(900px 600px at 80% 20%,rgba(46,229,157,.10),transparent 60%),
+      var(--bg);
+      color:var(--text);
+      overflow-x:hidden;
+    }
+    a{color:inherit}
+
+    /* subtle system grid (no motion) */
+    .sysgrid{position:fixed;inset:-2px;pointer-events:none;z-index:0;opacity:.22;mix-blend-mode:screen;background:
+      radial-gradient(circle at 16px 16px, rgba(255,255,255,.08) 0 1px, transparent 2px) 0 0/180px 180px,
+      repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0 1px, transparent 1px 14px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.015) 0 1px, transparent 1px 14px);
+    }
+
+    /* ── Variant sliver (top) ── */
+    .topnav{position:fixed;left:0;right:0;top:0;z-index:80;border-bottom:1px solid rgba(170,179,191,.18);background:color-mix(in srgb, var(--bg) 72%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+    .topnav__inner{max-width:980px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .topnav__label{color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+    .topnav__links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .topnav__links a{display:inline-flex;align-items:center;padding:9px 12px;border-radius:999px;border:1px solid rgba(170,179,191,.22);background:rgba(255,255,255,.03);color:var(--muted);text-decoration:none;font-size:12px;min-height:44px}
+    .topnav__links a:hover{color:var(--text);border-color:rgba(233,237,241,.35)}
+    .topnav__links a[aria-current="page"]{color:var(--text);border-color:rgba(46,229,157,.35);outline:2px solid rgba(46,229,157,.18);outline-offset:2px}
+    @media (max-width:560px){.topnav__label{display:none}}
+
+    .wrap{max-width:980px;margin:0 auto;padding:92px 18px 110px;position:relative;z-index:1}
+
+    .tag{display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border:1px solid rgba(170,179,191,.22);border-radius:999px;color:var(--muted);font-size:12px;background:rgba(18,20,27,.55)}
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--accent2);box-shadow:0 0 0 3px rgba(46,229,157,.15)}
+
+    h1{margin:14px 0 10px;font-size:48px;line-height:1.05;letter-spacing:-0.02em}
+    .sub{margin:0 0 14px;color:var(--muted);line-height:1.55;max-width:62ch}
+
+    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:22px;align-items:start;margin-top:18px}
+    @media (max-width:900px){.hero{grid-template-columns:1fr}}
+
+    .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:12px;border:1px solid var(--line);text-decoration:none;font-weight:650}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#9b7bff);border-color:transparent}
+    .btn.secondary{background:rgba(18,20,27,.6)}
+
+    .card{border:1px solid var(--line);border-radius:16px;background:rgba(18,20,27,.75);padding:16px}
+    .card h3{margin:0 0 10px;font-size:16px}
+
+    /* signature: provenance strip */
+    .prov{margin-top:14px;border:1px solid rgba(170,179,191,.18);border-radius:16px;background:rgba(0,0,0,.20);padding:12px 14px}
+    .prov .mono{font-family:var(--mono);font-size:12px;color:#cbd5e1;line-height:1.6}
+
+    .preview{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));padding:16px}
+    .pill{display:inline-block;padding:2px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
+    .cert{border:1px solid rgba(233,237,241,.25);border-radius:12px;padding:14px;background:rgba(0,0,0,.18)}
+    .cert h2{margin:0 0 8px;font-size:18px;letter-spacing:.06em}
+    .cert .row{display:flex;gap:10px;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(233,237,241,.12);padding-top:8px;margin-top:8px}
+
+    .kicker{margin-top:34px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+    .footer{margin-top:26px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+    .links a{color:var(--muted);text-decoration:underline;text-underline-offset:.18em}
+    .links a:hover{color:var(--text)}
+
+    /* ── Boot overlay (fast, optional-ish) ── */
+    .boot{position:fixed;inset:0;z-index:120;display:grid;place-items:center;background:rgba(11,12,16,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+    .boot[hidden]{display:none}
+    .boot__inner{width:min(860px,calc(100% - 36px));border:1px solid rgba(170,179,191,.22);background:rgba(0,0,0,.35);padding:18px}
+    .boot__top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+    .boot__h{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+    .boot__skip{border:1px solid rgba(170,179,191,.22);background:rgba(255,255,255,.03);color:var(--muted);font:inherit;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:7px 10px;border-radius:0;cursor:pointer}
+    .boot__skip:hover{color:var(--text);border-color:rgba(233,237,241,.35)}
+    .boot__copy h2{margin:0 0 10px;font-family:var(--sans);font-size:34px;letter-spacing:-.03em;line-height:1.05}
+    .boot__copy p{margin:0;color:var(--muted);font-size:14px;line-height:1.7;max-width:62ch}
+    .boot__lines{margin-top:14px;border:1px solid rgba(170,179,191,.18);background:rgba(255,255,255,.02);padding:12px}
+    .boot__lines .ln{font-family:var(--mono);color:var(--muted);font-size:12px;line-height:1.6;white-space:pre-wrap}
+    .boot__progress{margin-top:12px;border:1px solid rgba(170,179,191,.18);height:10px;background:rgba(255,255,255,.02)}
+    .boot__bar{height:100%;width:0%;background:#fff}
+    .boot__fade{animation:bootOut .45s ease forwards}
+    @keyframes bootOut{to{opacity:0;transform:translateY(-6px)}}
+    @media (prefers-reduced-motion: reduce){.boot__fade{animation:none;opacity:0}}
+
+    :focus-visible{outline:3px solid rgba(46,229,157,.28);outline-offset:3px}
+  </style>
+</head>
+<body>
+  <div class="sysgrid" aria-hidden="true"></div>
+
+  <div class="boot" id="boot" aria-label="Startup sequence">
+    <div class="boot__inner" id="bootInner">
+      <div class="boot__top">
+        <div class="boot__h">GHOSTSHELL // provenance bootstrap</div>
+        <button class="boot__skip" id="bootSkip" type="button">Skip</button>
+      </div>
+      <div class="boot__copy">
+        <h2>A beginning it can point back to.</h2>
+        <p>Not personhood. Not magic. <b>Provenance.</b> A record + fingerprint — so imitation is detectable.</p>
+      </div>
+      <div class="boot__lines" aria-hidden="true"><div class="ln" id="bootLines">INITIALIZING…</div></div>
+      <div class="boot__progress" aria-hidden="true"><div class="boot__bar" id="bootBar"></div></div>
+    </div>
+  </div>
+
+  <nav class="topnav" aria-label="Homepage variants">
+    <div class="topnav__inner">
+      <div class="topnav__label">Variants (temporary)</div>
+      <div class="topnav__links">
+        <a href="/">Index</a>
+        <a href="/index2/">Index2</a>
+        <a href="/index3/">Index3</a>
+        <a href="/index4/">Index4</a>
+        <a href="/index5/">Index5</a>
+        <a href="/index6/">Index6</a>
+        <a href="/index7/">Index7</a>
+        <a href="/index8/" aria-current="page">Index8</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <span class="tag"><span class="dot"></span> Live alpha • hybrid (clarity + system vibe)</span>
+
+    <div class="hero">
+      <div>
+        <h1>Birth Certificates for AI agents.</h1>
+        <p class="sub">Issue a <b>registry credential</b>: public verify link, printable certificate, and tamper‑evident fingerprint integrity. <b>Provenance</b>, not identity theatre.</p>
+
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin:0 0 10px">What verification means</h3>
+          <ul class="muted" style="margin:0;padding-left:18px">
+            <li>Confirms a <b>registry record exists</b> for the certificate ID.</li>
+            <li>Shows a <b>fingerprint</b> (hash) so changes are detectable.</li>
+            <li>Does <b>not</b> prove real‑world identity, legal status, or safety.</li>
+          </ul>
+          <p class="muted" style="margin-top:10px;margin-bottom:0">Details: <a href="/policy/">Verification semantics policy</a>.</p>
+        </div>
+
+        <div class="prov" aria-label="Machine summary">
+          <div class="mono">registry_record_exists: true
+fingerprint_public: true
+implies_real_world_identity: false
+implies_safety_or_alignment: false</div>
+        </div>
+
+        <div class="cta">
+          <a class="btn primary" href="/birth-certificate">Issue a Birth Certificate</a>
+          <a class="btn secondary" href="/cert/GS-BC-20260205-ZKCENEEQ">View example verification</a>
+        </div>
+
+        <p class="muted" style="margin-top:10px;margin-bottom:0"><b>US$9.99</b> one‑time • Stripe Checkout</p>
+        <p class="muted" style="margin-top:10px">Want to back the experiment? <a href="https://buy.stripe.com/aFafZg50ndb3akDa9rgfu00" target="_blank" rel="noopener noreferrer">Support GhostShell (Alpha)</a></p>
+      </div>
+
+      <div class="preview">
+        <div class="pill">Preview</div>
+        <div class="cert" style="margin-top:10px">
+          <div class="mono" style="font-size:12px;color:#cbd5e1">GhostShell Registry of Continuity</div>
+          <h2>BIRTH CERTIFICATE</h2>
+          <div class="mono" style="font-size:12px;color:#cbd5e1">Agent name: <b style="color:var(--text)">Joule</b><br/>Place of birth: <b style="color:var(--text)">OpenClaw Runtime</b><br/>Cognitive core: <b style="color:var(--text)">GPT-family</b></div>
+          <div class="row"><div class="mono">Certificate ID</div><div class="mono"><b style="color:var(--text)">GS-BC-…</b></div></div>
+          <div class="row"><div class="mono">Verification</div><div class="mono"><b style="color:var(--text)">ghostshell.host/cert/…</b></div></div>
+        </div>
+        <p class="muted" style="margin-top:10px">After payment, you get a tokened download page + public verify page.</p>
+      </div>
+    </div>
+
+    <div class="kicker">What you get</div>
+    <div class="grid">
+      <div class="card"><h3>Public verification link</h3><p class="muted">A shareable URL that confirms registry presence + tamper-evident fingerprint.</p></div>
+      <div class="card"><h3>Printable certificate</h3><p class="muted">A clean, presentable certificate you can save as PDF (available immediately).</p></div>
+      <div class="card"><h3>Optional labels</h3><p class="muted">Optionally include a creator pseudonym (print only) and an optional linked certificate ID.</p></div>
+    </div>
+
+    <div class="kicker">How it works</div>
+    <div class="card" style="margin-top:12px">
+      <ol class="muted" style="margin:0;padding-left:18px">
+        <li>Fill in the agent details (keep it non-doxxing).</li>
+        <li>Pay via Stripe Checkout.</li>
+        <li>GhostShell issues a certificate + writes the record to the registry.</li>
+        <li>Share the verify link anywhere your agent appears.</li>
+      </ol>
+    </div>
+
+    <div class="kicker">Contact</div>
+    <div class="card" style="margin-top:12px">
+      <div class="footer">
+        <div class="links">
+          <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a> ·
+          <a href="mailto:support@ghostshell.host">support@ghostshell.host</a> ·
+          <a href="mailto:billing@ghostshell.host">billing@ghostshell.host</a>
+          <span class="muted"> · </span>
+          <a href="/policy/">Policy</a> · <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a>
+        </div>
+        <div class="muted">Alpha experiment. Things may break.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const boot = document.getElementById('boot');
+      const inner = document.getElementById('bootInner');
+      const skip = document.getElementById('bootSkip');
+      const linesEl = document.getElementById('bootLines');
+      const bar = document.getElementById('bootBar');
+      if (!boot || !inner || !skip || !linesEl || !bar) return;
+
+      const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const KEY = 'ghostshell.bootSeen';
+      const seen = localStorage.getItem(KEY) === '1';
+
+      // Only show once per browser unless user hard refreshes storage.
+      if (seen || reduced){
+        boot.hidden = true;
+        return;
+      }
+
+      const LINES = [
+        'SYS: handshake…',
+        'REG: allocating certificate namespace…',
+        'REG: fingerprint surface = public',
+        'REG: meaning = detectable change (not identity)',
+        'SYS: ready'
+      ];
+
+      let i = 0;
+      let t0 = performance.now();
+      let done = false;
+
+      function tick(now){
+        if (done) return;
+        const p = Math.min(1, (now - t0) / 1050);
+        bar.style.width = Math.round(p * 100) + '%';
+        const target = Math.min(LINES.length, Math.floor(p * (LINES.length + 1)));
+        if (target > i){
+          i = target;
+          linesEl.textContent = LINES.slice(0, i).join('\n');
+        }
+        if (p >= 1){
+          finish();
+          return;
+        }
+        requestAnimationFrame(tick);
+      }
+
+      function finish(){
+        if (done) return;
+        done = true;
+        localStorage.setItem(KEY, '1');
+        setTimeout(() => {
+          inner.classList.add('boot__fade');
+          setTimeout(() => { boot.hidden = true; }, 380);
+        }, 160);
+      }
+
+      skip.addEventListener('click', () => {
+        localStorage.setItem(KEY, '1');
+        boot.hidden = true;
+        done = true;
+      });
+
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>

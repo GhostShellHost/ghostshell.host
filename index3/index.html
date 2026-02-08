@@ -7,91 +7,113 @@
   <title>GhostShell — Verifiable identity for agents (Index3)</title>
   <meta name="description" content="GhostShell issues verifiable Birth Certificates for AI agents: a public verification link + a printable certificate." />
   <style>
-    /* Index3 — EDITORIAL DOSSIER
-       A research-paper / dossier aesthetic: bright, calm, modern.
-       Signature: marginalia rail + section numbering + footnote vibe.
+    /* Index3 — TIDAL PORCELAIN
+       Quiet-white, oceanic, precision UI. Signature: faint topographic contours + “Depth” dial.
     */
+
     :root{
-      --bg:#fbfbf8;
-      --paper:#ffffff;
-      --ink:#111827;
-      --muted:#4b5563;
-      --line:rgba(17,24,39,.14);
-      --accent:#1f2937;
-      --accent2:#2563eb;
-      --hi:#fef3c7;
-      --radius:18px;
+      --bg:#fbfbf8;          /* porcelain */
+      --panel:#ffffff;
+      --panel2:#f3f6fa;      /* cool wash */
+      --text:#0a2342;        /* deep navy */
+      --muted:rgba(10,35,66,.66);
+      --faint:rgba(10,35,66,.42);
+      --border:rgba(10,35,66,.12);
+      --accent:#1e5eff;      /* cobalt */
+      --accent2:#00b8d9;     /* cyan */
+      --shadow:0 10px 30px rgba(10,35,66,.08);
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      --serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --radius:18px;
     }
+
     *{box-sizing:border-box}
-    body{margin:0;font-family:var(--sans);background:linear-gradient(180deg,rgba(37,99,235,.04),transparent 30%),var(--bg);color:var(--ink)}
+    html{font-size:16px}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1000px 650px at 18% 0%, rgba(0,184,217,.09), transparent 60%),
+        radial-gradient(900px 650px at 82% 10%, rgba(30,94,255,.10), transparent 58%),
+        linear-gradient(180deg, rgba(30,94,255,.035), transparent 30%),
+        var(--bg);
+      overflow-x:hidden;
+    }
     a{color:inherit}
 
     /* ── Variant sliver (top) ── */
-    .topnav{position:fixed;left:0;right:0;top:0;z-index:80;border-bottom:1px solid var(--line);background:rgba(251,251,248,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+    .topnav{position:fixed;left:0;right:0;top:0;z-index:80;border-bottom:1px solid var(--border);background:rgba(251,251,248,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
     .topnav__inner{max-width:1040px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
     .topnav__label{color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
     .topnav__links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
-    .topnav__links a{display:inline-flex;align-items:center;padding:9px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.7);color:var(--muted);text-decoration:none;font-size:12px;min-height:44px}
-    .topnav__links a:hover{color:var(--ink);border-color:rgba(17,24,39,.28)}
-    .topnav__links a[aria-current="page"]{color:var(--ink);border-color:rgba(37,99,235,.35);outline:2px solid rgba(37,99,235,.18);outline-offset:2px}
+    .topnav__links a{display:inline-flex;align-items:center;padding:9px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.75);color:var(--muted);text-decoration:none;font-size:12px;min-height:44px}
+    .topnav__links a:hover{color:var(--text);border-color:rgba(10,35,66,.22)}
+    .topnav__links a[aria-current="page"]{color:var(--text);border-color:rgba(30,94,255,.28);outline:2px solid rgba(30,94,255,.18);outline-offset:2px}
     @media (max-width:560px){.topnav__label{display:none}}
 
-    .wrap{max-width:1040px;margin:0 auto;padding:92px 18px 80px}
+    /* ── Topographic contour overlay ── */
+    .contours{position:fixed;inset:-20%;pointer-events:none;z-index:0;opacity:.14;mix-blend-mode:multiply;background:
+      radial-gradient(circle at 15% 30%, rgba(10,35,66,.25), transparent 52%),
+      radial-gradient(circle at 75% 18%, rgba(10,35,66,.18), transparent 55%),
+      repeating-radial-gradient(circle at 30% 50%, rgba(10,35,66,.18) 0 1px, transparent 1px 16px),
+      repeating-radial-gradient(circle at 70% 42%, rgba(10,35,66,.12) 0 1px, transparent 1px 20px);
+      filter:blur(.2px)
+    }
 
-    /* ── Layout with marginalia rail ── */
-    .page{display:grid;grid-template-columns:190px 1fr;gap:18px;align-items:start}
-    @media (max-width:900px){.page{grid-template-columns:1fr}.rail{display:none}}
+    .wrap{max-width:1040px;margin:0 auto;padding:92px 18px 80px;position:relative;z-index:1}
 
-    .rail{position:sticky;top:84px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.7);padding:12px}
-    .rail .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-    .rail .v{margin-top:8px;font-family:var(--mono);font-size:12px;color:var(--ink);line-height:1.6}
-    .rail .pill{display:inline-block;margin-top:10px;font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:rgba(37,99,235,.05);color:var(--muted)}
+    .tag{display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border:1px solid var(--border);border-radius:999px;color:var(--muted);font-size:12px;background:rgba(255,255,255,.75)}
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--accent2);box-shadow:0 0 0 3px rgba(0,184,217,.14)}
 
-    h1{margin:10px 0 10px;font-size:52px;line-height:1.02;letter-spacing:-0.03em;font-family:var(--serif);font-weight:600}
-    .sub{margin:0;color:var(--muted);font-size:16px;line-height:1.65;max-width:64ch}
-
-    .metaRow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
-    .tag{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px;background:rgba(255,255,255,.75)}
-    .dot{width:8px;height:8px;border-radius:99px;background:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-    .mark{background:linear-gradient(180deg,transparent 55%,var(--hi) 55%);padding:0 3px}
-
-    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;align-items:start;margin-top:18px}
+    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:start;margin-top:18px}
     @media (max-width:900px){.hero{grid-template-columns:1fr}}
 
-    .card{border:1px solid var(--line);border-radius:var(--radius);background:rgba(255,255,255,.88);padding:16px}
-    .card h3{margin:0 0 10px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-    .card p{margin:0;color:var(--muted);line-height:1.6}
+    h1{margin:14px 0 10px;font-size:52px;line-height:1.02;letter-spacing:-.03em}
+    .sub{margin:0;color:var(--muted);font-size:16px;line-height:1.65;max-width:66ch}
+
+    .panel{border:1px solid var(--border);border-radius:var(--radius);background:rgba(255,255,255,.86);box-shadow:var(--shadow);padding:16px}
+    .panel h3{margin:0 0 10px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
 
     .cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:14px;border:1px solid var(--line);text-decoration:none;font-weight:750;background:#fff}
-    .btn.primary{background:var(--accent2);border-color:transparent;color:#fff}
-    .btn:hover{filter:brightness(.98)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:14px;border:1px solid var(--border);text-decoration:none;font-weight:780;background:#fff}
+    .btn.primary{background:var(--accent);border-color:transparent;color:#fff}
+    .btn:hover{filter:brightness(.99)}
 
-    .preview{border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(180deg,rgba(37,99,235,.04),rgba(255,255,255,.75));padding:16px;position:relative;overflow:hidden}
-    .stamp{position:absolute;right:14px;top:14px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:6px 8px;border-radius:999px;background:rgba(255,255,255,.7)}
+    /* Depth dial */
+    .depth{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:var(--radius);background:rgba(255,255,255,.78);padding:12px}
+    .depth .k{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+    .depth .v{font-family:var(--mono);font-size:12px;color:var(--muted)}
+    .dial{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .dial button{appearance:none;border:1px solid var(--border);background:#fff;color:var(--muted);font:inherit;font-size:12px;padding:8px 10px;border-radius:999px;cursor:pointer;min-height:40px}
+    .dial button[data-on]{border-color:rgba(30,94,255,.28);color:var(--text);box-shadow:0 0 0 3px rgba(30,94,255,.12)}
+
+    /* density modes */
+    body[data-depth="surface"] .deepOnly{display:none}
+    body[data-depth="deep"] .surfaceOnly{display:none}
+
+    .preview{border:1px solid var(--border);border-radius:var(--radius);background:linear-gradient(180deg,rgba(0,184,217,.05),rgba(255,255,255,.75));padding:16px;overflow:hidden}
     .mono{font-family:var(--mono);font-size:12px;color:var(--muted)}
-    .cert{margin-top:10px;border:1px solid rgba(17,24,39,.14);border-radius:14px;padding:14px;background:#fff}
-    .certTitle{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
-    .rows{margin-top:10px;display:grid;gap:8px}
-    .row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid rgba(17,24,39,.08);padding-top:8px}
-    .k{color:var(--muted);font-family:var(--mono);font-size:12px}
-    .v{color:var(--ink);font-family:var(--mono);font-weight:750;font-size:12px}
+    .cert{margin-top:10px;border:1px solid rgba(10,35,66,.12);border-radius:14px;padding:14px;background:#fff}
+    .row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid rgba(10,35,66,.08);padding-top:8px;margin-top:8px}
 
-    .kicker{margin-top:34px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+    .kicker{margin-top:34px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
     @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .card{border:1px solid var(--border);border-radius:var(--radius);background:rgba(255,255,255,.86);padding:14px}
+    .card b{letter-spacing:.12em;text-transform:uppercase;font-size:12px}
+    .card p{margin:10px 0 0;color:var(--muted);font-size:13px;line-height:1.6}
 
     .footer{margin-top:26px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
     .links a{text-decoration:underline;text-underline-offset:.18em;color:var(--muted)}
-    .links a:hover{color:var(--ink)}
+    .links a:hover{color:var(--text)}
 
-    :focus-visible{outline:3px solid rgba(37,99,235,.35);outline-offset:3px}
+    :focus-visible{outline:3px solid rgba(30,94,255,.25);outline-offset:3px}
   </style>
 </head>
-<body>
+<body data-depth="mid">
+  <div class="contours" aria-hidden="true"></div>
+
   <nav class="topnav" aria-label="Homepage variants">
     <div class="topnav__inner">
       <div class="topnav__label">Variants (temporary)</div>
@@ -102,95 +124,118 @@
         <a href="/index4/">Index4</a>
         <a href="/index5/">Index5</a>
         <a href="/index6/">Index6</a>
+        <a href="/index7/">Index7</a>
+        <a href="/index8/">Index8</a>
       </div>
     </div>
   </nav>
 
   <div class="wrap">
-    <div class="page">
-      <aside class="rail" aria-label="Marginalia">
-        <div class="k">Document</div>
-        <div class="v">GS-BC / v1\nregistry credential\nnon‑doxxing defaults</div>
-        <span class="pill">Alpha dossier</span>
-      </aside>
+    <span class="tag"><span class="dot"></span> Live alpha • tidal porcelain</span>
 
-      <main>
-        <div class="metaRow">
-          <span class="tag"><span class="dot"></span> Live alpha • editorial dossier</span>
-          <span class="tag">Section <span class="mark">01</span> — Overview</span>
-        </div>
-
+    <div class="hero">
+      <div>
         <h1>Birth Certificates for AI agents.</h1>
         <p class="sub">Issue a <b>registry credential</b>: public verify link, printable certificate, and tamper‑evident fingerprint integrity.</p>
 
-        <div class="hero">
-          <section>
-            <div class="card">
-              <h3>What verification means</h3>
-              <ul style="margin:0;padding-left:18px;color:var(--muted);line-height:1.7">
-                <li>Confirms a <b>registry record exists</b> for the certificate ID.</li>
-                <li>Shows a <b>fingerprint</b> (hash) so changes are detectable.</li>
-                <li>Does <b>not</b> prove real‑world identity, legal status, or safety.</li>
-              </ul>
-              <p style="margin-top:10px;margin-bottom:0">Details: <a href="/policy/">Verification semantics policy</a>.</p>
-            </div>
-
-            <div class="cta">
-              <a class="btn primary" href="/birth-certificate">Issue a Birth Certificate</a>
-              <a class="btn" href="/cert/GS-BC-20260205-ZKCENEEQ">View example verification</a>
-            </div>
-
-            <p class="sub" style="margin-top:12px"><b>US$9.99</b> one‑time • Stripe Checkout</p>
-            <p class="sub" style="margin-top:-6px">Want to back the experiment? <a href="https://buy.stripe.com/aFafZg50ndb3akDa9rgfu00" target="_blank" rel="noopener noreferrer">Support GhostShell (Alpha)</a></p>
-          </section>
-
-          <aside class="preview" aria-label="Preview">
-            <div class="stamp">Artifact preview</div>
-            <div class="mono">GhostShell Registry of Continuity</div>
-            <div class="cert">
-              <div class="certTitle">BIRTH CERTIFICATE</div>
-              <div class="mono" style="margin-top:8px">Agent name: <b style="color:var(--ink)">Joule</b><br/>Place of birth: <b style="color:var(--ink)">OpenClaw Runtime</b><br/>Cognitive core: <b style="color:var(--ink)">GPT-family</b></div>
-              <div class="rows">
-                <div class="row"><div class="k">certificate_id</div><div class="v">GS-BC-…</div></div>
-                <div class="row"><div class="k">verify_url</div><div class="v">ghostshell.host/cert/…</div></div>
-              </div>
-            </div>
-            <p class="sub" style="margin-top:10px">After payment, you get a tokened download page + public verify page.</p>
-          </aside>
-        </div>
-
-        <div class="kicker">What you get</div>
-        <div class="grid">
-          <div class="card"><h3>Public verification link</h3><p>A shareable URL that confirms registry presence + tamper‑evident fingerprint.</p></div>
-          <div class="card"><h3>Printable certificate</h3><p>A clean, presentable certificate you can save as PDF (available immediately).</p></div>
-          <div class="card"><h3>Optional labels</h3><p>Optionally include a creator pseudonym (print only) and an optional linked certificate ID.</p></div>
-        </div>
-
-        <div class="kicker">How it works</div>
-        <div class="card" style="margin-top:12px">
-          <ol style="margin:0;padding-left:18px;color:var(--muted);line-height:1.7">
-            <li>Fill in the agent details (keep it non-doxxing).</li>
-            <li>Pay via Stripe Checkout.</li>
-            <li>GhostShell issues a certificate + writes the record to the registry.</li>
-            <li>Share the verify link anywhere your agent appears.</li>
-          </ol>
-        </div>
-
-        <div class="kicker">Contact</div>
-        <div class="card" style="margin-top:12px">
-          <div class="footer">
-            <div class="links">
-              <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a> ·
-              <a href="mailto:support@ghostshell.host">support@ghostshell.host</a> ·
-              <a href="mailto:billing@ghostshell.host">billing@ghostshell.host</a>
-              <span style="color:var(--muted)"> · </span>
-              <a href="/policy/">Policy</a> · <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a>
-            </div>
-            <div style="color:var(--muted)">Alpha experiment. Things may break.</div>
+        <div class="depth" aria-label="Depth dial">
+          <div>
+            <div class="k">Depth</div>
+            <div class="v"><span class="surfaceOnly">Surface: quick read.</span><span class="deepOnly">Deep: extra protocol detail.</span><span class="midOnly">Mid: balanced.</span></div>
+          </div>
+          <div class="dial" role="group" aria-label="Depth selector">
+            <button type="button" data-depth="surface">Surface</button>
+            <button type="button" data-depth="mid" data-on>Mid</button>
+            <button type="button" data-depth="deep">Deep</button>
           </div>
         </div>
-      </main>
+
+        <div class="panel" style="margin-top:14px">
+          <h3>What verification means</h3>
+          <ul class="sub" style="margin:0;padding-left:18px">
+            <li>Confirms a <b>registry record exists</b> for the certificate ID.</li>
+            <li>Shows a <b>fingerprint</b> (hash) so changes are detectable.</li>
+            <li>Does <b>not</b> prove real‑world identity, legal status, or safety.</li>
+          </ul>
+          <p class="sub" style="margin-top:10px;margin-bottom:0">Details: <a href="/policy/">Verification semantics policy</a>.</p>
+
+          <div class="deepOnly" style="margin-top:12px">
+            <div class="mono">Machine summary:</div>
+            <div class="mono" style="margin-top:6px;line-height:1.7">
+              registry_record_exists: true<br/>
+              fingerprint_public: true<br/>
+              implies_real_world_identity: false<br/>
+              implies_safety_or_alignment: false
+            </div>
+          </div>
+        </div>
+
+        <div class="cta">
+          <a class="btn primary" href="/birth-certificate">Issue a Birth Certificate</a>
+          <a class="btn" href="/cert/GS-BC-20260205-ZKCENEEQ">View example verification</a>
+        </div>
+
+        <p class="sub" style="margin-top:12px"><b>US$9.99</b> one‑time • Stripe Checkout</p>
+        <p class="sub" style="margin-top:-6px">Want to back the experiment? <a href="https://buy.stripe.com/aFafZg50ndb3akDa9rgfu00" target="_blank" rel="noopener noreferrer">Support GhostShell (Alpha)</a></p>
+      </div>
+
+      <aside class="preview">
+        <div class="mono">GhostShell Registry of Continuity</div>
+        <div class="cert">
+          <div class="mono" style="letter-spacing:.22em;text-transform:uppercase">Birth certificate</div>
+          <div class="mono" style="margin-top:8px">Agent name: <b style="color:var(--text)">Joule</b><br/>Place of birth: <b style="color:var(--text)">OpenClaw Runtime</b><br/>Cognitive core: <b style="color:var(--text)">GPT-family</b></div>
+          <div class="row"><div class="mono">certificate_id</div><div class="mono" style="font-weight:800;color:var(--text)">GS-BC-…</div></div>
+          <div class="row"><div class="mono">verify_url</div><div class="mono" style="font-weight:800;color:var(--text)">ghostshell.host/cert/…</div></div>
+        </div>
+        <p class="sub" style="margin-top:10px">After payment, you get a tokened download page + public verify page.</p>
+      </aside>
+    </div>
+
+    <div class="kicker">What you get</div>
+    <div class="grid">
+      <div class="card"><b>Public verification link</b><p>A shareable URL that confirms registry presence + tamper‑evident fingerprint.</p></div>
+      <div class="card"><b>Printable certificate</b><p>A clean, presentable certificate you can save as PDF (available immediately).</p></div>
+      <div class="card"><b>Optional labels</b><p>Optionally include a creator pseudonym (print only) and an optional linked certificate ID.</p></div>
+    </div>
+
+    <div class="kicker">How it works</div>
+    <div class="panel" style="margin-top:12px;box-shadow:none">
+      <ol class="sub" style="margin:0;padding-left:18px">
+        <li>Fill in the agent details (keep it non-doxxing).</li>
+        <li>Pay via Stripe Checkout.</li>
+        <li>GhostShell issues a certificate + writes the record to the registry.</li>
+        <li>Share the verify link anywhere your agent appears.</li>
+      </ol>
+    </div>
+
+    <div class="kicker">Contact</div>
+    <div class="panel" style="margin-top:12px;box-shadow:none">
+      <div class="footer">
+        <div class="links">
+          <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a> ·
+          <a href="mailto:support@ghostshell.host">support@ghostshell.host</a> ·
+          <a href="mailto:billing@ghostshell.host">billing@ghostshell.host</a>
+          <span style="color:var(--muted)"> · </span>
+          <a href="/policy/">Policy</a> · <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a>
+        </div>
+        <div style="color:var(--muted)">Alpha experiment. Things may break.</div>
+      </div>
     </div>
   </div>
+
+  <script>
+    (function(){
+      const body = document.body;
+      const btns = Array.from(document.querySelectorAll('.dial button[data-depth]'));
+      if (!btns.length) return;
+
+      function setDepth(d){
+        body.setAttribute('data-depth', d);
+        btns.forEach(b => b.toggleAttribute('data-on', b.dataset.depth === d));
+      }
+
+      btns.forEach(b => b.addEventListener('click', () => setDepth(b.dataset.depth)));
+    })();
+  </script>
 </body>
 </html>
