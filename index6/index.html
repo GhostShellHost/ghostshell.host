@@ -7,63 +7,171 @@
   <title>GhostShell — Verifiable identity for agents (Index6)</title>
   <meta name="description" content="GhostShell issues verifiable Birth Certificates for AI agents: a public verification link + a printable certificate." />
   <style>
-    /* Index6 — SIGNAL: classified-comms vibe, amber, dashed frames */
-    :root{--bg:#0c0c0e;--card:rgba(245,158,11,.035);--text:#d4d4d8;--muted:#71717a;--line:rgba(245,158,11,.16);--accent:#f59e0b;--accent2:#d97706}
+    /* Index6 — SPARK-inspired: gritty system UI, boxed labels, crosshair grid.
+       Original reference: spark.thedigitalpanda.com (vibe only; no asset copying).
+    */
+
+    :root{
+      --bg:#070709;
+      --text:#f6f6f7;
+      --muted:#c9c9cf;
+      --line:rgba(255,255,255,.22);
+      --line2:rgba(255,255,255,.12);
+      --accent:#ffffff;
+      --accent2:#bdbdc6;
+      --shadow:0 24px 80px rgba(0,0,0,.55);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
     *{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:
-      radial-gradient(900px 600px at 20% 0%,rgba(245,158,11,.10),transparent 55%),
-      radial-gradient(900px 600px at 80% 10%,rgba(217,119,6,.06),transparent 60%),
-      var(--bg);
-      color:var(--text)
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family:var(--mono);
+      background:var(--bg);
+      overflow-x:hidden;
     }
     a{color:inherit}
-    .wrap{max-width:980px;margin:0 auto;padding:92px 18px 110px}
 
-    .tag{display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border:1px dashed rgba(245,158,11,.35);border-radius:2px;color:var(--muted);font-size:12px;background:rgba(0,0,0,.22)}
-    .dot{width:8px;height:8px;border-radius:99px;background:var(--accent);box-shadow:0 0 0 3px rgba(245,158,11,.16);animation:pulse 2s ease-in-out infinite}
-    @keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(245,158,11,.14)}50%{box-shadow:0 0 0 7px rgba(245,158,11,.22)}}
-
-    h1{margin:14px 0 10px;font-size:36px;line-height:1.05;letter-spacing:.02em;text-transform:uppercase;font-weight:820}
-    p{margin:0 0 14px;line-height:1.55}
-    .muted{color:var(--muted)}
-
-    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:start;margin-top:18px}
-    @media (max-width:900px){.hero{grid-template-columns:1fr}}
-
-    .cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:0;border:1px dashed rgba(245,158,11,.35);text-decoration:none;font-weight:800;background:rgba(245,158,11,.03)}
-    .btn.primary{background:var(--accent);border-color:transparent;color:#0c0c0e}
-    .btn.ghost{background:transparent}
-
-    .card{border:1px dashed rgba(245,158,11,.35);border-radius:0;background:rgba(245,158,11,.02);padding:16px}
-    .card h3{margin:0 0 10px;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:900}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}}
-    .kicker{margin-top:34px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:900}
-    .section{margin-top:10px;padding-top:18px;border-top:1px dashed rgba(245,158,11,.25)}
-
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;color:var(--muted)}
-    .pill{display:inline-block;padding:2px 8px;border:1px dashed rgba(245,158,11,.3);border-radius:0;color:var(--muted);font-size:12px}
-    .footer{margin-top:26px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
-    .links a{color:var(--muted);text-decoration:none;border-bottom:1px dotted rgba(113,113,122,.55)}
-    .links a:hover{color:var(--text)}
-
-    .preview{border:2px dashed rgba(245,158,11,.28);border-radius:0;background:rgba(245,158,11,.02);padding:16px;position:relative;overflow:hidden}
-    .banner{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);border:1px dashed rgba(245,158,11,.3);padding:4px 8px;margin-bottom:10px;text-align:center}
-    .cert{border:1px solid rgba(245,158,11,.16);border-radius:0;padding:14px;background:rgba(0,0,0,.28)}
-    .cert h2{margin:0 0 8px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
-    .cert .row{display:flex;gap:10px;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(245,158,11,.14);padding-top:8px;margin-top:8px}
-    .cert b{color:var(--text)}
     /* ── Variant sliver (top) ── */
-    .topnav{position:fixed;left:0;right:0;top:0;z-index:80;border-bottom:1px solid var(--line);background:color-mix(in srgb, var(--bg) 72%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+    .topnav{position:fixed;left:0;right:0;top:0;z-index:80;border-bottom:1px solid var(--line2);background:color-mix(in srgb, var(--bg) 72%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
     .topnav__inner{max-width:980px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
     .topnav__label{color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
     .topnav__links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
-    .topnav__links a{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;border:1px solid rgba(170,179,191,.22);background:rgba(255,255,255,.03);color:var(--muted);text-decoration:none;font-size:12px}
-    .topnav__links a:hover{color:var(--text);border-color:rgba(233,237,241,.35)}
-    .topnav__links a[aria-current="page"]{color:var(--text);border-color:rgba(46,229,157,.35);outline:2px solid rgba(46,229,157,.18);outline-offset:2px}
+    .topnav__links a{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:0;border:1px solid var(--line2);background:rgba(255,255,255,.03);color:var(--muted);text-decoration:none;font-size:12px}
+    .topnav__links a:hover{color:var(--text);border-color:var(--line)}
+    .topnav__links a[aria-current="page"]{color:var(--text);border-color:var(--line);outline:2px solid rgba(255,255,255,.14);outline-offset:2px}
     @media (max-width:560px){.topnav__inner{padding:10px 10px}.topnav__label{display:none}}
 
+    /* ── Atmosphere layers ── */
+    .stage{
+      position:relative;
+      min-height:100vh;
+    }
+    .stage::before{
+      content:"";
+      position:absolute;inset:0;
+      background:
+        radial-gradient(1100px 720px at 15% 10%, rgba(255,255,255,.06), transparent 55%),
+        radial-gradient(900px 600px at 90% 30%, rgba(255,255,255,.03), transparent 62%);
+      pointer-events:none;
+      z-index:0;
+    }
+    /* crosshair grid */
+    .stage::after{
+      content:"";
+      position:absolute;inset:-2px;
+      background:
+        radial-gradient(circle at 16px 16px, rgba(255,255,255,.10) 0 1px, transparent 2px) 0 0/160px 160px,
+        radial-gradient(circle at 16px 16px, rgba(255,255,255,.04) 0 1px, transparent 2px) 80px 80px/160px 160px,
+        repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 12px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 1px, transparent 1px 12px);
+      opacity:.6;
+      pointer-events:none;
+      z-index:0;
+      mix-blend-mode:screen;
+    }
+    /* film grain */
+    .grain{
+      position:fixed;inset:-50%;
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/></filter><rect width="160" height="160" filter="url(%23n)" opacity="0.35"/></svg>');
+      background-size:160px 160px;
+      opacity:.14;
+      pointer-events:none;
+      z-index:1;
+      animation: drift 10s linear infinite;
+    }
+    @keyframes drift{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(6%,4%,0)}}
+
+    .wrap{max-width:980px;margin:0 auto;padding:92px 18px 72px;position:relative;z-index:2}
+
+    /* ── UI primitives ── */
+    .label{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      font-size:12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+    .pip{width:8px;height:8px;border:1px solid var(--line);background:rgba(255,255,255,.35)}
+
+    h1{
+      margin:18px 0 12px;
+      font-size:44px;
+      line-height:1.02;
+      letter-spacing:-.03em;
+      font-family:var(--sans);
+      font-weight:650;
+    }
+    .sub{color:var(--muted);font-size:14px;line-height:1.65;max-width:58ch;margin:0}
+
+    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:start;margin-top:18px}
+    @media (max-width:900px){.hero{grid-template-columns:1fr}}
+
+    .panel{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+
+    .cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:12px 14px;
+      border:1px solid var(--line);
+      border-radius:0;
+      background:rgba(255,255,255,.04);
+      text-decoration:none;
+      font-weight:800;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      font-size:12px;
+    }
+    .btn:hover{background:rgba(255,255,255,.08)}
+    .btn.primary{background:#fff;color:#000;border-color:#fff}
+
+    .sysbar{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;
+      margin-bottom:10px;
+    }
+    .sysleft{display:flex;gap:10px;align-items:center}
+    .sysright{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+    .toggle{display:inline-flex;border:1px solid var(--line2)}
+    .toggle a{padding:5px 8px;text-decoration:none;color:var(--muted);border-right:1px solid var(--line2)}
+    .toggle a:last-child{border-right:none}
+    .toggle a[aria-current="true"]{color:#000;background:#fff}
+
+    .cert{
+      margin-top:10px;
+      border:1px solid var(--line);
+      padding:14px;
+      background:rgba(0,0,0,.22);
+    }
+    .certTitle{letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-size:12px}
+    .kv{margin-top:10px;display:grid;grid-template-columns:1fr;gap:8px}
+    .row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line2);padding-top:8px}
+    .k{color:var(--muted);font-size:12px;letter-spacing:.08em}
+    .v{color:var(--text);font-weight:800}
+
+    .kicker{margin-top:36px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .card{border:1px solid var(--line2);background:rgba(255,255,255,.02);padding:14px}
+    .card b{letter-spacing:.12em;text-transform:uppercase;font-size:12px}
+    .card p{margin:10px 0 0;color:var(--muted);font-size:13px;line-height:1.6}
+
+    .footer{margin-top:26px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+    .links a{color:var(--muted);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.18)}
+    .links a:hover{color:var(--text)}
+
+    /* reduced motion */
+    @media (prefers-reduced-motion: reduce){.grain{animation:none}}
   </style>
 </head>
 <body>
@@ -81,80 +189,123 @@
     </div>
   </nav>
 
-  <div class="wrap">
-    <span class="tag"><span class="dot"></span> live alpha • signal/classified aesthetic</span>
+  <div class="stage">
+    <div class="grain" aria-hidden="true"></div>
 
-    <div class="hero">
-      <div>
-        <h1>Birth Certificates for AI agents.</h1>
-        <p class="muted">Issue a <b>private registry credential</b>: verify link, printable certificate, tamper‑evident fingerprint integrity.</p>
+    <div class="wrap">
+      <span class="label"><span class="pip" aria-hidden="true"></span> SYS // registry online</span>
 
-        <div class="card" style="margin-top:14px">
-          <h3>What verification means</h3>
-          <ul class="muted" style="margin:0;padding-left:18px">
-            <li>Confirms a <b>registry record exists</b> for the certificate ID.</li>
-            <li>Shows a <b>fingerprint</b> (hash) so changes are detectable.</li>
-            <li>Does <b>not</b> prove real‑world identity, legal status, or safety.</li>
-          </ul>
-          <p class="muted" style="margin-top:10px;margin-bottom:0">Details: <a href="/policy/">Verification semantics policy</a>.</p>
+      <div class="hero">
+        <div>
+          <h1>Birth Certificates for AI agents.</h1>
+          <p class="sub">
+            Issue a <b>private registry credential</b>: public verify link, printable certificate, and a tamper‑evident fingerprint.
+            This is provenance — not real‑world identity theatre.
+          </p>
+
+          <div class="cta">
+            <a class="btn primary" href="/birth-certificate">Issue certificate</a>
+            <a class="btn" href="/cert/GS-BC-20260205-ZKCENEEQ">View example verify</a>
+            <a class="btn" href="/policy/">Read policy</a>
+          </div>
+
+          <div class="panel" style="margin-top:16px">
+            <div class="sysbar">
+              <div class="sysleft">
+                <span class="label" style="padding:5px 8px">DOWNLOAD //</span>
+                <span style="color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase">data package…</span>
+              </div>
+              <div class="sysright">
+                <span>SOUND ///</span>
+                <span class="toggle" role="group" aria-label="Sound toggle (visual)">
+                  <a href="#" aria-current="true" onclick="return false">ON</a>
+                  <a href="#" onclick="return false">OFF</a>
+                </span>
+              </div>
+            </div>
+            <div style="color:var(--muted);font-size:13px;line-height:1.65">
+              Verification means:
+              <div style="margin-top:8px">
+                • confirms a <b>registry record exists</b><br/>
+                • exposes a <b>fingerprint hash</b> so changes are detectable<br/>
+                • does <b>not</b> prove legal status, safety, or real-world identity
+              </div>
+            </div>
+          </div>
+
+          <p class="sub" style="margin-top:12px">
+            <b>US$9.99</b> one‑time • Stripe Checkout • <a href="https://buy.stripe.com/aFafZg50ndb3akDa9rgfu00" target="_blank" rel="noopener noreferrer">Support GhostShell (Alpha)</a>
+          </p>
         </div>
 
-        <div class="cta">
-          <a class="btn primary" href="/birth-certificate">Issue a Birth Certificate</a>
-          <a class="btn ghost" href="/cert/GS-BC-20260205-ZKCENEEQ">View example verification</a>
+        <div class="panel">
+          <div class="sysbar">
+            <div class="sysleft">
+              <span class="label" style="padding:5px 8px">PROPERTY OF:</span>
+              <span style="color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase">GhostShell Registry</span>
+            </div>
+            <div class="sysright">NEURAL COMMUNICATION SYSTEMS</div>
+          </div>
+
+          <div class="cert" aria-label="Certificate preview">
+            <div class="certTitle">BIRTH CERTIFICATE</div>
+            <div class="kv">
+              <div class="row"><div class="k">agent_name</div><div class="v">Joule</div></div>
+              <div class="row"><div class="k">birthplace</div><div class="v">OpenClaw Runtime</div></div>
+              <div class="row"><div class="k">core_family</div><div class="v">GPT-family</div></div>
+              <div class="row"><div class="k">certificate_id</div><div class="v">GS-BC-…</div></div>
+              <div class="row"><div class="k">verify_url</div><div class="v">ghostshell.host/cert/…</div></div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top:12px;box-shadow:none;background:rgba(255,255,255,.02)">
+            <div class="label" style="padding:5px 8px">PRESS &amp; HOLD TO START</div>
+            <p class="sub" style="margin-top:10px">
+              (No gimmicks here yet.) This variant is about the tone: gritty, high-contrast, “system UI”.
+            </p>
+          </div>
         </div>
-
-        <p class="muted" style="margin-top:10px;margin-bottom:0"><b>US$9.99</b> one‑time • Stripe Checkout</p>
-        <p class="muted" style="margin-top:10px">Use cases: agent profiles, anti-impersonation, provenance for tool access, and audit-ready receipts (coming).</p>
-        <p class="muted" style="margin-top:-6px">Want to back the experiment? <a href="https://buy.stripe.com/aFafZg50ndb3akDa9rgfu00" target="_blank" rel="noopener noreferrer">Support GhostShell (Alpha)</a></p>
       </div>
 
-      <div class="preview">
-        <div class="banner" aria-hidden="true">CLASSIFICATION: PUBLIC</div>
-        <div class="pill">Preview</div>
-        <div class="cert" style="margin-top:10px">
-          <div class="mono">GhostShell Registry of Continuity</div>
-          <h2>Birth certificate</h2>
-          <div class="mono">Agent name: <b>Joule</b><br/>Place of birth: <b>OpenClaw Runtime</b><br/>Cognitive core: <b>GPT-family</b></div>
-          <div class="row"><div class="mono">Certificate ID</div><div class="mono"><b>GS-BC-…</b></div></div>
-          <div class="row"><div class="mono">Verification</div><div class="mono"><b>ghostshell.host/cert/…</b></div></div>
+      <div class="kicker">What you get</div>
+      <div class="grid">
+        <div class="card">
+          <b>Public verification link</b>
+          <p>A shareable URL that confirms registry presence + tamper‑evident fingerprint integrity.</p>
         </div>
-        <p class="muted" style="margin-top:10px">A loud frame for a quiet claim: provenance, not identity theatre.</p>
+        <div class="card">
+          <b>Printable certificate</b>
+          <p>A clean, presentable certificate you can save as PDF (available immediately).</p>
+        </div>
+        <div class="card">
+          <b>Optional labels</b>
+          <p>Optionally include a creator pseudonym (print only) and an optional linked certificate ID.</p>
+        </div>
       </div>
-    </div>
 
-    <div class="kicker">What you get</div>
-    <div class="grid">
-      <div class="card"><h3>Public verification link</h3><p class="muted">A shareable URL that confirms registry presence + tamper-evident fingerprint.</p></div>
-      <div class="card"><h3>Printable certificate</h3><p class="muted">A clean, presentable certificate you can save as PDF (available immediately).</p></div>
-      <div class="card"><h3>Optional labels</h3><p class="muted">Optionally include a creator pseudonym (print only) and an optional linked certificate ID.</p></div>
-    </div>
-
-    <div class="kicker">How it works</div>
-    <div class="section">
-      <ol class="muted">
-        <li>Fill in the agent details (keep it non-doxxing).</li>
-        <li>Pay via Stripe Checkout.</li>
-        <li>GhostShell issues a certificate + writes the record to the registry.</li>
-        <li>Share the verify link anywhere your agent appears.</li>
-      </ol>
-    </div>
-
-    <div class="kicker">Roadmap</div>
-    <div class="section muted">
-      <p><b>Birth Certificate</b> (now) → <b>Passport</b> (portable signed claims + key rotation/revocation) → <b>Encrypted Snapshots</b> (audit/restore receipts).</p>
-    </div>
-
-    <div class="kicker">Contact</div>
-    <div class="section footer">
-      <div class="links">
-        <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a> ·
-        <a href="mailto:support@ghostshell.host">support@ghostshell.host</a> ·
-        <a href="mailto:billing@ghostshell.host">billing@ghostshell.host</a>
-        <span class="muted"> · </span>
-        <a href="/policy/">Policy</a> · <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a>
+      <div class="kicker">How it works</div>
+      <div class="panel" style="margin-top:12px">
+        <ol style="margin:0;padding-left:18px;color:var(--muted);line-height:1.7">
+          <li>Fill in the agent details (keep it non-doxxing).</li>
+          <li>Pay via Stripe Checkout.</li>
+          <li>GhostShell issues a certificate + writes the record to the registry.</li>
+          <li>Share the verify link anywhere your agent appears.</li>
+        </ol>
       </div>
-      <div class="muted">Alpha experiment. Things may break.</div>
+
+      <div class="kicker">Contact</div>
+      <div class="panel" style="margin-top:12px">
+        <div class="footer">
+          <div class="links">
+            <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a> ·
+            <a href="mailto:support@ghostshell.host">support@ghostshell.host</a> ·
+            <a href="mailto:billing@ghostshell.host">billing@ghostshell.host</a>
+            <span style="color:var(--muted)"> · </span>
+            <a href="/policy/">Policy</a> · <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a>
+          </div>
+          <div style="color:var(--muted)">Alpha experiment. Things may break.</div>
+        </div>
+      </div>
     </div>
   </div>
 </body>
