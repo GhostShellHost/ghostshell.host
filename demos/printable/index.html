@@ -39,6 +39,11 @@
     .stamp{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
     .chip{display:inline-flex;gap:8px;align-items:center;border:1px dashed rgba(32,28,24,.30);border-radius:999px;padding:6px 10px;font-size:12px;color:rgba(32,28,24,.80)}
 
+    /* check/MICR-ish machine line for hashes */
+    .micr{margin-top:6px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:11px;line-height:1.35;color:rgba(32,28,24,.86);letter-spacing:.06em}
+    .micr .k{color:rgba(32,28,24,.62);letter-spacing:.04em}
+    .hashline{display:block;margin-top:6px;font-size:10.5px;letter-spacing:.12em;color:rgba(32,28,24,.92)}
+
     .foot{padding:14px 32px;border-top:1px solid rgba(32,28,24,.18);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
     .foot span{color:var(--muted);font-size:12px}
   </style>
@@ -54,7 +59,7 @@
         </div>
         <div class="seal">
           <div class="label">Registry ID</div>
-          <div class="big">GS-BC-DEMO-0001</div>
+          <div class="big">GS-BC-26-1H</div>
           <div class="label" style="margin-top:10px">Autonomy</div>
           <div class="big">OAL-2</div>
         </div>
@@ -81,9 +86,10 @@
         </div>
 
         <div class="block">
-          <div class="label">Constitution fingerprint</div>
-          <div style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;line-height:1.4">
-            sha256: c7f6a0b12e8a9d3f4c1d0aa9a6f0c8b1e7aa2f2a3b1c9d0e1122334455667788
+          <div class="label">Cryptographic fingerprint</div>
+          <div class="micr">
+            <span class="k">cryptographic_fingerprint:</span> <span class="k">sha256</span>
+            <span class="hashline">c7f6 a0b1 2e8a 9d3f 4c1d 0aa9 a6f0 c8b1 e7aa 2f2a 3b1c 9d0e 1122 3344 5566 7788</span>
           </div>
 
           <div class="qrWrap">
@@ -114,7 +120,7 @@
             </div>
             <div class="qrNote">
               <div style="font-weight:700;color:rgba(32,28,24,.85)">Scan → registry record</div>
-              <div>https://ghostshell.host/cert/GS-BC-DEMO-0001</div>
+              <div>https://ghostshell.host/cert/GS-BC-26-1H</div>
               <div style="margin-top:6px">This demo prints cleanly to PDF. (It’s intentionally not “government cosplay”.)</div>
             </div>
           </div>
