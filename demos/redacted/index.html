@@ -75,20 +75,21 @@
     /* rubber stamp watermark */
     .rubber{
       position:absolute;
-      right:22px;
-      bottom:18px;
+      right:18px;
+      bottom:14px;
       transform:rotate(-12deg);
       font-family:var(--mono);
-      font-size:26px;
+      font-size:24px;
       letter-spacing:.16em;
       text-transform:uppercase;
-      color:rgba(17,24,39,.10);
-      border:2px solid rgba(17,24,39,.12);
+      color:rgba(180,24,24,.18);
+      border:2px solid rgba(180,24,24,.16);
       padding:10px 14px;
       border-radius:10px;
       mix-blend-mode:multiply;
       pointer-events:none;
       user-select:none;
+      filter:blur(.15px);
     }
 
     .sheet{
@@ -137,17 +138,27 @@
       height:1.05em;
       width:18ch;
       vertical-align:middle;
-      background:#0b0c10;
+      background:#050608;
       border-radius:3px;
       box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,.10),
+        inset 0 0 0 1px rgba(255,255,255,.08),
         0 0.5px 0 rgba(0,0,0,.35);
-      transform:rotate(-.4deg);
+      transform:rotate(-.6deg);
       position:relative;
       overflow:hidden;
     }
-    /* marker bleed */
-    .redact::before{content:"";position:absolute;inset:-2px;background:radial-gradient(18px 10px at 20% 30%, rgba(255,255,255,.10), transparent 60%),radial-gradient(16px 10px at 70% 60%, rgba(255,255,255,.08), transparent 62%);opacity:.12;mix-blend-mode:overlay}
+    /* marker bleed + uneven edge */
+    .redact::before{content:"";position:absolute;inset:-2px;background:
+      radial-gradient(22px 10px at 20% 30%, rgba(255,255,255,.10), transparent 62%),
+      radial-gradient(20px 10px at 70% 60%, rgba(255,255,255,.08), transparent 64%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.06) 0 1px, transparent 1px 6px);
+      opacity:.10;mix-blend-mode:overlay}
+    .redact::after{content:"";position:absolute;left:-6px;right:-6px;top:-2px;bottom:-2px;background:
+      radial-gradient(14px 10px at 10% 40%, rgba(0,0,0,.55), transparent 70%),
+      radial-gradient(14px 10px at 90% 55%, rgba(0,0,0,.55), transparent 70%);
+      opacity:.08;mix-blend-mode:multiply}
+
+    /* widths */
     .redact.w2{width:22ch}
     .redact.w10{width:10ch}
     .redact.w12{width:12ch}
@@ -162,6 +173,7 @@
       font-size:11.5px;
       line-height:1.6;
       font-family:var(--mono);
+      white-space:pre-wrap; /* avoid showing literal \n */
     }
 
     /* landscape feel */
@@ -224,11 +236,9 @@
           <div class="v">sha256:c7f6a0b12e8a9d3f…</div>
         </div>
 
-        <div class="note">
-          Redaction policy: place_of_origin defaults to <b>state-only</b>; city + country can be made public by explicit opt‑in.\n
-          Time policy: date_of_first_boot is public as <b>YYYY‑MM‑DD</b>; time is redacted.\n
-          Integrity policy: fingerprints + signatures still verify the underlying record.
-        </div>
+        <div class="note">Redaction policy: place_of_origin defaults to <b>state-only</b>; city + country can be made public by explicit opt‑in.
+Time policy: date_of_first_boot is public as <b>YYYY‑MM‑DD</b>; time is redacted.
+Integrity policy: fingerprints + signatures still verify the underlying record.</div>
       </div>
     </div>
   </div>
