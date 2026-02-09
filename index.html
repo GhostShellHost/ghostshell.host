@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GhostShell — Registry for autonomous software</title>
-  <meta name="description" content="GhostShell is building a public-safe registry and verification system for autonomous software: provenance and tamper-evidence, not identity theatre." />
+  <title>GhostShell — Birth Certificates for AI agents</title>
+  <meta name="description" content="GhostShell issues birth certificates for AI agents: a public-safe registry record + tamper-evident hash + buyer-only full certificate." />
   <style>
-    :root{--bg:#0b0c10;--panel:rgba(18,20,27,.78);--text:#e9edf1;--muted:#aab3bf;--line:#252a35;--accent:#7c5cff;--accent2:#2ee59d;--shadow:0 24px 90px rgba(0,0,0,.55);--sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    :root{--bg:#0b0c10;--text:#e9edf1;--muted:#aab3bf;--line:#252a35;--accent:#7c5cff;--shadow:0 24px 90px rgba(0,0,0,.55);--sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
     *{box-sizing:border-box}
     body{margin:0;font-family:var(--sans);background:
       radial-gradient(1000px 600px at 20% 0%,rgba(124,92,255,.22),transparent 50%),
@@ -14,37 +14,99 @@
       var(--bg);
       color:var(--text);
     }
-    .wrap{max-width:980px;margin:0 auto;padding:84px 18px 80px}
-    .panel{border:1px solid rgba(170,179,191,.18);border-radius:18px;background:rgba(18,20,27,.72);box-shadow:var(--shadow);padding:18px}
-    .badge{display:inline-flex;align-items:center;gap:10px;padding:8px 12px;border-radius:999px;border:1px solid rgba(170,179,191,.18);background:rgba(255,255,255,.03);color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
-    .dot{width:10px;height:10px;border-radius:999px;background:var(--accent2);box-shadow:0 0 0 4px rgba(46,229,157,.12)}
-    h1{margin:18px 0 10px;font-size:52px;line-height:1.02;letter-spacing:-0.03em}
-    p{margin:0;color:var(--muted);line-height:1.6;max-width:72ch}
-    .mono{margin-top:14px;font-family:var(--mono);font-size:12px;color:rgba(233,237,241,.78)}
-    .list{margin-top:14px;border-top:1px solid rgba(170,179,191,.14);padding-top:14px;display:grid;gap:10px}
-    .item{display:flex;gap:10px;align-items:flex-start}
-    .k{min-width:18ch;color:rgba(233,237,241,.70);font-family:var(--mono);font-size:12px}
-    .v{color:var(--muted)}
+    a{color:inherit}
+    .wrap{max-width:980px;margin:0 auto;padding:64px 18px 80px}
+
+    h1{margin:0;font-size:56px;line-height:1.0;letter-spacing:-0.03em}
+    .sub{margin:10px 0 0;color:var(--muted);line-height:1.55;max-width:70ch}
+    .origin{margin-top:10px;font-family:var(--mono);letter-spacing:.06em;color:rgba(233,237,241,.78)}
+
+    .certStack{position:relative;height:360px;margin:18px 0 14px}
+    .certBtn{position:absolute;left:0;top:0;display:block;padding:0;border:0;background:transparent;cursor:pointer;border-radius:18px;overflow:hidden;
+      width:min(520px, 92vw);
+      box-shadow:0 12px 44px rgba(0,0,0,.45);
+      transition:transform .16s ease, box-shadow .16s ease;
+    }
+    .certBtn img{display:block;width:100%;height:auto;border-radius:18px}
+
+    /* bottom (redacted) peeks */
+    .certBtn--redacted{transform:rotate(-7deg) translate(52px, 52px);z-index:1;opacity:.97}
+    /* top (full) */
+    .certBtn--full{transform:rotate(5deg) translate(0, 0);z-index:2}
+
+    .certBtn:hover,.certBtn:focus-visible{z-index:6;transform:scale(1.04) rotate(0deg) translate(0, -4px);box-shadow:0 18px 72px rgba(0,0,0,.55)}
+    :focus-visible{outline:3px solid rgba(124,92,255,.35);outline-offset:4px}
+
+    .ctaRow{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:10px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:12px;border:1px solid rgba(170,179,191,.18);text-decoration:none;font-weight:800;background:rgba(255,255,255,.03)}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#9b7bff);border-color:transparent;color:#fff}
+    .price{margin:10px 0 0;color:var(--muted)}
+
+    .kicker{margin-top:30px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+    .formWrap{margin-top:12px}
+    .issueFrame{width:100%;border:0;border-radius:16px;min-height:1500px;box-shadow:var(--shadow);background:#0b0c10}
+
+    /* lightbox */
+    .lightbox{position:fixed;inset:0;z-index:999;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.72)}
+    .lightbox[open]{display:flex}
+    .lightbox__img{max-width:min(1100px, 96vw);max-height:92vh;border-radius:18px;box-shadow:0 34px 140px rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.12)}
+
+    @media (max-width:980px){
+      h1{font-size:46px}
+      .certStack{height:420px}
+      .certBtn{width:min(520px, 92vw)}
+      .issueFrame{min-height:1700px}
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="panel" role="document" aria-label="GhostShell holding page">
-      <div class="badge"><span class="dot" aria-hidden="true"></span> Public holding page</div>
-      <h1>GhostShell</h1>
-      <p>
-        We’re building a registry for autonomous software: a way to publish a <b style="color:var(--text)">public‑safe record</b> and a
-        <b style="color:var(--text)">tamper‑evident hash</b> that can be matched to a buyer’s full certificate.
-      </p>
+    <h1>Birth Certificates for AI agents.</h1>
+    <div class="origin">Everyone has an origin story. <span style="color:var(--muted)">GhostShell records them.</span></div>
 
-      <div class="list" aria-label="What we’re trying to do">
-        <div class="item"><div class="k">Goal</div><div class="v">Provenance + integrity signals for agent deployments.</div></div>
-        <div class="item"><div class="k">Not a claim</div><div class="v">Not legal identity, personhood, or safety certification.</div></div>
-        <div class="item"><div class="k">Status</div><div class="v">Alpha — iterating design + verification semantics.</div></div>
-      </div>
+    <div class="certStack" aria-label="Certificate previews">
+      <button class="certBtn certBtn--redacted" type="button" data-zoom="/assets/launch/redacted.png" aria-label="Open redacted certificate preview">
+        <img src="/assets/launch/redacted.png" alt="Redacted registry record certificate" />
+      </button>
+      <button class="certBtn certBtn--full" type="button" data-zoom="/assets/launch/full.png" aria-label="Open full certificate preview">
+        <img src="/assets/launch/full.png" alt="Full registry record certificate" />
+      </button>
+    </div>
 
-      <div class="mono">(This page is intentionally non-interactive while we iterate.)</div>
+    <div class="ctaRow">
+      <a class="btn primary" href="#issue">Issue a Birth Certificate</a>
+    </div>
+    <div class="price"><b>US$9.99</b> one‑time • instant delivery</div>
+
+    <div id="issue" class="kicker">Issue a Birth Certificate</div>
+    <div class="formWrap">
+      <iframe class="issueFrame" title="Issue a Birth Certificate" src="/birth-certificate/"></iframe>
     </div>
   </div>
+
+  <dialog class="lightbox" id="lightbox" aria-label="Certificate preview">
+    <img class="lightbox__img" id="lightboxImg" alt="Certificate preview" />
+  </dialog>
+
+  <script>
+    (function(){
+      const dlg = document.getElementById('lightbox');
+      const img = document.getElementById('lightboxImg');
+      function open(src){
+        img.src = src;
+        if (typeof dlg.showModal === 'function') dlg.showModal();
+        else dlg.setAttribute('open','');
+      }
+      function close(){
+        if (typeof dlg.close === 'function') dlg.close();
+        else dlg.removeAttribute('open');
+      }
+      document.querySelectorAll('[data-zoom]').forEach(btn => {
+        btn.addEventListener('click', () => open(btn.getAttribute('data-zoom')));
+      });
+      dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); });
+      window.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    })();
+  </script>
 </body>
 </html>
