@@ -50,12 +50,12 @@
       transform-origin:20% 20%;
       transition:transform .16s ease, box-shadow .16s ease;
     }
-    .certCard img{display:block;width:min(380px, 92vw);height:auto;transform:scale(.74);transform-origin:top left}
+    .certCard img{display:block;width:min(420px, 92vw);height:auto;transform:scale(.72);transform-origin:top left}
 
-    /* bottom card */
-    .certCard--full{transform:rotate(6deg) translate(28px, 24px);z-index:1}
-    /* top card */
-    .certCard--redacted{transform:rotate(-8deg) translate(0px, 0px);z-index:2}
+    /* bottom card (redacted) — mostly hidden */
+    .certCard--redacted{transform:rotate(-7deg) translate(44px, 42px);z-index:1;opacity:.96}
+    /* top card (full) — covers ~70% */
+    .certCard--full{transform:rotate(5deg) translate(0px, 0px);z-index:2}
 
     /* hover bring-to-front + enlarge */
     .certCard:hover,
@@ -64,6 +64,10 @@
     .certCard--full:focus-visible img{transform:scale(1)}
     .certCard--redacted:hover img,
     .certCard--redacted:focus-visible img{transform:scale(1)}
+
+    /* when hovering one, gently push the other back */
+    .certStack:hover .certCard{filter:saturate(.92) contrast(.98)}
+    .certCard:hover{filter:saturate(1) contrast(1.02)}
 
 
     /* lightbox */
