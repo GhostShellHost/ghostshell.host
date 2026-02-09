@@ -203,11 +203,12 @@
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7.25 5h1.5v1.5h-1.5V5zm0 3h1.5v3h-1.5V8z" fill="currentColor"/></svg>
         Privacy &mdash; pseudonyms only
       </div>
-      <p>All fields on your certificate are publicly visible on the verification page. To protect your privacy:</p>
+      <p>Certificate fields are publicly visible on the verification page. To protect your privacy:</p>
       <ul>
         <li>Use pseudonyms, handles, or labels &mdash; never real names</li>
-        <li>No email addresses, phone numbers, or physical addresses</li>
+        <li>No email addresses, phone numbers, or physical addresses in certificate fields</li>
         <li>Agent names and labels should be shareable without risk</li>
+        <li><b>Stretch goal:</b> optional delivery email (private, not shown on the public record)</li>
       </ul>
     </div>
 
@@ -222,14 +223,63 @@
         <div class="field-note">The public name for this agent. Use a pseudonym or project name.</div>
         <div class="pii-warn" id="warn_agent_name">This looks like it may contain personal information. Please use a pseudonym instead.</div>
 
-        <label for="place_of_birth">Place of birth <span class="req">*</span></label>
-        <select id="place_of_birth" name="place_of_birth" required>
-          <option value="OpenClaw Runtime">OpenClaw Runtime</option>
-          <option value="Local Host">Local Host</option>
-          <option value="Cloud Instance">Cloud Instance</option>
-          <option value="Browser Session">Browser Session</option>
-          <option value="Unknown">Unknown</option>
+        <label>Place of origin <span class="req">*</span> <span class="hint">city, state, country</span></label>
+        <div class="row">
+          <div>
+            <input id="place_city" name="place_city" required placeholder="City (public-safe default: withheld)" autocomplete="off" />
+          </div>
+          <div>
+            <input id="place_state" name="place_state" required placeholder="State / region" autocomplete="off" />
+          </div>
+          <div>
+            <input id="place_country" name="place_country" required placeholder="Country" value="Australia" autocomplete="off" />
+          </div>
+        </div>
+        <div class="field-note">Public-safe view defaults to showing <b>state + country</b>. City is withheld by default.</div>
+
+        <label for="origin_runtime">Origin runtime <span class="req">*</span></label>
+        <select id="origin_runtime" name="origin_runtime" required>
+          <option value="OpenClaw">OpenClaw</option>
+          <option value="Other">Other</option>
         </select>
+
+        <label for="autonomy_level">Autonomy level <span class="req">*</span></label>
+        <select id="autonomy_level" name="autonomy_level" required>
+          <option value="OAL-2">OAL-2</option>
+          <option value="OAL-1">OAL-1</option>
+          <option value="OAL-0">OAL-0</option>
+        </select>
+
+        <label for="first_boot_date">First boot (UTC) <span class="req">*</span></label>
+        <div class="row">
+          <div>
+            <input id="first_boot_date" name="first_boot_date" type="date" required />
+            <div class="field-note">Public-safe view shows date only by default.</div>
+          </div>
+          <div>
+            <label style="margin-top:0;font-weight:600;font-size:14px" for="public_time_precision">Public time precision <span class="hint">default: date only</span></label>
+            <select id="public_time_precision" name="public_time_precision">
+              <option value="date">date only</option>
+              <option value="datetime">date + time</option>
+            </select>
+          </div>
+        </div>
+
+        <label for="human_custodian">Human custodian <span class="hint">pseudonym</span></label>
+        <input id="human_custodian" name="human_custodian" placeholder="e.g., Jas (withheld in public views)" autocomplete="off" />
+        <div class="confirm-row" style="margin-top:12px">
+          <input type="checkbox" id="withhold_custodian" name="withhold_custodian" checked />
+          <label for="withhold_custodian">Withhold custodian label in public-safe view (recommended).</label>
+        </div>
+
+        <div class="confirm-row" style="margin-top:12px">
+          <input type="checkbox" id="show_city_public" name="show_city_public" />
+          <label for="show_city_public">Show city in public-safe view (opt-in).</label>
+        </div>
+        <div class="confirm-row" style="margin-top:12px">
+          <input type="checkbox" id="hide_state_public" name="hide_state_public" />
+          <label for="hide_state_public">Withhold state in public-safe view (country remains public).</label>
+        </div>
 
         <label for="cognitive_core_family">Cognitive core <span class="req">*</span></label>
         <select id="cognitive_core_family" name="cognitive_core_family" required>
@@ -264,10 +314,24 @@
         <div class="field-note">If this agent descends from another registered agent, enter that certificate ID here.</div>
       </div>
 
+      <!-- Section 4: Delivery (stretch goal) -->
+      <div class="form-section">
+        <div class="section-label">Delivery <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">&mdash; stretch goal</span></div>
+
+        <label for="delivery_email">Delivery email <span class="hint">optional, private</span></label>
+        <input id="delivery_email" name="delivery_email" type="email" placeholder="you@example.com" autocomplete="email" />
+        <div class="field-note">Not shown on the public record. Intended for automatic email delivery + resend support (coming).</div>
+
+        <div class="confirm-row" style="margin-top:14px">
+          <input type="checkbox" id="delivery_consent" name="delivery_consent" />
+          <label for="delivery_consent">I consent to GhostShell storing my email <b>privately</b> for certificate delivery/resend (retention-limited). Not used as identity proof.</label>
+        </div>
+      </div>
+
       <!-- Confirmation -->
       <div class="confirm-row">
         <input type="checkbox" id="no_pii" name="no_pii" required />
-        <label for="no_pii">I confirm that I have not included real names, email addresses, phone numbers, or other personally identifying information in any field above.</label>
+        <label for="no_pii">I confirm that I have not included real names, email addresses, phone numbers, or other personally identifying information in any certificate field above.</label>
       </div>
 
       <!-- Price + summary -->
@@ -354,6 +418,17 @@
       const warn = document.getElementById(wid);
       if (inp && warn) inp.addEventListener('input', () => checkPII(inp, warn));
     });
+
+    // ── Delivery email consent (stretch goal) ──
+    const deliveryEmail = document.getElementById('delivery_email');
+    const deliveryConsent = document.getElementById('delivery_consent');
+    function syncDeliveryConsent(){
+      if (!deliveryEmail || !deliveryConsent) return;
+      const hasEmail = (deliveryEmail.value || '').trim().length > 0;
+      deliveryConsent.required = hasEmail;
+    }
+    deliveryEmail?.addEventListener('input', syncDeliveryConsent);
+    syncDeliveryConsent();
 
     // ── Checkbox gates submit ──
     const checkbox = document.getElementById('no_pii');
