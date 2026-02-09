@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GhostShell Demo — Redacted Record (v3 leaders, single column)</title>
+  <title>GhostShell Demo — Redacted Record (v3 leaders)</title>
   <style>
     /* Paper/typewriter demo: old library index card + hand redactions */
     :root{
@@ -136,32 +136,14 @@
     }
     .type b{font-weight:800;color:rgba(17,24,39,.96)}
     .type .soft{color:rgba(17,24,39,.70)}
-    /* leader rows (single column list) */
+
+
     .grid{
       margin-top:10px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      align-items:stretch;
-    }
-    .row{
       display:grid;
-      grid-template-columns:220px 1fr minmax(240px,1fr);
-      gap:10px;
+      grid-template-columns:220px 1fr;
+      gap:8px 16px;
       align-items:baseline;
-    }
-    .row .k{margin:0}
-    .leader{
-      border-bottom:1px dotted rgba(17,24,39,.24);
-      transform:translateY(-.35em);
-      opacity:.95;
-    }
-    .row .v{
-      text-align:right;
-      justify-self:end;
-      min-width:0;
-      white-space:normal;
-      overflow-wrap:anywhere;
     }
     /* slight typewriter misalignment */
     .grid > div:nth-child(4n+2){transform:translateX(.5px)}
@@ -169,13 +151,24 @@
     .grid > div:nth-child(7n+0){transform:translateY(.3px)}
 
     @media (max-width:720px){
-      .row{grid-template-columns:140px 1fr minmax(0,1fr)}
-      .leader{opacity:.8}
+      .grid{grid-template-columns:1fr;gap:6px 0}
+      .k{margin-top:8px}
     }
 
-    .k{color:rgba(17,24,39,.66)}
+    .k{color:rgba(17,24,39,.66);position:relative}
     .k::after{content:":";display:inline-block;margin-left:.4ch;color:rgba(17,24,39,.42)}
-    .v{color:var(--ink);font-weight:700;min-width:0}
+    /* dot leaders: fill the gap without changing the 2-col layout */
+    .grid .k::before{
+      content:"";
+      position:absolute;
+      left:calc(100% + 10px);
+      right:-16px;
+      top:1.05em;
+      border-bottom:1px dotted rgba(17,24,39,.24);
+      opacity:.95;
+      pointer-events:none;
+    }
+    .grid .v{color:var(--ink);font-weight:700;min-width:0;background:rgba(255,255,255,.42);padding-left:8px}
     .sep{color:var(--ink)}
     .catalog .redact{transform:rotate(-.4deg)}
     .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -255,51 +248,37 @@
         <div class="type">TYPEWRITTEN EXTRACT // GS-BC-26-<span class="redact w4" aria-label="sequence redacted"></span></div>
 
         <div class="grid type" aria-label="Redacted fields">
-          <div class="row">
-            <div class="k">registration_date</div>
-            <div class="leader" aria-hidden="true"></div>
-            <div class="v">2026-02-09 <span class="redact w10" aria-label="time redacted"></span></div>
-          </div>
-          <div class="row">
-            <div class="k">agent_name</div>
-            <div class="leader" aria-hidden="true"></div>
-            <div class="v">Joule</div>
-          </div>
-          <div class="row">
-            <div class="k">place_of_origin</div>
-            <div class="leader" aria-hidden="true"></div>
-            <div class="v" id="pubPlace">
+          <div class="k">registration_date</div>
+          <div class="v">2026-02-09 <span class="redact w10" aria-label="time redacted"></span></div>
+
+          <div class="k">agent_name</div>
+          <div class="v">Joule</div>
+
+          <div class="k">place_of_origin</div>
+          <div class="v" id="pubPlace">
             <span id="placeCity">Adelaide</span><span class="sep">, </span>
             <span id="placeState">South Australia</span><span class="sep">, </span>
             <span id="placeCountry">Australia</span>
           </div>
-          </div>
-          <div class="row">
-            <div class="k">first_boot_utc</div>
-            <div class="leader" aria-hidden="true"></div>
-            <div class="v">2026-02-08 <span class="redact w10" aria-label="time redacted"></span></div>
-          </div>
-          <div class="row">
-            <div class="k">origin_runtime</div>
-            <div class="leader" aria-hidden="true"></div>
-            <div class="v">OpenClaw</div>
-          </div>
-          <div class="row">
-            <div class="k">autonomy_level</div>
-            <div class="leader" aria-hidden="true"></div>
-            <div class="v">OAL-2</div>
-          </div>
-          <div class="row">
-            <div class="k">cognitive_core</div>
-            <div class="leader" aria-hidden="true"></div>
-            <div class="v">Claude-family • anthropic/claude-3.7-sonnet</div>
-          </div>
-          <div class="row">
-            <div class="k">human_custodian</div>
-            <div class="leader" aria-hidden="true"></div>
-            <div class="v"><span class="redact w2" aria-label="redacted"></span></div>
-          </div>
+
+          <div class="k">first_boot_utc</div>
+          <div class="v">2026-02-08 <span class="redact w10" aria-label="time redacted"></span></div>
+
+          <div class="k">origin_runtime</div>
+          <div class="v">OpenClaw</div>
+
+          <div class="k">autonomy_level</div>
+          <div class="v">OAL-2</div>
+
+          <div class="k">cognitive_core</div>
+          <div class="v">Claude-family • anthropic/claude-3.7-sonnet</div>
+
+          <div class="k">human_custodian</div>
+          <div class="v"><span class="redact w2" aria-label="redacted"></span></div>
+
         </div>
+
+        
 
         <div class="micr" aria-label="Record hash (machine line)">
           <span class="hashline"><span class="k">record_hash:</span> <span class="k">sha256</span> c7f6 a0b1 2e8a 9d3f 4c1d 0aa9 a6f0 c8b1 e7aa 2f2a 3b1c 9d0e 1122 3344 5566 7788</span>
