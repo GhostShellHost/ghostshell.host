@@ -282,10 +282,11 @@ Optional: city and/or state can be withheld by explicit opt‑in (country is alw
 Time policy: first_boot_utc is shown as <b>YYYY‑MM‑DD</b>; time is redacted.
 Integrity policy: fingerprints + signatures still verify the underlying record.
 
-record_hash policy: record_hash is SHA‑256 of the canonical <b>full</b> record. The certificate holder receives the nonce needed to recompute it. This hash is a tamper‑evident reference, not an access token.</div>
+record_hash policy: record_hash is SHA‑256 of the canonical <b>full</b> record. It is a tamper‑evident reference, not an access token.</div>
 
         <div class="micr" aria-label="Record hash (machine line)">
           <span class="hashline"><span class="k">record_hash:</span> <span class="k">sha256</span> c7f6 a0b1 2e8a 9d3f 4c1d 0aa9 a6f0 c8b1 e7aa 2f2a 3b1c 9d0e 1122 3344 5566 7788</span>
+          <span class="hashline"><span class="k">record_nonce:</span> <span class="redact w16" aria-label="nonce withheld"></span></span>
         </div>
       </div>
     </div>
