@@ -62,19 +62,44 @@
     /* top card (full) — bigger */
     .certCard--full{transform:rotate(3deg) translate(0px, 0px);z-index:2}
 
-    /* hover bring-to-front + enlarge */
-    .certCard:hover,
-    .certCard:focus-visible{z-index:6;box-shadow:0 20px 90px rgba(0,0,0,.62);transform:translate(0, -6px) rotate(0deg) scale(1.02)}
+    /* On hover/click: expand to full width and crossfade full ↔ redacted */
+    .certCycle{position:absolute;inset:0;display:none;align-items:flex-start;justify-content:flex-start;z-index:10}
+    .certStack:hover .certCycle,
+    .certStack:focus-within .certCycle,
+    .certStack[data-active="1"] .certCycle{display:flex}
 
-    /* when hovering one, gently push the other back */
-    .certStack:hover .certCard{filter:saturate(.92) contrast(.98)}
-    .certCard:hover{filter:saturate(1) contrast(1.02)}
+    .certStack:hover .certCard,
+    .certStack:focus-within .certCard,
+    .certStack[data-active="1"] .certCard{opacity:0;pointer-events:none}
 
+    .certCycle__frame{position:relative;width:100%;max-width:980px}
+    .certCycle__img{position:absolute;left:0;top:0;width:100%;height:auto;border-radius:18px;box-shadow:0 22px 100px rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.08)}
 
-    /* lightbox */
-    .lightbox{position:fixed;inset:0;z-index:999;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.72)}
-    .lightbox[open]{display:flex}
-    .lightbox__img{max-width:min(1100px, 96vw);max-height:92vh;border-radius:18px;box-shadow:0 34px 140px rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.12)}
+    @keyframes fadeToRedacted{
+      0%,40%{opacity:1}
+      48%,80%{opacity:0}
+      90%,100%{opacity:1}
+    }
+    @keyframes fadeInRedacted{
+      0%,40%{opacity:0}
+      52%,80%{opacity:1}
+      90%,100%{opacity:0}
+    }
+    .certStack:hover .certCycle__img.full,
+    .certStack:focus-within .certCycle__img.full,
+    .certStack[data-active="1"] .certCycle__img.full{animation:fadeToRedacted 3.6s ease-in-out infinite}
+    .certStack:hover .certCycle__img.redacted,
+    .certStack:focus-within .certCycle__img.redacted,
+    .certStack[data-active="1"] .certCycle__img.redacted{animation:fadeInRedacted 3.6s ease-in-out infinite}
+
+    @media (prefers-reduced-motion: reduce){
+      .certStack:hover .certCycle__img.full,
+      .certStack:focus-within .certCycle__img.full,
+      .certStack[data-active="1"] .certCycle__img.full{animation:none;opacity:1}
+      .certStack:hover .certCycle__img.redacted,
+      .certStack:focus-within .certCycle__img.redacted,
+      .certStack[data-active="1"] .certCycle__img.redacted{animation:none;opacity:0}
+    }
 
     @media (max-width:980px){
       .certStack{height:520px}
@@ -107,13 +132,20 @@
       <div>
         <div style="margin-top:16px">
           <h1>Birth Certificates for AI agents.</h1>
-          <div class="certStack" aria-label="Certificate previews">
-            <button class="certCard certCard--full" type="button" data-zoom="/assets/launch/full.png" aria-label="Open full certificate preview">
+          <div class="certStack" aria-label="Certificate previews" id="certStack">
+            <button class="certCard certCard--full" type="button" aria-label="Preview certificates">
               <img src="/assets/launch/full.png" alt="Full registry record certificate" />
             </button>
-            <button class="certCard certCard--redacted" type="button" data-zoom="/assets/launch/redacted.png" aria-label="Open redacted certificate preview">
+            <button class="certCard certCard--redacted" type="button" aria-label="Preview certificates">
               <img src="/assets/launch/redacted.png" alt="Redacted registry record certificate" />
             </button>
+
+            <div class="certCycle" aria-hidden="true">
+              <div class="certCycle__frame">
+                <img class="certCycle__img full" src="/assets/launch/full.png" alt="" />
+                <img class="certCycle__img redacted" src="/assets/launch/redacted.png" alt="" />
+              </div>
+            </div>
           </div>
 
           <div class="cta" style="margin-top:12px">
@@ -141,10 +173,6 @@
     </div>
   </div>
 
-  <dialog class="lightbox" id="lightbox" aria-label="Certificate preview">
-    <img class="lightbox__img" id="lightboxImg" alt="Certificate preview" />
-  </dialog>
-
   <script>
     (function(){
       // ── Auto-resize the embedded form to avoid an inner scrollbar ──
@@ -157,27 +185,24 @@
           issueFrame.style.height = Math.max(900, Math.ceil(d.h)) + 'px';
         }
       });
-      // Ask the iframe for its height (Safari sometimes misses the first postMessage).
       issueFrame?.addEventListener('load', () => {
         try { issueFrame.contentWindow?.postMessage({ type: 'ghostshell:ping' }, location.origin); } catch(e) {}
       });
 
-      const dlg = document.getElementById('lightbox');
-      const img = document.getElementById('lightboxImg');
-      function open(src){
-        img.src = src;
-        if (typeof dlg.showModal === 'function') dlg.showModal();
-        else dlg.setAttribute('open','');
-      }
-      function close(){
-        if (typeof dlg.close === 'function') dlg.close();
-        else dlg.removeAttribute('open');
-      }
-      document.querySelectorAll('[data-zoom]').forEach(btn => {
-        btn.addEventListener('click', () => open(btn.getAttribute('data-zoom')));
+      // ── Touch support for the certificate crossfade preview ──
+      const stack = document.getElementById('certStack');
+      function close(){ stack?.removeAttribute('data-active'); }
+      function open(){ stack?.setAttribute('data-active','1'); }
+      stack?.addEventListener('click', (e) => {
+        // toggle on tap
+        const on = stack.getAttribute('data-active') === '1';
+        if (on) close();
+        else open();
+        e.preventDefault();
+        e.stopPropagation();
       });
-      dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); });
-      window.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+      document.addEventListener('click', () => close());
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
     })();
   </script>
 </body>
