@@ -195,18 +195,6 @@
     .redact.w12{width:12ch}
     .redact.w16{width:16ch}
 
-
-    .note{
-      margin-top:12px;
-      border-top:1px dashed rgba(17,24,39,.22);
-      padding-top:10px;
-      color:rgba(17,24,39,.62);
-      font-size:11.5px;
-      line-height:1.6;
-      font-family:var(--mono);
-      white-space:pre-wrap; /* avoid showing literal \n */
-    }
-
     /* MICR-ish machine line (bottom) */
     .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:9.8px;line-height:1.22;color:rgba(17,24,39,.70);letter-spacing:.08em}
     .micr .k{letter-spacing:.04em;color:inherit}
@@ -277,13 +265,7 @@
 
         </div>
 
-        <div class="note">Redaction policy: place_of_origin defaults to <b>state+country</b>; city is redacted by default.
-Optional: city and/or state can be withheld by explicit opt‑in (country is always public).
-Time policy: first_boot_utc is shown as <b>YYYY‑MM‑DD</b>; time is redacted.
-Integrity policy: fingerprints + signatures still verify the underlying record.
-
-record_hash policy: record_hash is SHA‑256 of the canonical <b>full</b> record. It is a tamper‑evident reference, not an access token.
-Nonce policy: the public-safe copy withholds the nonce; the certificate holder receives it.</div>
+        
 
         <div class="micr" aria-label="Record hash (machine line)">
           <span class="hashline"><span class="k">record_hash:</span> <span class="k">sha256</span> c7f6 a0b1 2e8a 9d3f 4c1d 0aa9 a6f0 c8b1 e7aa 2f2a 3b1c 9d0e 1122 3344 5566 7788</span>
