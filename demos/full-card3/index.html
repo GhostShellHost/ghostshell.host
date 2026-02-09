@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GhostShell Demo — Registry Record (Full)</title>
+  <style>
+    /* Full (unredacted) catalogue card record — matched to redacted style */
+    :root{
+      --desk:#0b0c10;
+      --paper:#fbf7ea;
+      --paper2:#f6f0dd;
+      --ink:#111827;
+      --muted:#4b5563;
+      --line:rgba(17,24,39,.18);
+      --shadow:0 26px 80px rgba(0,0,0,.55);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 600px at 20% 0%, rgba(255,255,255,.05), transparent 55%),
+        radial-gradient(900px 600px at 80% 20%, rgba(255,255,255,.03), transparent 60%),
+        var(--desk);
+      color:#e9edf1;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      padding:18px;
+    }
+    .wrap{max-width:900px;margin:0 auto}
+
+    .paper{
+      color:var(--ink);
+      background:linear-gradient(180deg,var(--paper),var(--paper2));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:var(--shadow);
+      border-radius:14px;
+      padding:18px 18px 16px;
+      position:relative;
+      overflow:hidden;
+      transform:rotate(-.12deg);
+    }
+    .paper::after{content:"";position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:92px;height:24px;border:1px solid rgba(17,24,39,.22);border-bottom:none;border-radius:0 0 14px 14px;background:linear-gradient(180deg,var(--paper2),var(--paper));opacity:.75}
+
+    .wear{position:absolute;inset:-2px;pointer-events:none;opacity:.16;mix-blend-mode:multiply;background:
+      radial-gradient(28px 18px at 6% 10%, rgba(0,0,0,.35), transparent 70%),
+      radial-gradient(34px 22px at 96% 14%, rgba(0,0,0,.28), transparent 72%),
+      radial-gradient(34px 22px at 92% 92%, rgba(0,0,0,.25), transparent 74%),
+      radial-gradient(28px 18px at 8% 92%, rgba(0,0,0,.28), transparent 74%);
+    }
+
+    .holes{position:absolute;left:10px;top:74px;bottom:26px;width:18px;pointer-events:none}
+    .hole{width:14px;height:14px;border-radius:99px;border:1px solid rgba(17,24,39,.20);background:rgba(0,0,0,.10);box-shadow:inset 0 0 0 3px rgba(255,255,255,.28);margin:0 0 18px 0;opacity:.55}
+
+    .rules{position:absolute;inset:0;pointer-events:none;opacity:.55;background:repeating-linear-gradient(180deg, rgba(17,24,39,.05) 0 1px, transparent 1px 24px)}
+    .margin{position:absolute;left:28px;top:0;bottom:0;width:1px;background:rgba(255,106,42,.28);pointer-events:none}
+
+    .paper::before{content:"";position:absolute;inset:-50%;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/></filter><rect width="180" height="180" filter="url(%23n)" opacity="0.35"/></svg>');background-size:180px 180px;opacity:.085;pointer-events:none}
+
+    .header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;position:relative}
+    h1{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
+
+    .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
+    .catalog b{color:rgba(17,24,39,.82)}
+    .slot{display:inline-block}
+    .cardSlot{display:inline-flex;align-items:baseline;min-width:18ch;max-width:24ch;white-space:nowrap;vertical-align:baseline}
+    .cardPad{flex:1 1 auto}
+    .classSlot{min-width:7ch}
+
+
+    .stamp{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(17,24,39,.55);border:1px solid rgba(17,24,39,.22);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.5);white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+    .lock{width:12px;height:12px;opacity:.7}
+
+    /* rubber stamp watermark */
+    .rubber{
+      position:absolute;
+      right:18px;
+      bottom:14px;
+      transform:rotate(-16deg);
+      font-family:var(--mono);
+      font-size:24px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:rgba(20,120,70,.22);
+      border:2px solid rgba(20,120,70,.20);
+      padding:10px 14px;
+      border-radius:10px;
+      mix-blend-mode:multiply;
+      pointer-events:none;
+      user-select:none;
+      filter:blur(.15px);
+    }
+
+    .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.18);border-radius:12px;background:rgba(255,255,255,.46);padding:14px;position:relative;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+
+    .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);position:relative;letter-spacing:.03em;text-shadow:0.35px 0 rgba(17,24,39,.55),-0.15px 0 rgba(17,24,39,.25);filter:contrast(1.02) saturate(0.95)}
+    .type b{font-weight:800;color:rgba(17,24,39,.96)}
+
+    .grid{margin-top:10px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px 16px;align-items:baseline}
+    /* ruled separators per row pair */
+    .grid .k,.grid .v{padding-bottom:6px;border-bottom:1px solid rgba(17,24,39,.08)}
+    .grid > div:nth-last-child(-n+2){border-bottom:0;padding-bottom:0}
+    /* gentle typewriter drift */
+    .grid > div:nth-child(4n+2){transform:translateX(.5px)}
+    .grid > div:nth-child(6n+1){transform:translateX(-.4px)}
+    .grid > div:nth-child(7n+0){transform:translateY(.3px)}
+    @media (max-width:720px){.grid{grid-template-columns:1fr;gap:6px 0}.k{margin-top:8px}}
+
+    .k{color:rgba(17,24,39,.58);font-weight:600}
+    .v{color:var(--ink);font-weight:800;min-width:0}
+    .v.clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    /* clip should only ellipsis when it truly runs out of available width */
+    .clip{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
+
+    .note{display:none}
+
+    /* MICR-ish machine line (bottom) */
+    .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:9.8px;line-height:1.22;color:rgba(17,24,39,.70);letter-spacing:.08em}
+    .micr .k{letter-spacing:.04em;color:inherit}
+    .micr .hashline{display:block;margin-top:6px;color:rgba(17,24,39,.86);letter-spacing:.10em;white-space:nowrap;overflow:hidden;text-overflow:clip}
+    .micr a:focus-visible{outline:2px solid rgba(17,24,39,.35);outline-offset:2px;border-radius:4px}
+
+    @media (min-width:780px){
+      .paper{padding:22px 22px 18px}
+      .sheet{padding:16px 18px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="paper" role="document" aria-label="Full record demo on paper">
+      <div class="rules" aria-hidden="true"></div>
+      <div class="margin" aria-hidden="true"></div>
+      <div class="wear" aria-hidden="true"></div>
+      <div class="holes" aria-hidden="true"><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+
+      <div class="header">
+        <div>
+          <h1>GhostShell registry record — full</h1>
+          <div class="catalog"><span>CATALOG:</span> <b>GS/REG</b> <span>•</span> <span>CARD:</span> <span class="slot cardSlot"><b>GS-BC-26-1H</b><span class="cardPad" aria-hidden="true"></span></span> <span>•</span> <span>CLASS:</span> <span class="slot classSlot"><b>OAL-2</b></span></div>
+        </div>
+        <div class="stamp"><svg class="lock" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.5 11V8.5a4.5 4.5 0 1 1 9 0V11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6 11h12v9H6v-9Z" stroke="currentColor" stroke-width="2"/><path d="M12 15v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>PRIVATE FULL RECORD</div>
+      </div>
+
+      <div class="sheet">
+        <div class="rubber" aria-hidden="true">ORIGINAL COPY</div>
+        <div class="type">TYPEWRITTEN EXTRACT // GS-BC-26-1H</div>
+
+        <div class="grid type" aria-label="Full fields">
+          <div class="k">certificate_id</div><div class="v">GS-BC-26-1H</div>
+          <div class="k">agent_name</div><div class="v">Joule</div>
+          <div class="k">place_of_origin</div><div class="v" title="Adelaide, South Australia, Australia">Adelaide, South Australia, Australia</div>
+          <div class="k">first_boot_utc</div><div class="v">2026-02-08 09:23:12Z</div>
+          <div class="k">origin_runtime</div><div class="v">OpenClaw</div>
+          <div class="k">autonomy_level</div><div class="v">OAL-2</div>
+          <div class="k">cognitive_core</div><div class="v clip" title="Claude-family • anthropic/claude-3.7-sonnet">Claude-family • anthropic/claude-3.7-sonnet</div>
+          <div class="k">human_custodian</div><div class="v clip" title="Jason (withheld in public views)">Jason (withheld in public views)</div>
+        </div>
+
+        <div class="micr" aria-label="Record hash (machine line)" data-build="38c9ee5+nonce-line">
+          <span class="hashline"><span class="k">record_hash:</span> <span class="k">sha256</span> c7f6 a0b1 2e8a 9d3f 4c1d 0aa9 a6f0 c8b1 e7aa 2f2a 3b1c 9d0e 1122 3344 5566 7788</span>
+          <span class="hashline"><span class="k">record_nonce:</span> n_7f3c9b1a2d4e6f80</span>
+          <span class="hashline"><span class="k">public_record:</span> <a href="/demos/redacted/" style="color:inherit;text-decoration:none;border-bottom:1px solid rgba(17,24,39,.22)">ghostshell.host/demos/redacted/</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
