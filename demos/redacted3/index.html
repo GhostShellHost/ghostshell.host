@@ -161,16 +161,19 @@
     .grid .k::before{
       content:"";
       position:absolute;
-      /* start the leaders immediately after the colon */
+      /* start leaders immediately after the colon */
       left:calc(100% + 2px);
-      /* run right up to the value column; value background masks overlap */
+      /* run under the value; value background masks overlap */
       right:-10px;
-      top:1.02em;
-      border-bottom:1px dotted rgba(17,24,39,.26);
-      opacity:.95;
+      top:1.05em;
+      height:10px;
+      background:
+        radial-gradient(circle, rgba(17,24,39,.38) 1.1px, transparent 1.2px)
+        0 100%/6px 2px repeat-x;
+      opacity:1;
       pointer-events:none;
     }
-    .grid .v{color:var(--ink);font-weight:700;min-width:0;background:rgba(255,255,255,.42);padding-left:10px}
+    .grid .v{color:var(--ink);font-weight:700;min-width:0;background:rgba(255,255,255,.55);padding-left:10px}
     .sep{color:var(--ink)}
     .catalog .redact{transform:rotate(-.4deg)}
     .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
