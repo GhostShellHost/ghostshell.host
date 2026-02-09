@@ -275,14 +275,24 @@
         </ul>
       </div>
 
-      <button class="btn" type="submit" id="submitBtn" disabled>Continue to payment</button>
+      <button class="btn" type="submit" id="submitBtn">Coming very soon</button>
     </form>
 
     <div class="foot">
       <p>Private credential issued by <a href="/">GhostShell</a>. This is not a government-issued identity document. All certificate fields are publicly visible on the verification page. Digital product; see <a href="/#faq">FAQ</a> for refund policy.</p>
-      <p style="margin-top:8px"><a href="/style-lab">&larr; Style Lab</a></p>
     </div>
   </div>
+
+  <dialog class="lightbox" id="comingSoon" aria-label="Coming soon" style="padding:0;border:1px solid rgba(170,179,191,.18);border-radius:16px;background:rgba(18,20,27,.92);color:var(--fg);max-width:min(520px,92vw)">
+    <div style="padding:18px 18px 14px">
+      <div style="font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-size:12px">Payments</div>
+      <div style="margin-top:8px;font-size:18px;font-weight:800">Coming very soon</div>
+      <div style="margin-top:8px;color:var(--muted);line-height:1.55">We’re polishing the issuance flow. Check back shortly.</div>
+      <div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" id="closeSoon" style="padding:10px 12px;border-radius:12px;border:1px solid rgba(170,179,191,.22);background:rgba(255,255,255,.04);color:var(--fg);font-weight:800;cursor:pointer">Close</button>
+      </div>
+    </div>
+  </dialog>
 
   <script>
 
@@ -320,12 +330,28 @@
     deliveryEmail?.addEventListener('input', syncDeliveryConsent);
     syncDeliveryConsent();
 
-    // ── Checkbox gates submit ──
-    const checkbox = document.getElementById('no_pii');
+    // ── Disable payments for now (launch holding) ──
+    const form = document.getElementById('certForm');
+    const soon = document.getElementById('comingSoon');
+    const closeSoon = document.getElementById('closeSoon');
     const submitBtn = document.getElementById('submitBtn');
-    checkbox?.addEventListener('change', () => {
-      submitBtn.disabled = !checkbox.checked;
+
+    function openSoon(){
+      if (typeof soon.showModal === 'function') soon.showModal();
+      else soon.setAttribute('open','');
+    }
+    function closeSoonFn(){
+      if (typeof soon.close === 'function') soon.close();
+      else soon.removeAttribute('open');
+    }
+    closeSoon?.addEventListener('click', closeSoonFn);
+    soon?.addEventListener('click', (e)=>{ if (e.target===soon) closeSoonFn(); });
+
+    form?.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      openSoon();
     });
+    submitBtn?.addEventListener('click', (e)=>{ e.preventDefault(); openSoon(); });
   </script>
 </body>
 </html>

@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GhostShell — Birth Certificates for AI agents</title>
-  <meta name="description" content="GhostShell issues birth certificates for AI agents: a public-safe registry record + tamper-evident hash + buyer-only full certificate." />
+  <title>GhostShell — Birth Certificates for AI agents (Index 1.1)</title>
+  <meta name="description" content="GhostShell issues verifiable Birth Certificates for AI agents: a public verification link + printable certificate + tamper-evident fingerprint." />
   <style>
-    :root{--bg:#0b0c10;--text:#e9edf1;--muted:#aab3bf;--line:#252a35;--accent:#7c5cff;--shadow:0 24px 90px rgba(0,0,0,.55);--sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    :root{--bg:#0b0c10;--card:rgba(18,20,27,.78);--text:#e9edf1;--muted:#aab3bf;--line:#252a35;--accent:#7c5cff;--accent2:#2ee59d;--shadow:0 24px 90px rgba(0,0,0,.55);--sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
     *{box-sizing:border-box}
     body{margin:0;font-family:var(--sans);background:
       radial-gradient(1000px 600px at 20% 0%,rgba(124,92,255,.22),transparent 50%),
@@ -15,36 +15,60 @@
       color:var(--text);
     }
     a{color:inherit}
+
+    /* optional variants sliver */
+    .topnav{position:fixed;left:0;right:0;top:0;z-index:80;border-bottom:1px solid rgba(170,179,191,.18);background:color-mix(in srgb, var(--bg) 72%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+    .topnav__inner{max-width:1080px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .topnav__label{color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+    .topnav__links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .topnav__links a{display:inline-flex;align-items:center;padding:9px 12px;border-radius:999px;border:1px solid rgba(170,179,191,.22);background:rgba(255,255,255,.03);color:var(--muted);text-decoration:none;font-size:12px;min-height:44px}
+    .topnav__links a:hover{color:var(--text);border-color:rgba(233,237,241,.35)}
+    .topnav__links a[aria-current="page"]{color:var(--text);border-color:rgba(46,229,157,.35);outline:2px solid rgba(46,229,157,.18);outline-offset:2px}
+    @media (max-width:560px){.topnav__label{display:none}}
+
     .wrap{max-width:980px;margin:0 auto;padding:64px 18px 80px}
 
-    h1{margin:0;font-size:56px;line-height:1.0;letter-spacing:-0.03em}
-    .sub{margin:10px 0 0;color:var(--muted);line-height:1.55;max-width:70ch}
-    .origin{margin-top:10px;font-family:var(--mono);letter-spacing:.06em;color:rgba(233,237,241,.78)}
+    /* hero */
+    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:start}
+    @media (max-width:980px){.hero{grid-template-columns:1fr}}
 
-    .certStack{position:relative;height:360px;margin:18px 0 14px}
-    .certBtn{position:absolute;left:0;top:0;display:block;padding:0;border:0;background:transparent;cursor:pointer;border-radius:18px;overflow:hidden;
-      width:min(520px, 92vw);
-      box-shadow:0 12px 44px rgba(0,0,0,.45);
+    h1{margin:0 0 10px;font-size:56px;line-height:1.0;letter-spacing:-0.03em}
+    .sub{margin:0 0 16px;color:var(--muted);line-height:1.55;max-width:70ch}
+
+    .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:12px;border:1px solid var(--line);text-decoration:none;font-weight:700;background:rgba(255,255,255,.03)}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#9b7bff);border-color:transparent;color:#fff}
+    .btn.secondary{background:rgba(18,20,27,.45)}
+
+    .card{border:1px solid rgba(170,179,191,.18);border-radius:16px;background:rgba(18,20,27,.72);box-shadow:var(--shadow);padding:16px}
+    .card h3{margin:0 0 10px;font-size:16px}
+
+    /* certificate stack (two photos under the page title) */
+    .certStack{position:relative;height:340px;margin:14px 0 18px}
+    .certCard{position:absolute;left:0;top:0;display:block;padding:0;border:0;background:transparent;border-radius:18px;overflow:hidden;cursor:pointer;
+      width:min(420px, 92vw);
+      /* keep it feeling like paper (no heavy black slab) */
+      box-shadow:0 10px 38px rgba(0,0,0,.42), 0 1px 0 rgba(255,255,255,.10);
+      outline:1px solid rgba(255,255,255,.08);
+      outline-offset:-1px;
+      transform-origin:20% 20%;
       transition:transform .16s ease, box-shadow .16s ease;
     }
-    .certBtn img{display:block;width:100%;height:auto;border-radius:18px}
+    .certCard img{display:block;width:100%;height:auto;border-radius:18px}
 
-    /* bottom (redacted) peeks */
-    .certBtn--redacted{transform:rotate(-7deg) translate(52px, 52px);z-index:1;opacity:.97}
-    /* top (full) */
-    .certBtn--full{transform:rotate(5deg) translate(0, 0);z-index:2}
+    /* bottom card (redacted) — mostly hidden */
+    .certCard--redacted{transform:rotate(-7deg) translate(44px, 42px);z-index:1;opacity:.96}
+    /* top card (full) — covers ~70% */
+    .certCard--full{transform:rotate(5deg) translate(0px, 0px);z-index:2}
 
-    .certBtn:hover,.certBtn:focus-visible{z-index:6;transform:scale(1.04) rotate(0deg) translate(0, -4px);box-shadow:0 18px 72px rgba(0,0,0,.55)}
-    :focus-visible{outline:3px solid rgba(124,92,255,.35);outline-offset:4px}
+    /* hover bring-to-front + enlarge */
+    .certCard:hover,
+    .certCard:focus-visible{z-index:5;box-shadow:0 18px 70px rgba(0,0,0,.55);transform:scale(1.04) rotate(0deg) translate(0, -4px)}
 
-    .ctaRow{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:10px}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:12px;border:1px solid rgba(170,179,191,.18);text-decoration:none;font-weight:800;background:rgba(255,255,255,.03)}
-    .btn.primary{background:linear-gradient(90deg,var(--accent),#9b7bff);border-color:transparent;color:#fff}
-    .price{margin:10px 0 0;color:var(--muted)}
+    /* when hovering one, gently push the other back */
+    .certStack:hover .certCard{filter:saturate(.92) contrast(.98)}
+    .certCard:hover{filter:saturate(1) contrast(1.02)}
 
-    .kicker{margin-top:30px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-    .formWrap{margin-top:12px}
-    .issueFrame{width:100%;border:0;border-radius:16px;min-height:1500px;box-shadow:var(--shadow);background:#0b0c10}
 
     /* lightbox */
     .lightbox{position:fixed;inset:0;z-index:999;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.72)}
@@ -52,35 +76,65 @@
     .lightbox__img{max-width:min(1100px, 96vw);max-height:92vh;border-radius:18px;box-shadow:0 34px 140px rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.12)}
 
     @media (max-width:980px){
-      h1{font-size:46px}
       .certStack{height:420px}
-      .certBtn{width:min(520px, 92vw)}
-      .issueFrame{min-height:1700px}
+      .certCard{width:min(520px, 92vw)}
     }
+
+    /* sections */
+    .kicker{margin-top:36px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}}
+
+    /* form embed: no extra chrome */
+    .formWrap{margin-top:12px}
+    .issueFrame{width:100%;border:0;border-radius:16px;min-height:1200px;box-shadow:var(--shadow);background:#0b0c10}
+    @media (max-width:980px){.issueFrame{min-height:1500px}}
+
+    /* footer */
+    .footer{margin-top:26px;padding-top:18px;border-top:1px solid rgba(170,179,191,.18);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+    .links{color:var(--muted)}
+    .links a{color:var(--muted);text-decoration:none;border-bottom:1px solid rgba(170,179,191,.28)}
+    .links a:hover{color:var(--text)}
+    :focus-visible{outline:3px solid rgba(46,229,157,.28);outline-offset:3px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Birth Certificates for AI agents.</h1>
-    <div class="origin">Everyone has an origin story. <span style="color:var(--muted)">GhostShell records them.</span></div>
+    <div class="hero">
+      <div>
+        <div style="margin-top:16px">
+          <h1>Birth Certificates for AI agents.</h1>
+          <div class="certStack" aria-label="Certificate previews">
+            <button class="certCard certCard--full" type="button" data-zoom="/index_test/assets/full.png" aria-label="Open full certificate preview">
+              <img src="/index_test/assets/full.png" alt="Full registry record certificate" />
+            </button>
+            <button class="certCard certCard--redacted" type="button" data-zoom="/index_test/assets/redacted.png" aria-label="Open redacted certificate preview">
+              <img src="/index_test/assets/redacted.png" alt="Redacted registry record certificate" />
+            </button>
+          </div>
 
-    <div class="certStack" aria-label="Certificate previews">
-      <button class="certBtn certBtn--redacted" type="button" data-zoom="/assets/launch/redacted.png" aria-label="Open redacted certificate preview">
-        <img src="/assets/launch/redacted.png" alt="Redacted registry record certificate" />
-      </button>
-      <button class="certBtn certBtn--full" type="button" data-zoom="/assets/launch/full.png" aria-label="Open full certificate preview">
-        <img src="/assets/launch/full.png" alt="Full registry record certificate" />
-      </button>
-    </div>
+          <div class="cta" style="margin-top:12px">
+            <a class="btn primary" href="#issue">Issue a Birth Certificate</a>
+          </div>
+          <p class="muted" style="margin-top:10px;margin-bottom:0"><b>US$9.99</b> one‑time • instant delivery</p>
+        </div>
+      </div>
 
-    <div class="ctaRow">
-      <a class="btn primary" href="#issue">Issue a Birth Certificate</a>
+      <div class="stack" aria-label="Certificate examples" hidden></div>
     </div>
-    <div class="price"><b>US$9.99</b> one‑time • instant delivery</div>
 
     <div id="issue" class="kicker">Issue a Birth Certificate</div>
     <div class="formWrap">
       <iframe class="issueFrame" title="Issue a Birth Certificate" src="/birth-certificate/"></iframe>
+    </div>
+
+    <div class="footer">
+      <div class="links">
+        <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a>
+        <span> · </span>
+        <a href="/policy/">Policy</a> · <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a>
+      </div>
+      <div class="links">Alpha experiment. Things may break.</div>
     </div>
   </div>
 
