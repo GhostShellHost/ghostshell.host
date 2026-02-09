@@ -44,35 +44,10 @@
     .card{border:1px solid rgba(170,179,191,.18);border-radius:16px;background:rgba(18,20,27,.72);box-shadow:var(--shadow);padding:16px}
     .card h3{margin:0 0 10px;font-size:16px}
 
-    /* certificate stack (two photos under the page title) */
-    .certStack{position:relative;height:560px;margin:14px 0 18px}
-    .certCard{position:absolute;left:0;top:0;display:block;padding:0;border:0;background:transparent;border-radius:18px;overflow:hidden;cursor:pointer;
-      width:min(920px, 100%);
-      /* paper only */
-      box-shadow:0 12px 44px rgba(0,0,0,.45);
-      outline:1px solid rgba(255,255,255,.08);
-      outline-offset:-1px;
-      transform-origin:20% 20%;
-      transition:transform .16s ease, box-shadow .16s ease;
-    }
-    .certCard img{display:block;width:100%;height:auto;border-radius:18px}
-
-    /* bottom card (redacted) — ~50% visible */
-    .certCard--redacted{transform:rotate(-4deg) translate(150px, 170px);z-index:1;opacity:.96}
-    /* top card (full) — bigger */
-    .certCard--full{transform:rotate(3deg) translate(0px, 0px);z-index:2}
-
-    /* On hover/click: expand to full width and crossfade full ↔ redacted */
-    .certCycle{position:absolute;inset:0;display:none;align-items:flex-start;justify-content:flex-start;z-index:10}
-    .certStack:hover .certCycle,
-    .certStack:focus-within .certCycle,
-    .certStack[data-active="1"] .certCycle{display:flex}
-
-    .certStack:hover .certCard,
-    .certStack:focus-within .certCard,
-    .certStack[data-active="1"] .certCard{opacity:0;pointer-events:none}
-
-    .certCycle__frame{position:relative;width:100%;max-width:980px}
+    /* certificate hero (single full-width card that fades to redacted + back) */
+    .certStack{position:relative;height:420px;margin:14px 0 18px;cursor:pointer}
+    .certCycle{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-start;z-index:10}
+    .certCycle__frame{position:relative;width:100%}
     .certCycle__img{position:absolute;left:0;top:0;width:100%;height:auto;border-radius:18px;box-shadow:0 22px 100px rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.08)}
 
     @keyframes fadeToRedacted{
@@ -85,27 +60,16 @@
       52%,80%{opacity:1}
       90%,100%{opacity:0}
     }
-    .certStack:hover .certCycle__img.full,
-    .certStack:focus-within .certCycle__img.full,
-    .certStack[data-active="1"] .certCycle__img.full{animation:fadeToRedacted 3.6s ease-in-out infinite}
-    .certStack:hover .certCycle__img.redacted,
-    .certStack:focus-within .certCycle__img.redacted,
-    .certStack[data-active="1"] .certCycle__img.redacted{animation:fadeInRedacted 3.6s ease-in-out infinite}
+    .certCycle__img.full{animation:fadeToRedacted 3.8s ease-in-out infinite}
+    .certCycle__img.redacted{animation:fadeInRedacted 3.8s ease-in-out infinite}
 
     @media (prefers-reduced-motion: reduce){
-      .certStack:hover .certCycle__img.full,
-      .certStack:focus-within .certCycle__img.full,
-      .certStack[data-active="1"] .certCycle__img.full{animation:none;opacity:1}
-      .certStack:hover .certCycle__img.redacted,
-      .certStack:focus-within .certCycle__img.redacted,
-      .certStack[data-active="1"] .certCycle__img.redacted{animation:none;opacity:0}
+      .certCycle__img.full{animation:none;opacity:1}
+      .certCycle__img.redacted{animation:none;opacity:0}
     }
 
     @media (max-width:980px){
-      .certStack{height:520px}
-      .certCard{width:100%}
-      .certCard--redacted{transform:rotate(-3deg) translate(70px, 210px)}
-      .certCard--full{transform:rotate(2deg) translate(0, 0)}
+      .certStack{height:360px}
     }
 
     /* sections */
@@ -132,14 +96,7 @@
       <div>
         <div style="margin-top:16px">
           <h1>Birth Certificates for AI agents.</h1>
-          <div class="certStack" aria-label="Certificate previews" id="certStack">
-            <button class="certCard certCard--full" type="button" aria-label="Preview certificates">
-              <img src="/assets/launch/full.png" alt="Full registry record certificate" />
-            </button>
-            <button class="certCard certCard--redacted" type="button" aria-label="Preview certificates">
-              <img src="/assets/launch/redacted.png" alt="Redacted registry record certificate" />
-            </button>
-
+          <div class="certStack" aria-label="Certificate preview (full fades to redacted)" id="certStack" role="button" tabindex="0">
             <div class="certCycle" aria-hidden="true">
               <div class="certCycle__frame">
                 <img class="certCycle__img full" src="/assets/launch/full.png" alt="" />
@@ -189,20 +146,7 @@
         try { issueFrame.contentWindow?.postMessage({ type: 'ghostshell:ping' }, location.origin); } catch(e) {}
       });
 
-      // ── Touch support for the certificate crossfade preview ──
-      const stack = document.getElementById('certStack');
-      function close(){ stack?.removeAttribute('data-active'); }
-      function open(){ stack?.setAttribute('data-active','1'); }
-      stack?.addEventListener('click', (e) => {
-        // toggle on tap
-        const on = stack.getAttribute('data-active') === '1';
-        if (on) close();
-        else open();
-        e.preventDefault();
-        e.stopPropagation();
-      });
-      document.addEventListener('click', () => close());
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+      // (No special interaction needed; the preview cycles on its own.)
     })();
   </script>
 </body>
