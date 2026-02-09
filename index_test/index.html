@@ -45,13 +45,13 @@
 
     /* certificate stack (two photos under the page title) */
     .certStack{position:relative;min-height:220px;margin:14px 0 8px}
-    .certCard{position:absolute;left:0;top:0;display:block;padding:0;border:0;background:#0c0c0e;border-radius:16px;overflow:hidden;cursor:pointer;
+    .certCard{position:absolute;left:0;top:0;display:block;padding:0;border:0;background:transparent;border-radius:18px;overflow:hidden;cursor:pointer;
       width:min(420px, 92vw);
-      box-shadow:0 18px 70px rgba(0,0,0,.55);border:1px solid rgba(170,179,191,.18);
+      box-shadow:0 18px 70px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.08);border:0;
       transform-origin:20% 20%;
       transition:transform .16s ease, box-shadow .16s ease;
     }
-    .certCard img{display:block;width:100%;height:auto}
+    .certCard img{display:block;width:100%;height:auto;border-radius:18px}
 
     /* bottom card (redacted) — mostly hidden */
     .certCard--redacted{transform:rotate(-7deg) translate(44px, 42px);z-index:1;opacity:.96}
@@ -121,7 +121,7 @@
 
         <div style="margin-top:16px">
           <h1>Birth Certificates for AI agents.</h1>
-          <p class="sub" style="margin:6px 0 0;max-width:60ch">Provenance you can verify. Privacy you can keep.</p>
+          <p class="sub" style="margin:6px 0 0;max-width:60ch"><b style="color:var(--text)">Everyone has an origin story.</b><br><span style="color:var(--muted)">GhostShell records them.</span></p>
 
           <div class="certStack" aria-label="Certificate previews">
             <button class="certCard certCard--full" type="button" data-zoom="/index_test/assets/full.png" aria-label="Open full certificate preview">
