@@ -45,11 +45,11 @@
     .card h3{margin:0 0 10px;font-size:16px}
 
     /* certificate stack (two photos under the page title) */
-    .certStack{position:relative;height:340px;margin:14px 0 18px}
+    .certStack{position:relative;height:560px;margin:14px 0 18px}
     .certCard{position:absolute;left:0;top:0;display:block;padding:0;border:0;background:transparent;border-radius:18px;overflow:hidden;cursor:pointer;
-      width:min(420px, 92vw);
-      /* keep it feeling like paper (no heavy black slab) */
-      box-shadow:0 10px 38px rgba(0,0,0,.42), 0 1px 0 rgba(255,255,255,.10);
+      width:min(920px, 100%);
+      /* paper only */
+      box-shadow:0 12px 44px rgba(0,0,0,.45);
       outline:1px solid rgba(255,255,255,.08);
       outline-offset:-1px;
       transform-origin:20% 20%;
@@ -57,14 +57,14 @@
     }
     .certCard img{display:block;width:100%;height:auto;border-radius:18px}
 
-    /* bottom card (redacted) — mostly hidden */
-    .certCard--redacted{transform:rotate(-7deg) translate(44px, 42px);z-index:1;opacity:.96}
-    /* top card (full) — covers ~70% */
-    .certCard--full{transform:rotate(5deg) translate(0px, 0px);z-index:2}
+    /* bottom card (redacted) — ~50% visible */
+    .certCard--redacted{transform:rotate(-4deg) translate(150px, 170px);z-index:1;opacity:.96}
+    /* top card (full) — bigger */
+    .certCard--full{transform:rotate(3deg) translate(0px, 0px);z-index:2}
 
     /* hover bring-to-front + enlarge */
     .certCard:hover,
-    .certCard:focus-visible{z-index:5;box-shadow:0 18px 70px rgba(0,0,0,.55);transform:scale(1.04) rotate(0deg) translate(0, -4px)}
+    .certCard:focus-visible{z-index:6;box-shadow:0 20px 90px rgba(0,0,0,.62);transform:translate(0, -6px) rotate(0deg) scale(1.02)}
 
     /* when hovering one, gently push the other back */
     .certStack:hover .certCard{filter:saturate(.92) contrast(.98)}
@@ -77,8 +77,10 @@
     .lightbox__img{max-width:min(1100px, 96vw);max-height:92vh;border-radius:18px;box-shadow:0 34px 140px rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.12)}
 
     @media (max-width:980px){
-      .certStack{height:420px}
-      .certCard{width:min(520px, 92vw)}
+      .certStack{height:520px}
+      .certCard{width:100%}
+      .certCard--redacted{transform:rotate(-3deg) translate(70px, 210px)}
+      .certCard--full{transform:rotate(2deg) translate(0, 0)}
     }
 
     /* sections */
@@ -106,11 +108,11 @@
         <div style="margin-top:16px">
           <h1>Birth Certificates for AI agents.</h1>
           <div class="certStack" aria-label="Certificate previews">
-            <button class="certCard certCard--full" type="button" data-zoom="/index_test/assets/full.png" aria-label="Open full certificate preview">
-              <img src="/index_test/assets/full.png" alt="Full registry record certificate" />
+            <button class="certCard certCard--full" type="button" data-zoom="/assets/launch/full.png" aria-label="Open full certificate preview">
+              <img src="/assets/launch/full.png" alt="Full registry record certificate" />
             </button>
-            <button class="certCard certCard--redacted" type="button" data-zoom="/index_test/assets/redacted.png" aria-label="Open redacted certificate preview">
-              <img src="/index_test/assets/redacted.png" alt="Redacted registry record certificate" />
+            <button class="certCard certCard--redacted" type="button" data-zoom="/assets/launch/redacted.png" aria-label="Open redacted certificate preview">
+              <img src="/assets/launch/redacted.png" alt="Redacted registry record certificate" />
             </button>
           </div>
 
