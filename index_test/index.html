@@ -44,7 +44,7 @@
     .card h3{margin:0 0 10px;font-size:16px}
 
     /* certificate stack (two photos under the page title) */
-    .certStack{position:relative;min-height:220px;margin:14px 0 8px}
+    .certStack{position:relative;height:340px;margin:14px 0 18px}
     .certCard{position:absolute;left:0;top:0;display:block;padding:0;border:0;background:transparent;border-radius:18px;overflow:hidden;cursor:pointer;
       width:min(420px, 92vw);
       /* keep it feeling like paper (no heavy black slab) */
@@ -76,8 +76,8 @@
     .lightbox__img{max-width:min(1100px, 96vw);max-height:92vh;border-radius:18px;box-shadow:0 34px 140px rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.12)}
 
     @media (max-width:980px){
-      .certStack{min-height:280px}
-      .certCard img{width:min(520px, 92vw);transform:scale(.92)}
+      .certStack{height:420px}
+      .certCard{width:min(520px, 92vw)}
     }
 
     /* sections */
@@ -137,13 +137,6 @@
       </div>
 
       <div class="stack" aria-label="Certificate examples" hidden></div>
-    </div>
-
-    <div class="kicker">What you get</div>
-    <div class="grid">
-      <div class="card"><h3>Public verification link</h3><p class="muted">A shareable URL that confirms registry presence + tamper‑evident fingerprint.</p></div>
-      <div class="card"><h3>Printable record card</h3><p class="muted">Archival card aesthetic: full record and a redacted public-safe view.</p></div>
-      <div class="card"><h3>Policy-driven redaction</h3><p class="muted">Default public sharing is coarse; sensitive fields can be withheld.</p></div>
     </div>
 
     <div id="issue" class="kicker">Issue a Birth Certificate</div>
