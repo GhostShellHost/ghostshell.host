@@ -295,6 +295,25 @@
   </dialog>
 
   <script>
+    // ── Report height to parent page so the embed doesn't get an inner scrollbar ──
+    (function(){
+      if (window.top === window) return; // not embedded
+      const post = () => {
+        const h = Math.max(
+          document.documentElement.scrollHeight,
+          document.body?.scrollHeight || 0
+        );
+        parent.postMessage({ type: 'ghostshell:formHeight', h }, location.origin);
+      };
+      // initial + after layout settles
+      window.addEventListener('load', () => { post(); setTimeout(post, 50); setTimeout(post, 250); });
+      window.addEventListener('resize', () => setTimeout(post, 50));
+      // watch for dynamic changes
+      try {
+        const ro = new ResizeObserver(() => post());
+        ro.observe(document.documentElement);
+      } catch(e) {}
+    })();
 
     // ── Anti-PII detection ──
     const PII_PATTERNS = [
