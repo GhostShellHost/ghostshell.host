@@ -43,43 +43,39 @@
     .card{border:1px solid rgba(170,179,191,.18);border-radius:16px;background:rgba(18,20,27,.72);box-shadow:var(--shadow);padding:16px}
     .card h3{margin:0 0 10px;font-size:16px}
 
-    /* thrown photos */
-    .stack{position:relative;min-height:430px}
-    @media (max-width:980px){.stack{min-height:auto}}
-
-    .sheet{
-      position:absolute;right:0;top:0;
-      width:min(340px, 92%);
-      border-radius:16px;
-      overflow:hidden;
-      border:1px solid rgba(170,179,191,.18);
-      box-shadow:0 28px 90px rgba(0,0,0,.6);
-      background:#0c0c0e;
-      transform:rotate(-8deg);
-      transition:transform .18s ease, box-shadow .18s ease, width .18s ease;
-      z-index:1;
+    /* certificate stack (two photos under the page title) */
+    .certStack{position:relative;min-height:220px;margin:14px 0 8px}
+    .certCard{position:absolute;left:0;top:0;display:block;padding:0;border:0;background:transparent;border-radius:16px;overflow:hidden;cursor:pointer;
+      box-shadow:0 18px 70px rgba(0,0,0,.55);border:1px solid rgba(170,179,191,.18);
+      transform-origin:20% 20%;
+      transition:transform .16s ease, box-shadow .16s ease;
     }
-    .sheet.full{top:160px;right:44px;transform:rotate(6deg);width:min(330px, 90%)}
+    .certCard img{display:block;width:min(380px, 92vw);height:auto;transform:scale(.74);transform-origin:top left}
 
-    .sheet:hover,
-    .sheet:focus-within{
-      width:min(640px, 96%);
-      transform:translateY(-6px) rotate(0deg);
-      box-shadow:0 36px 120px rgba(0,0,0,.78);
-      z-index:3;
-    }
+    /* bottom card */
+    .certCard--full{transform:rotate(6deg) translate(28px, 24px);z-index:1}
+    /* top card */
+    .certCard--redacted{transform:rotate(-8deg) translate(0px, 0px);z-index:2}
 
-    .photo{display:block;width:100%;height:auto;transform:scale(.76);transform-origin:top left;filter:contrast(1.02) saturate(0.98)}
-    .sheet:hover .photo,
-    .sheet:focus-within .photo{transform:scale(1)}
+    /* hover bring-to-front + enlarge */
+    .certCard:hover,
+    .certCard:focus-visible{z-index:5;box-shadow:0 26px 110px rgba(0,0,0,.72)}
+    .certCard--full:hover img,
+    .certCard--full:focus-visible img{transform:scale(1)}
+    .certCard--redacted:hover img,
+    .certCard--redacted:focus-visible img{transform:scale(1)}
 
-    .cap{padding:10px 12px;background:rgba(255,255,255,.04);border-top:1px solid rgba(170,179,191,.14);font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:rgba(233,237,241,.78)}
+    .certTitle{margin-top:220px;font-family:var(--mono);letter-spacing:.08em;color:rgba(233,237,241,.78)}
+
+    /* lightbox */
+    .lightbox{position:fixed;inset:0;z-index:999;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.72)}
+    .lightbox[open]{display:flex}
+    .lightbox__img{max-width:min(1100px, 96vw);max-height:92vh;border-radius:18px;box-shadow:0 34px 140px rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.12)}
 
     @media (max-width:980px){
-      .sheet{position:relative;right:auto;top:auto;margin:0 auto 14px;transform:none;width:100%}
-      .sheet.full{top:auto;right:auto;transform:none;width:100%}
-      .sheet:hover,.sheet:focus-within{width:100%;transform:none}
-      .photo,.sheet:hover .photo,.sheet:focus-within .photo{transform:none}
+      .certStack{min-height:280px}
+      .certCard img{width:min(520px, 92vw);transform:scale(.92)}
+      .certTitle{margin-top:280px}
     }
 
     /* sections */
@@ -126,6 +122,17 @@
 
         <div style="margin-top:16px">
           <h1>Birth Certificates for AI agents.</h1>
+
+          <div class="certStack" aria-label="Certificate previews">
+            <button class="certCard certCard--full" type="button" data-zoom="/index_test/assets/full.png" aria-label="Open full certificate preview">
+              <img src="/index_test/assets/full.png" alt="Full registry record certificate" />
+            </button>
+            <button class="certCard certCard--redacted" type="button" data-zoom="/index_test/assets/redacted.png" aria-label="Open redacted certificate preview">
+              <img src="/index_test/assets/redacted.png" alt="Redacted registry record certificate" />
+            </button>
+          </div>
+          <div class="certTitle">Birth Certificates for AI agents</div>
+
           <p class="sub">Issue a <b>registry credential</b>: public verify link, printable record card, and tamper‑evident fingerprint integrity. Provenance — not identity theatre.</p>
 
           <div class="card">
@@ -148,17 +155,7 @@
         </div>
       </div>
 
-      <div class="stack" aria-label="Certificate examples">
-        <figure class="sheet redacted" aria-label="Redacted record (photo)">
-          <img class="photo" alt="Redacted registry record card" src="/index_test/assets/redacted.png" />
-          <figcaption class="cap">Registry record — redacted</figcaption>
-        </figure>
-
-        <figure class="sheet full" aria-label="Full record (photo)">
-          <img class="photo" alt="Full registry record card" src="/index_test/assets/full.png" />
-          <figcaption class="cap">Registry record — full</figcaption>
-        </figure>
-      </div>
+      <div class="stack" aria-label="Certificate examples" hidden></div>
     </div>
 
     <div class="kicker">What you get</div>
@@ -182,5 +179,30 @@
       <div class="links">Alpha experiment. Things may break.</div>
     </div>
   </div>
+
+  <dialog class="lightbox" id="lightbox" aria-label="Certificate preview">
+    <img class="lightbox__img" id="lightboxImg" alt="Certificate preview" />
+  </dialog>
+
+  <script>
+    (function(){
+      const dlg = document.getElementById('lightbox');
+      const img = document.getElementById('lightboxImg');
+      function open(src){
+        img.src = src;
+        if (typeof dlg.showModal === 'function') dlg.showModal();
+        else dlg.setAttribute('open','');
+      }
+      function close(){
+        if (typeof dlg.close === 'function') dlg.close();
+        else dlg.removeAttribute('open');
+      }
+      document.querySelectorAll('[data-zoom]').forEach(btn => {
+        btn.addEventListener('click', () => open(btn.getAttribute('data-zoom')));
+      });
+      dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); });
+      window.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    })();
+  </script>
 </body>
 </html>
