@@ -283,7 +283,8 @@
     </div>
   </div>
 
-  <dialog class="lightbox" id="comingSoon" aria-label="Coming soon" style="padding:0;border:1px solid rgba(170,179,191,.18);border-radius:16px;background:rgba(18,20,27,.92);color:var(--fg);max-width:min(520px,92vw)">
+  <div id="soonBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998"></div>
+  <div id="comingSoon" role="dialog" aria-modal="true" aria-label="Coming soon" style="display:none;position:fixed;z-index:9999;max-width:min(520px,92vw);padding:0;border:1px solid rgba(170,179,191,.18);border-radius:16px;background:rgba(18,20,27,.96);color:var(--fg);box-shadow:0 30px 120px rgba(0,0,0,.65)">
     <div style="padding:18px 18px 14px">
       <div style="font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-size:12px">Payments</div>
       <div style="margin-top:8px;font-size:18px;font-weight:800">Coming very soon</div>
@@ -292,7 +293,7 @@
         <button type="button" id="closeSoon" style="padding:10px 12px;border-radius:12px;border:1px solid rgba(170,179,191,.22);background:rgba(255,255,255,.04);color:var(--fg);font-weight:800;cursor:pointer">Close</button>
       </div>
     </div>
-  </dialog>
+  </div>
 
   <script>
     // ── Report height to parent page so the embed doesn't get an inner scrollbar ──
@@ -352,26 +353,54 @@
     // ── Disable payments for now (launch holding) ──
     const form = document.getElementById('certForm');
     const soon = document.getElementById('comingSoon');
+    const backdrop = document.getElementById('soonBackdrop');
     const closeSoon = document.getElementById('closeSoon');
     const submitBtn = document.getElementById('submitBtn');
 
-    function openSoon(){
-      if (typeof soon.showModal === 'function') soon.showModal();
-      else soon.setAttribute('open','');
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+    function openSoon(anchorEl){
+      if (!soon) return;
+      backdrop.style.display = 'block';
+      soon.style.display = 'block';
+
+      // Position near the button (Chrome), fallback to centered.
+      const r = anchorEl?.getBoundingClientRect?.();
+      // Temporarily move offscreen so we can measure its size.
+      soon.style.left = '-9999px';
+      soon.style.top = '-9999px';
+
+      requestAnimationFrame(() => {
+        const box = soon.getBoundingClientRect();
+        const margin = 12;
+        let left = (window.innerWidth - box.width) / 2;
+        let top = (window.innerHeight - box.height) / 2;
+        if (r) {
+          left = r.left + (r.width/2) - (box.width/2);
+          top = r.bottom + 10;
+        }
+        left = clamp(left, margin, window.innerWidth - box.width - margin);
+        top = clamp(top, margin, window.innerHeight - box.height - margin);
+        soon.style.left = left + 'px';
+        soon.style.top = top + 'px';
+      });
     }
+
     function closeSoonFn(){
-      if (typeof soon.close === 'function') soon.close();
-      else soon.removeAttribute('open');
+      backdrop.style.display = 'none';
+      soon.style.display = 'none';
     }
+
     closeSoon?.addEventListener('click', closeSoonFn);
-    soon?.addEventListener('click', (e)=>{ if (e.target===soon) closeSoonFn(); });
+    backdrop?.addEventListener('click', closeSoonFn);
+    window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeSoonFn(); });
 
     form?.addEventListener('submit', (e)=>{
       e.preventDefault();
-      openSoon();
+      openSoon(submitBtn);
     });
     // Use a plain button so native form validation doesn't block the modal.
-    submitBtn?.addEventListener('click', (e)=>{ e.preventDefault(); openSoon(); });
+    submitBtn?.addEventListener('click', (e)=>{ e.preventDefault(); openSoon(submitBtn); });
   </script>
 </body>
 </html>
