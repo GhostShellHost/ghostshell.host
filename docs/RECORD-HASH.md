@@ -18,7 +18,9 @@ record_hash = SHA-256( canonical_record_bytes )
 
 Where `canonical_record_bytes` are produced from a **canonical (deterministic) serialization** of the **full record**, including:
 - all record fields (public + private)
-- **plus a private nonce** (random salt) stored only in the full record
+- **plus a nonce** (random salt)
+
+The nonce is provided to the **certificate holder** as part of the full record (e.g., in the downloadable original copy). It is not printed on the public-safe/redacted copy.
 
 ### Why include a private nonce?
 If the hash were computed from only public/guessable fields, an attacker could try guesses (a “dictionary attack”) and see if any guess matches the published hash.
