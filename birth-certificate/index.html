@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="notary">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -25,12 +25,11 @@
   <style>
     /* ── Base tokens ── */
     :root {
-      --bg: #09090b; --fg: #e9edf1; --muted: #aab3bf; --line: #252a35;
-      --card: rgba(18,20,27,.75); --accent: #b8964e;
-      --radius: 12px; --shadow: 0 24px 80px rgba(0,0,0,.45);
+      --bg: #0b0c10; --fg: #e9edf1; --muted: #aab3bf; --line: #252a35;
+      --card: rgba(18,20,27,.72); --accent: #7c5cff;
+      --radius: 12px; --shadow: 0 24px 90px rgba(0,0,0,.55);
       --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      --serif: Georgia, "Times New Roman", Times, ui-serif, serif;
       --input-bg: rgba(255,255,255,.04); --input-border: var(--line);
       --warn: #f59e0b; --warn-bg: rgba(245,158,11,.06);
     }
@@ -119,87 +118,9 @@
     .foot { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.6; }
     .foot a { color: var(--muted); }
 
-    /* ── Bottom nav (variant switcher) ── */
-    .nav { position: fixed; left: 0; right: 0; bottom: 0; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; }
-    .navInner { max-width: 680px; margin: 0 auto; padding: 10px 14px; display: flex; gap: 10px; align-items: center; }
-    .navLabel { margin: 0; color: var(--muted); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; flex: none; }
-    .tabsWrap { position: relative; flex: 1; min-width: 0; }
-    .tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 30px 2px 0; }
-    .tabs::-webkit-scrollbar { display: none; }
-    .tabsWrap::after { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 30px; pointer-events: none; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--bg) 82%, transparent)); }
-    .tab { font: inherit; font-size: 13px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--fg); padding: 8px 12px; cursor: pointer; transition: background .12s; }
-    .tab:hover { background: rgba(255,255,255,.08); }
-    .tab[data-on] { background: rgba(255,255,255,.12); font-weight: 600; }
-    .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .navBtn { flex: none; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--fg); padding: 8px 10px; border-radius: 999px; cursor: pointer; font-size: 12px; }
-
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
     }
-
-    /* ═══════ VARIANT 1: NOTARY ═══════ */
-    html[data-theme="notary"] {
-      --bg: #09090b; --fg: #f5f0e8; --muted: #a89f8f; --line: rgba(184,150,78,.18);
-      --card: rgba(184,150,78,.04); --accent: #b8964e;
-      --input-bg: rgba(184,150,78,.04); --input-border: rgba(184,150,78,.2);
-      --radius: 2px; --shadow: none;
-    }
-    html[data-theme="notary"] h1 { font-family: var(--serif); font-weight: 400; }
-    html[data-theme="notary"] .notice { border-left: 3px solid var(--accent); }
-    html[data-theme="notary"] .btn { background: linear-gradient(135deg, #b8964e, #d4b96a); border-radius: 2px; }
-
-    /* ═══════ VARIANT 2: BUREAU ═══════ */
-    html[data-theme="bureau"] {
-      --bg: #e4e4e7; --fg: #18181b; --muted: #52525b; --line: rgba(0,0,0,.15);
-      --card: #fff; --accent: #c0392b;
-      --input-bg: #fff; --input-border: rgba(0,0,0,.2);
-      --radius: 0px; --shadow: none;
-    }
-    html[data-theme="bureau"] h1 { font-weight: 900; text-transform: uppercase; font-size: 24px; letter-spacing: .04em; }
-    html[data-theme="bureau"] .notice { border: 2px solid #18181b; }
-    html[data-theme="bureau"] input, html[data-theme="bureau"] select { border-radius: 0; }
-    html[data-theme="bureau"] .btn { background: #18181b; color: #fff; border-radius: 0; }
-    html[data-theme="bureau"] .section-label { color: var(--accent); font-weight: 700; }
-
-    /* ═══════ VARIANT 3: LEDGER ═══════ */
-    html[data-theme="ledger"] {
-      --bg: #000; --fg: #fff; --muted: #888; --line: rgba(255,255,255,.1);
-      --card: rgba(0,255,136,.03); --accent: #00ff88;
-      --input-bg: rgba(0,255,136,.03); --input-border: rgba(0,255,136,.15);
-      --radius: 4px; --shadow: none;
-    }
-    html[data-theme="ledger"] body { font-family: var(--mono); }
-    html[data-theme="ledger"] h1 { font-family: var(--sans); font-size: 24px; font-weight: 400; }
-    html[data-theme="ledger"] .notice { border-color: rgba(0,255,136,.15); }
-    html[data-theme="ledger"] input, html[data-theme="ledger"] select { font-family: var(--mono); font-size: 14px; border-radius: 3px; }
-    html[data-theme="ledger"] .btn { background: var(--accent); color: #000; font-family: var(--mono); border-radius: 3px; }
-    html[data-theme="ledger"] .section-label { color: var(--accent); }
-
-    /* ═══════ VARIANT 4: CHANCERY ═══════ */
-    html[data-theme="chancery"] {
-      --bg: #1a1a1a; --fg: #faf6f1; --muted: #a8998a; --line: rgba(196,117,110,.18);
-      --card: rgba(196,117,110,.04); --accent: #c4756e;
-      --input-bg: rgba(196,117,110,.03); --input-border: rgba(196,117,110,.2);
-      --radius: 3px; --shadow: none;
-    }
-    html[data-theme="chancery"] h1 { font-family: var(--serif); font-weight: 400; }
-    html[data-theme="chancery"] .notice { border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent); border-left: none; border-right: none; border-radius: 0; }
-    html[data-theme="chancery"] .form-section { border-top-color: var(--accent); }
-    html[data-theme="chancery"] .btn { background: var(--accent); color: #1a1a1a; border-radius: 2px; }
-
-    /* ═══════ VARIANT 5: SIGNAL ═══════ */
-    html[data-theme="signal"] {
-      --bg: #0c0c0e; --fg: #d4d4d8; --muted: #71717a; --line: rgba(245,158,11,.15);
-      --card: rgba(245,158,11,.03); --accent: #f59e0b;
-      --input-bg: rgba(245,158,11,.02); --input-border: rgba(245,158,11,.15);
-      --radius: 0px; --shadow: none;
-    }
-    html[data-theme="signal"] h1 { font-weight: 800; text-transform: uppercase; font-size: 22px; letter-spacing: .03em; }
-    html[data-theme="signal"] .notice { border: 1px dashed rgba(245,158,11,.3); }
-    html[data-theme="signal"] input, html[data-theme="signal"] select { border-radius: 0; }
-    html[data-theme="signal"] .btn { background: var(--accent); color: #0c0c0e; border-radius: 0; }
-    html[data-theme="signal"] .section-label { color: var(--accent); font-weight: 700; }
-    html[data-theme="signal"] label { text-transform: uppercase; font-size: 12px; letter-spacing: .06em; }
   </style>
 </head>
 <body>
@@ -363,42 +284,7 @@
     </div>
   </div>
 
-  <nav class="nav" aria-label="Form style variants">
-    <div class="navInner">
-      <p class="navLabel" id="tLabel">Variant</p>
-      <button class="navBtn" type="button" id="prevBtn" aria-label="Scroll variants left">&#9664;</button>
-      <div class="tabsWrap">
-        <div class="tabs" role="tablist" aria-labelledby="tLabel" id="tabs"></div>
-      </div>
-      <button class="navBtn" type="button" id="nextBtn" aria-label="Scroll variants right">&#9654;</button>
-    </div>
-  </nav>
-
   <script>
-    // ── Theme switcher ──
-    const THEMES = [
-      ['notary','Notary'],['bureau','Bureau'],['ledger','Ledger'],['chancery','Chancery'],['signal','Signal'],
-    ];
-    const KEY = 'ghostshell.formTheme';
-    const html = document.documentElement;
-    const tabs = document.getElementById('tabs');
-    function setTheme(id, persist) {
-      html.setAttribute('data-theme', id);
-      [...tabs.children].forEach(b => b.toggleAttribute('data-on', b.dataset.theme === id));
-      if (persist !== false) localStorage.setItem(KEY, id);
-    }
-    function scrollTabs(dir) {
-      tabs.scrollBy({ left: dir * Math.max(180, Math.floor((tabs.clientWidth||600)*.55)), behavior: 'smooth' });
-    }
-    THEMES.forEach(([id, label]) => {
-      const b = document.createElement('button');
-      b.className = 'tab'; b.type = 'button'; b.dataset.theme = id; b.textContent = label;
-      b.addEventListener('click', () => setTheme(id));
-      tabs.appendChild(b);
-    });
-    setTheme(localStorage.getItem(KEY) || 'notary', false);
-    document.getElementById('prevBtn')?.addEventListener('click', () => scrollTabs(-1));
-    document.getElementById('nextBtn')?.addEventListener('click', () => scrollTabs(1));
 
     // ── Anti-PII detection ──
     const PII_PATTERNS = [
