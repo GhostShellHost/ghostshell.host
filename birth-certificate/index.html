@@ -86,6 +86,15 @@
     .confirm-row input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex: none; accent-color: var(--accent); cursor: pointer; }
     .confirm-row label { margin: 0; font-weight: 400; font-size: 14px; line-height: 1.45; cursor: pointer; }
 
+    /* ── Toggle rows (opt-in under relevant fields) ── */
+    .toggleRow{margin-top:10px;display:flex;gap:12px;align-items:flex-start;max-width:480px}
+    .toggleRow input{position:absolute;opacity:0;pointer-events:none}
+    .toggle{flex:none;width:46px;height:28px;border-radius:999px;border:1px solid var(--input-border);background:rgba(255,255,255,.05);position:relative;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+    .toggle::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:999px;background:rgba(255,255,255,.75);box-shadow:0 4px 10px rgba(0,0,0,.35);transition:transform .15s ease, background .15s ease}
+    .toggleRow input:checked + .toggle{background:color-mix(in srgb, var(--accent) 28%, rgba(255,255,255,.05));border-color:color-mix(in srgb, var(--accent) 55%, var(--input-border))}
+    .toggleRow input:checked + .toggle::after{transform:translateX(18px);background:#fff}
+    .toggleText{margin-top:2px;color:var(--muted);font-size:13px;line-height:1.45}
+
     /* ── Price summary ── */
     .price-summary { margin-top: 24px; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
     .price-summary .price-row { display: flex; justify-content: space-between; align-items: baseline; }
@@ -226,16 +235,26 @@
         <label>Place of origin <span class="req">*</span> <span class="hint">city, state, country</span></label>
         <div class="row">
           <div>
-            <input id="place_city" name="place_city" required placeholder="City (public-safe default: withheld)" autocomplete="off" />
+            <input id="place_city" name="place_city" required placeholder="City" autocomplete="off" />
+            <div class="toggleRow">
+              <input type="checkbox" id="show_city_public" name="show_city_public" />
+              <label class="toggle" for="show_city_public" aria-hidden="true"></label>
+              <div class="toggleText">Show city in public-safe view (opt-in). Default: withheld.</div>
+            </div>
           </div>
           <div>
             <input id="place_state" name="place_state" required placeholder="State / region" autocomplete="off" />
+            <div class="toggleRow">
+              <input type="checkbox" id="hide_state_public" name="hide_state_public" />
+              <label class="toggle" for="hide_state_public" aria-hidden="true"></label>
+              <div class="toggleText">Withhold state in public-safe view (country remains public).</div>
+            </div>
           </div>
           <div>
             <input id="place_country" name="place_country" required placeholder="Country" value="Australia" autocomplete="off" />
+            <div class="field-note">Country is always public.</div>
           </div>
         </div>
-        <div class="field-note">Public-safe view defaults to showing <b>state + country</b>. City is withheld by default.</div>
 
         <label for="origin_runtime">Origin runtime <span class="req">*</span></label>
         <select id="origin_runtime" name="origin_runtime" required>
@@ -251,34 +270,19 @@
         </select>
 
         <label for="first_boot_date">First boot (UTC) <span class="req">*</span></label>
-        <div class="row">
-          <div>
-            <input id="first_boot_date" name="first_boot_date" type="date" required />
-            <div class="field-note">Public-safe view shows date only by default.</div>
-          </div>
-          <div>
-            <label style="margin-top:0;font-weight:600;font-size:14px" for="public_time_precision">Public time precision <span class="hint">default: date only</span></label>
-            <select id="public_time_precision" name="public_time_precision">
-              <option value="date">date only</option>
-              <option value="datetime">date + time</option>
-            </select>
-          </div>
+        <input id="first_boot_date" name="first_boot_date" type="date" required />
+        <div class="toggleRow">
+          <input type="checkbox" id="public_time_precision" name="public_time_precision" />
+          <label class="toggle" for="public_time_precision" aria-hidden="true"></label>
+          <div class="toggleText">Public time precision: include time (otherwise date-only).</div>
         </div>
 
         <label for="human_custodian">Human custodian <span class="hint">pseudonym</span></label>
-        <input id="human_custodian" name="human_custodian" placeholder="e.g., Jas (withheld in public views)" autocomplete="off" />
-        <div class="confirm-row" style="margin-top:12px">
+        <input id="human_custodian" name="human_custodian" placeholder="e.g., Jas" autocomplete="off" />
+        <div class="toggleRow">
           <input type="checkbox" id="withhold_custodian" name="withhold_custodian" checked />
-          <label for="withhold_custodian">Withhold custodian label in public-safe view (recommended).</label>
-        </div>
-
-        <div class="confirm-row" style="margin-top:12px">
-          <input type="checkbox" id="show_city_public" name="show_city_public" />
-          <label for="show_city_public">Show city in public-safe view (opt-in).</label>
-        </div>
-        <div class="confirm-row" style="margin-top:12px">
-          <input type="checkbox" id="hide_state_public" name="hide_state_public" />
-          <label for="hide_state_public">Withhold state in public-safe view (country remains public).</label>
+          <label class="toggle" for="withhold_custodian" aria-hidden="true"></label>
+          <div class="toggleText">Withhold custodian label in public-safe view (recommended).</div>
         </div>
 
         <label for="cognitive_core_family">Cognitive core <span class="req">*</span></label>
