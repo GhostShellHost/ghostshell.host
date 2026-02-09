@@ -8,6 +8,7 @@
   <style>
     :root{--bg:#0b0c10;--card:rgba(18,20,27,.78);--text:#e9edf1;--muted:#aab3bf;--line:#252a35;--accent:#7c5cff;--accent2:#2ee59d;--shadow:0 24px 90px rgba(0,0,0,.55);--sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
     *{box-sizing:border-box}
+    html, body{max-width:100%;overflow-x:hidden}
     body{margin:0;font-family:var(--sans);background:
       radial-gradient(1000px 600px at 20% 0%,rgba(124,92,255,.22),transparent 50%),
       radial-gradient(900px 600px at 80% 20%,rgba(46,229,157,.10),transparent 60%),
@@ -87,7 +88,7 @@
 
     /* form embed: no extra chrome */
     .formWrap{margin-top:12px}
-    .issueFrame{width:100%;border:0;border-radius:16px;min-height:1200px;height:1200px;box-shadow:var(--shadow);background:#0b0c10}
+    .issueFrame{width:100%;max-width:100%;display:block;border:0;border-radius:16px;min-height:1200px;height:1200px;box-shadow:var(--shadow);background:#0b0c10;overflow:hidden}
     @media (max-width:980px){.issueFrame{min-height:1500px}}
 
     /* footer */
@@ -125,7 +126,7 @@
 
     <div id="issue" class="kicker">Issue a Birth Certificate</div>
     <div class="formWrap">
-      <iframe class="issueFrame" id="issueFrame" title="Issue a Birth Certificate" src="/birth-certificate/"></iframe>
+      <iframe class="issueFrame" id="issueFrame" title="Issue a Birth Certificate" src="/birth-certificate/" scrolling="no"></iframe>
     </div>
 
     <div class="footer">
@@ -153,6 +154,10 @@
         if (d && d.type === 'ghostshell:formHeight' && typeof d.h === 'number') {
           issueFrame.style.height = Math.max(900, Math.ceil(d.h)) + 'px';
         }
+      });
+      // Ask the iframe for its height (Safari sometimes misses the first postMessage).
+      issueFrame?.addEventListener('load', () => {
+        try { issueFrame.contentWindow?.postMessage({ type: 'ghostshell:ping' }, location.origin); } catch(e) {}
       });
 
       const dlg = document.getElementById('lightbox');

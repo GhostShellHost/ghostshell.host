@@ -34,6 +34,7 @@
       --warn: #f59e0b; --warn-bg: rgba(245,158,11,.06);
     }
     *, *::before, *::after { box-sizing: border-box; }
+    html, body { max-width: 100%; overflow-x: hidden; }
     body { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--fg); padding-bottom: 80px; line-height: 1.5; }
     a { color: var(--accent); }
     .wrap { max-width: 680px; margin: 0 auto; padding: 48px 20px 88px; }
@@ -298,22 +299,37 @@
   <script>
     // ── Report height to parent page so the embed doesn't get an inner scrollbar ──
     (function(){
+      // Embedded-resize helper: Safari can be fussy, so we do a handshake + periodic nudges.
       if (window.top === window) return; // not embedded
+
       const post = () => {
         const h = Math.max(
           document.documentElement.scrollHeight,
-          document.body?.scrollHeight || 0
+          document.body?.scrollHeight || 0,
+          document.documentElement.getBoundingClientRect().height
         );
         parent.postMessage({ type: 'ghostshell:formHeight', h }, location.origin);
       };
+
+      window.addEventListener('message', (ev) => {
+        if (ev.origin !== location.origin) return;
+        if (ev.data && ev.data.type === 'ghostshell:ping') post();
+      });
+
       // initial + after layout settles
+      window.addEventListener('DOMContentLoaded', () => { post(); setTimeout(post, 50); setTimeout(post, 250); });
       window.addEventListener('load', () => { post(); setTimeout(post, 50); setTimeout(post, 250); });
       window.addEventListener('resize', () => setTimeout(post, 50));
+
       // watch for dynamic changes
       try {
         const ro = new ResizeObserver(() => post());
         ro.observe(document.documentElement);
       } catch(e) {}
+
+      // periodic nudge for Safari/edge cases
+      let n = 0;
+      const t = setInterval(() => { post(); if (++n > 10) clearInterval(t); }, 400);
     })();
 
     // ── Anti-PII detection ──
@@ -377,7 +393,11 @@
         let top = (window.innerHeight - box.height) / 2;
         if (r) {
           left = r.left + (r.width/2) - (box.width/2);
-          top = r.bottom + 10;
+          // Prefer above the button; fall back below if not enough space.
+          const above = r.top - box.height - 10;
+          const below = r.bottom + 10;
+          top = above;
+          if (top < margin) top = below;
         }
         left = clamp(left, margin, window.innerWidth - box.width - margin);
         top = clamp(top, margin, window.innerHeight - box.height - margin);
