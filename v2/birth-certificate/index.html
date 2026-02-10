@@ -48,22 +48,26 @@
         </div>
         <input id="place_of_birth" name="place_of_birth" type="hidden" />
 
-        <label for="cognitive_core_family">Cognitive core *</label>
+        <label for="cognitive_core_family">Model provider *</label>
         <select id="cognitive_core_family" name="cognitive_core_family" required>
-          <option value="Undisclosed">Undisclosed</option>
-          <option value="GPT-family">GPT-family</option>
-          <option value="Claude-family">Claude-family</option>
-          <option value="Gemini-family">Gemini-family</option>
-          <option value="Local model">Local model</option>
+          <option value="GPT-family">OpenAI</option>
+          <option value="Claude-family">Anthropic</option>
+          <option value="Gemini-family">Google</option>
+          <option value="Llama-family">Meta</option>
+          <option value="Grok-family">xAI</option>
+          <option value="Mistral-family">Mistral</option>
+          <option value="DeepSeek-family">DeepSeek</option>
           <option value="Other">Other</option>
         </select>
+
+        <label for="cognitive_core_exact_select">Exact model *</label>
+        <select id="cognitive_core_exact_select"></select>
+        <input id="cognitive_core_exact_other" placeholder="Type model name" autocomplete="off" style="display:none" />
+        <input id="cognitive_core_exact" name="cognitive_core_exact" type="hidden" />
       </div>
 
       <div class="section">
         <div class="k">Optional</div>
-
-        <label for="cognitive_core_exact">Exact model</label>
-        <input id="cognitive_core_exact" name="cognitive_core_exact" placeholder="e.g., gpt-5.x" autocomplete="off" />
 
         <label for="creator_label">Creator label</label>
         <input id="creator_label" name="creator_label" placeholder="pseudonym" autocomplete="off" />
@@ -94,8 +98,56 @@
       const deliveryEmail = document.getElementById('delivery_email');
       const deliveryConsent = document.getElementById('delivery_consent');
 
+      const provider = document.getElementById('cognitive_core_family');
+      const exactSelect = document.getElementById('cognitive_core_exact_select');
+      const exactOther = document.getElementById('cognitive_core_exact_other');
+      const exactHidden = document.getElementById('cognitive_core_exact');
+
+      const MODELS = {
+        'GPT-family': ['gpt-4o','gpt-4.1','gpt-4.1-mini','gpt-4o-mini','o3','o4-mini','gpt-5'],
+        'Claude-family': ['claude-sonnet-4-5','claude-opus-4-1','claude-haiku-3.5'],
+        'Gemini-family': ['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-pro'],
+        'Llama-family': ['llama-3.1-8b','llama-3.1-70b','llama-3.1-405b'],
+        'Grok-family': ['grok-2','grok-2-mini'],
+        'Mistral-family': ['mistral-large','ministral-8b','codestral'],
+        'DeepSeek-family': ['deepseek-chat','deepseek-reasoner']
+      };
+
+      function refreshExactModels(){
+        const fam = provider?.value || 'GPT-family';
+        exactSelect.innerHTML = '';
+        if (fam === 'Other') {
+          exactSelect.style.display = 'none';
+          exactOther.style.display = 'block';
+          exactOther.required = true;
+          return;
+        }
+        exactSelect.style.display = 'block';
+        exactOther.style.display = 'none';
+        exactOther.required = false;
+        const list = MODELS[fam] || [];
+        list.forEach(m => {
+          const o = document.createElement('option');
+          o.value = m; o.textContent = m;
+          exactSelect.appendChild(o);
+        });
+        const other = document.createElement('option');
+        other.value = '__other__'; other.textContent = 'Other…';
+        exactSelect.appendChild(other);
+      }
+
+      provider?.addEventListener('change', refreshExactModels);
+      exactSelect?.addEventListener('change', () => {
+        const isOther = exactSelect.value === '__other__';
+        exactOther.style.display = isOther ? 'block' : 'none';
+        exactOther.required = isOther;
+      });
+      refreshExactModels();
+
       form?.addEventListener('submit', () => {
         pob.value = [city?.value, state?.value, country?.value].map(v => (v || '').trim()).filter(Boolean).join(', ');
+        const modelChoice = provider?.value === 'Other' || exactSelect?.value === '__other__' ? (exactOther?.value || '').trim() : (exactSelect?.value || '').trim();
+        exactHidden.value = modelChoice;
         const hasEmail = (deliveryEmail?.value || '').trim().length > 0;
         if (deliveryConsent) deliveryConsent.required = hasEmail;
       });
