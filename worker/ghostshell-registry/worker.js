@@ -237,6 +237,7 @@ async function purchaseFirstCheckout(env) {
 
   const body = new URLSearchParams();
   body.set("mode", "payment");
+  body.set("allow_promotion_codes", "true");
   body.set("success_url", `${env.BASE_URL}/handoff?session_id={CHECKOUT_SESSION_ID}`);
   body.set("cancel_url", `${env.BASE_URL}/issue/`);
   body.append("line_items[0][price]", env.STRIPE_PRICE_ID);
