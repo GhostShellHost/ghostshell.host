@@ -1,0 +1,1 @@
+[["$file\" == *\"node_modules", [["$file\" == *\".git", "then\n        continue\n    fi\n\n    echo \"Updating: $file\"\n\n    # Replace the old timestamp with new one\n    sed -i 's|Deployed: 2026-02-11 00:40 GMT+10:30|Deployed: 2026-02-11 00:41 GMT+10:30|g' \"$file\"\ndone\n\necho \"Done! All timestamps updated to 2026-02-11 00:41 GMT+10:30"]]]]
