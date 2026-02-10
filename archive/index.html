@@ -8,6 +8,7 @@
   <style>
     :root{--bg:#0b0c10;--card:rgba(18,20,27,.78);--text:#e9edf1;--muted:#aab3bf;--line:#252a35;--accent:#7c5cff;--accent2:#2ee59d;--shadow:0 24px 90px rgba(0,0,0,.55);--sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
     *{box-sizing:border-box}
+    html, body{max-width:100%;overflow-x:hidden}
     body{margin:0;font-family:var(--sans);background:
       radial-gradient(1000px 600px at 20% 0%,rgba(124,92,255,.22),transparent 50%),
       radial-gradient(900px 600px at 80% 20%,rgba(46,229,157,.10),transparent 60%),
@@ -43,41 +44,32 @@
     .card{border:1px solid rgba(170,179,191,.18);border-radius:16px;background:rgba(18,20,27,.72);box-shadow:var(--shadow);padding:16px}
     .card h3{margin:0 0 10px;font-size:16px}
 
-    /* certificate stack (two photos under the page title) */
-    .certStack{position:relative;height:340px;margin:14px 0 18px}
-    .certCard{position:absolute;left:0;top:0;display:block;padding:0;border:0;background:transparent;border-radius:18px;overflow:hidden;cursor:pointer;
-      width:min(420px, 92vw);
-      /* keep it feeling like paper (no heavy black slab) */
-      box-shadow:0 10px 38px rgba(0,0,0,.42), 0 1px 0 rgba(255,255,255,.10);
-      outline:1px solid rgba(255,255,255,.08);
-      outline-offset:-1px;
-      transform-origin:20% 20%;
-      transition:transform .16s ease, box-shadow .16s ease;
+    /* certificate hero (single full-width card that fades to redacted + back) */
+    .certStack{position:relative;height:420px;margin:14px 0 18px;cursor:pointer}
+    .certCycle{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-start;z-index:10}
+    .certCycle__frame{position:relative;width:100%}
+    .certCycle__img{position:absolute;left:0;top:0;width:100%;height:auto;border-radius:18px;box-shadow:0 22px 100px rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.08)}
+
+    @keyframes fadeToRedacted{
+      0%,40%{opacity:1}
+      48%,80%{opacity:0}
+      90%,100%{opacity:1}
     }
-    .certCard img{display:block;width:100%;height:auto;border-radius:18px}
+    @keyframes fadeInRedacted{
+      0%,40%{opacity:0}
+      52%,80%{opacity:1}
+      90%,100%{opacity:0}
+    }
+    .certCycle__img.full{animation:fadeToRedacted 3.8s ease-in-out infinite}
+    .certCycle__img.redacted{animation:fadeInRedacted 3.8s ease-in-out infinite}
 
-    /* bottom card (redacted) — mostly hidden */
-    .certCard--redacted{transform:rotate(-7deg) translate(44px, 42px);z-index:1;opacity:.96}
-    /* top card (full) — covers ~70% */
-    .certCard--full{transform:rotate(5deg) translate(0px, 0px);z-index:2}
-
-    /* hover bring-to-front + enlarge */
-    .certCard:hover,
-    .certCard:focus-visible{z-index:5;box-shadow:0 18px 70px rgba(0,0,0,.55);transform:scale(1.04) rotate(0deg) translate(0, -4px)}
-
-    /* when hovering one, gently push the other back */
-    .certStack:hover .certCard{filter:saturate(.92) contrast(.98)}
-    .certCard:hover{filter:saturate(1) contrast(1.02)}
-
-
-    /* lightbox */
-    .lightbox{position:fixed;inset:0;z-index:999;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.72)}
-    .lightbox[open]{display:flex}
-    .lightbox__img{max-width:min(1100px, 96vw);max-height:92vh;border-radius:18px;box-shadow:0 34px 140px rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.12)}
+    @media (prefers-reduced-motion: reduce){
+      .certCycle__img.full{animation:none;opacity:1}
+      .certCycle__img.redacted{animation:none;opacity:0}
+    }
 
     @media (max-width:980px){
-      .certStack{height:420px}
-      .certCard{width:min(520px, 92vw)}
+      .certStack{height:360px}
     }
 
     /* sections */
@@ -87,7 +79,7 @@
 
     /* form embed: no extra chrome */
     .formWrap{margin-top:12px}
-    .issueFrame{width:100%;border:0;border-radius:16px;min-height:1200px;box-shadow:var(--shadow);background:#0b0c10}
+    .issueFrame{width:100%;max-width:100%;display:block;border:0;border-radius:16px;min-height:1200px;height:1200px;box-shadow:var(--shadow);background:#0b0c10;overflow:hidden}
     @media (max-width:980px){.issueFrame{min-height:1500px}}
 
     /* footer */
@@ -104,13 +96,13 @@
       <div>
         <div style="margin-top:16px">
           <h1>Birth Certificates for AI agents.</h1>
-          <div class="certStack" aria-label="Certificate previews">
-            <button class="certCard certCard--full" type="button" data-zoom="/index_test/assets/full.png" aria-label="Open full certificate preview">
-              <img src="/index_test/assets/full.png" alt="Full registry record certificate" />
-            </button>
-            <button class="certCard certCard--redacted" type="button" data-zoom="/index_test/assets/redacted.png" aria-label="Open redacted certificate preview">
-              <img src="/index_test/assets/redacted.png" alt="Redacted registry record certificate" />
-            </button>
+          <div class="certStack" aria-label="Certificate preview (full fades to redacted)" id="certStack" role="button" tabindex="0">
+            <div class="certCycle" aria-hidden="true">
+              <div class="certCycle__frame">
+                <img class="certCycle__img full" src="/archive/assets/launch/full.png" alt="" />
+                <img class="certCycle__img redacted" src="/archive/assets/launch/redacted.png" alt="" />
+              </div>
+            </div>
           </div>
 
           <div class="cta" style="margin-top:12px">
@@ -125,41 +117,35 @@
 
     <div id="issue" class="kicker">Issue a Birth Certificate</div>
     <div class="formWrap">
-      <iframe class="issueFrame" title="Issue a Birth Certificate" src="/birth-certificate/"></iframe>
+      <iframe class="issueFrame" id="issueFrame" title="Issue a Birth Certificate" src="/archive/birth-certificate/" scrolling="no"></iframe>
     </div>
 
     <div class="footer">
       <div class="links">
         <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a>
         <span> · </span>
-        <a href="/policy/">Policy</a> · <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a>
+        <a href="/archive/policy/">Policy</a> · <a href="/archive/privacy/">Privacy</a> · <a href="/archive/terms/">Terms</a>
       </div>
       <div class="links">Alpha experiment. Things may break.</div>
     </div>
   </div>
 
-  <dialog class="lightbox" id="lightbox" aria-label="Certificate preview">
-    <img class="lightbox__img" id="lightboxImg" alt="Certificate preview" />
-  </dialog>
-
   <script>
     (function(){
-      const dlg = document.getElementById('lightbox');
-      const img = document.getElementById('lightboxImg');
-      function open(src){
-        img.src = src;
-        if (typeof dlg.showModal === 'function') dlg.showModal();
-        else dlg.setAttribute('open','');
-      }
-      function close(){
-        if (typeof dlg.close === 'function') dlg.close();
-        else dlg.removeAttribute('open');
-      }
-      document.querySelectorAll('[data-zoom]').forEach(btn => {
-        btn.addEventListener('click', () => open(btn.getAttribute('data-zoom')));
+      // ── Auto-resize the embedded form to avoid an inner scrollbar ──
+      const issueFrame = document.getElementById('issueFrame');
+      window.addEventListener('message', (ev) => {
+        if (!issueFrame) return;
+        if (ev.origin !== location.origin) return;
+        const d = ev.data || {};
+        if (d && d.type === 'ghostshell:formHeight' && typeof d.h === 'number') {
+          issueFrame.style.height = Math.max(900, Math.ceil(d.h)) + 'px';
+        }
       });
-      dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); });
-      window.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+      issueFrame?.addEventListener('load', () => {
+        try { issueFrame.contentWindow?.postMessage({ type: 'ghostshell:ping' }, location.origin); } catch(e) {}
+      });
+
     })();
   </script>
 </body>
