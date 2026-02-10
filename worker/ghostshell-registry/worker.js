@@ -4,10 +4,10 @@
 //
 // Deploy steps: see /WORKER-DEPLOY.md
 //
-// VERSION: 2026-02-10.007 (manual paste deploy)
+// VERSION: 2026-02-10.008 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-10.007";
+export const WORKER_VERSION = "2026-02-10.008";
 
 export default {
   async fetch(request, env) {
@@ -309,6 +309,23 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env) {
   return token;
 }
 
+function isCheckoutCompleteForIssuance(session) {
+  if (!session || typeof session !== "object") return false;
+
+  const paymentStatus = String(session.payment_status || "").toLowerCase();
+  if (paymentStatus === "paid" || paymentStatus === "no_payment_required") {
+    return true;
+  }
+
+  const status = String(session.status || "").toLowerCase();
+  const amountTotal = Number(session.amount_total || 0);
+  if (status === "complete" && amountTotal === 0) {
+    return true;
+  }
+
+  return false;
+}
+
 async function handoffToken(request, env) {
   const url = new URL(request.url);
   const sessionId = (url.searchParams.get("session_id") || "").trim();
@@ -323,7 +340,7 @@ async function handoffToken(request, env) {
   }
 
   const session = stripe.session;
-  if (session.payment_status !== "paid") {
+  if (!isCheckoutCompleteForIssuance(session)) {
     return json({ error: "not_paid" }, 409);
   }
 
@@ -347,7 +364,7 @@ async function postCheckoutRedirect(request, env) {
   }
 
   const stripe = await fetchStripeCheckoutSession(sessionId, env);
-  if (!stripe.ok || stripe.session?.payment_status !== "paid") {
+  if (!stripe.ok || !isCheckoutCompleteForIssuance(stripe.session)) {
     return Response.redirect(`${baseUrl}/issue/`, 303);
   }
 
@@ -363,7 +380,7 @@ async function getHandoff(request, env) {
   const sessionId = (url.searchParams.get("session_id") || "").trim();
   if (sessionId) {
     const stripe = await fetchStripeCheckoutSession(sessionId, env);
-    if (stripe.ok && stripe.session?.payment_status === "paid") {
+    if (stripe.ok && isCheckoutCompleteForIssuance(stripe.session)) {
       const token = await getOrCreatePurchaseTokenForSession(sessionId, stripe.session, env);
       const location = `/register/?token=${encodeURIComponent(token)}&by=human`;
       return new Response(null, {
