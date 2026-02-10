@@ -4,10 +4,10 @@
 //
 // Deploy steps: see /WORKER-DEPLOY.md
 //
-// VERSION: 2026-02-10.006 (manual paste deploy)
+// VERSION: 2026-02-10.007 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-10.006";
+export const WORKER_VERSION = "2026-02-10.007";
 
 export default {
   async fetch(request, env) {
@@ -157,6 +157,11 @@ function crockfordBase32Encode(n) {
 
 async function allocateCardNumber(db) {
   const yy = getUTCYearYY(new Date());
+
+  // Safety: ensure sequence table exists (avoids 1101 on first run/new DB)
+  await db.prepare(
+    "CREATE TABLE IF NOT EXISTS yearly_sequences (yy TEXT PRIMARY KEY, seq INTEGER NOT NULL DEFAULT 0)"
+  ).run();
 
   // Keep it simple but safe enough for D1 without schema changes:
   // - ensure year row exists (INSERT OR IGNORE)
@@ -465,7 +470,8 @@ async function redeemPurchaseToken(request, env) {
     }
   }
 
-  throw new Error(`Failed to insert certificate: ${String(lastErr?.message || "unknown")}`);
+  console.error("redeemPurchaseToken failed after retries", String(lastErr?.message || "unknown"));
+  return errPage("Temporary registry issue while issuing certificate. Please retry in 10–20 seconds.");
 }
 
 async function purchaseFirstCheckout(request, env) {
