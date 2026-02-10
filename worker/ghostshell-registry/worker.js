@@ -401,6 +401,18 @@ async function postCheckoutRedirect(request, env) {
     return Response.redirect(`${baseUrl}/issue/`, 303);
   }
 
+  // For test sessions (red button), look up the token directly from DB — no Stripe call needed
+  if (sessionId.startsWith("test_")) {
+    const row = await env.DB.prepare(
+      "SELECT token FROM purchase_tokens WHERE stripe_session_id = ?"
+    ).bind(sessionId).first();
+    if (!row?.token) {
+      return Response.redirect(`${baseUrl}/issue/`, 303);
+    }
+    const location = `${baseUrl}/register/?token=${encodeURIComponent(row.token)}&by=human`;
+    return Response.redirect(location, 303);
+  }
+
   const stripe = await fetchStripeCheckoutSession(sessionId, env);
   if (!stripe.ok || !isCheckoutCompleteForIssuance(stripe.session)) {
     return Response.redirect(`${baseUrl}/issue/`, 303);
