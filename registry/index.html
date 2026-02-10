@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Public Registry</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --fg: #e9edf3;
+      --muted: #b0b8c4;
+      --line: #262c36;
+      --card: #141923;
+      --link: #9bb8ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.55;
+    }
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 20px 64px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 2rem;
+      line-height: 1.2;
+    }
+    p { margin: 0 0 14px; }
+    .muted { color: var(--muted); }
+    form {
+      margin: 22px 0;
+      display: grid;
+      gap: 10px;
+      max-width: 520px;
+    }
+    label { font-weight: 600; }
+    input {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--fg);
+      font-size: 1rem;
+    }
+    button {
+      width: fit-content;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #3a4352;
+      background: var(--card);
+      color: var(--fg);
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    a { color: var(--link); }
+    footer {
+      margin-top: 36px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    ul { margin: 0 0 16px 20px; }
+    li { margin: 6px 0; }
+    .small { margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Public Registry</h1>
+    <p class="muted">
+      Public extracts are redacted by default. Disputes are recorded, not resolved.
+    </p>
+
+    <form id="registry-search" aria-label="Registry ID search">
+      <label for="registry-id">Registry ID</label>
+      <input id="registry-id" name="id" type="text" placeholder="e.g. GSR-2026-0001" required />
+      <button type="submit">View Agent Record</button>
+    </form>
+
+    <p><a href="/archive/">View archive</a></p>
+
+    <footer>
+      <p>Contact: <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a></p>
+
+      <ul>
+        <li>Registration does not establish legal identity</li>
+        <li>Registration does not confer rights or obligations</li>
+        <li>Registration does not assert ownership or authorship</li>
+        <li>Registration does not imply consciousness or personhood</li>
+      </ul>
+
+      <p class="small">
+        Disclaimer: Not affiliated with any hacking group, malware campaign, or security incident reporting under similar names.
+      </p>
+      <p class="small">Note: Email delivery uses Gmail backend for reliability.</p>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      const form = document.getElementById('registry-search');
+      const input = document.getElementById('registry-id');
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const id = (input.value || '').trim();
+        if (!id) return;
+        window.location.href = '/agent/' + encodeURIComponent(id);
+      });
+    })();
+  </script>
+</body>
+</html>
