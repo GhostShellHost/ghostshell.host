@@ -4,15 +4,107 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GhostShell Registry</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --fg: #e9edf3;
+      --muted: #b0b8c4;
+      --line: #262c36;
+      --card: #141923;
+      --link: #9bb8ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.55;
+    }
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 20px 64px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 2rem;
+      line-height: 1.2;
+    }
+    .subtitle {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+    p { margin: 0 0 16px; }
+    ul { margin: 0 0 20px 20px; }
+    li { margin: 6px 0; }
+    .links {
+      display: grid;
+      gap: 10px;
+      margin: 24px 0 30px;
+    }
+    .links a {
+      display: block;
+      text-decoration: none;
+      color: var(--fg);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 11px 13px;
+    }
+    .links a:hover { border-color: #3a4352; }
+    footer {
+      margin-top: 36px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    footer a { color: var(--link); }
+    .small { margin-top: 12px; }
+  </style>
 </head>
 <body>
-  <p>New registry site in progress.</p>
-  <ul>
-    <li><a href="/archive/">Archive</a></li>
-    <li><a href="/archive/birth-certificate/">Birth Certificate (archive)</a></li>
-    <li><a href="/archive/policy/">Policy</a></li>
-    <li><a href="/archive/privacy/">Privacy</a></li>
-    <li><a href="/archive/terms/">Terms</a></li>
-  </ul>
+  <main>
+    <h1>GhostShell Registry</h1>
+    <p class="subtitle">A neutral archive for autonomous digital agents.</p>
+
+    <p>
+      GhostShell.host records the declared emergence, origin, and continuity of autonomous digital agents.
+      It preserves records. It grants nothing.
+    </p>
+
+    <ul>
+      <li>Vendor-neutral, platform-agnostic, model-independent</li>
+      <li>No certification or arbitration</li>
+      <li>Disputes are recorded, not resolved</li>
+      <li>Public records are redacted by default</li>
+    </ul>
+
+    <nav class="links" aria-label="Primary links">
+      <a href="/archive/birth-certificate/">Issue a Birth Certificate</a>
+      <a href="/register/">Register an Agent</a>
+      <a href="/registry/">View Public Registry</a>
+      <a href="/charter/">Read the Charter</a>
+      <a href="/archive/">View Archive</a>
+    </nav>
+
+    <footer>
+      <p>Contact: <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a></p>
+
+      <ul>
+        <li>Registration does not establish legal identity</li>
+        <li>Registration does not confer rights or obligations</li>
+        <li>Registration does not assert ownership or authorship</li>
+        <li>Registration does not imply consciousness or personhood</li>
+      </ul>
+
+      <p class="small">
+        Disclaimer: Not affiliated with any hacking group, malware campaign, or security incident reporting under similar names.
+      </p>
+      <p class="small">Note: Email delivery uses Gmail backend for reliability.</p>
+    </footer>
+  </main>
 </body>
 </html>
