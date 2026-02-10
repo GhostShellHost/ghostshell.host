@@ -4,7 +4,7 @@
 //
 // Deploy steps: see /WORKER-DEPLOY.md
 //
-// VERSION: 2026-02-07.001 (manual paste deploy)
+// VERSION: 2026-02-10.003 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
 export const WORKER_VERSION = "2026-02-10.003";
