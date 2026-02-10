@@ -7,7 +7,7 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-11.010";
+export const WORKER_VERSION = "2026-02-11.011";
 
 export default {
   async fetch(request, env) {
@@ -127,6 +127,45 @@ function makeToken() {
   return b64url(rand);
 }
 
+function isValidEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
+}
+
+async function aesGcmDecrypt(ivB64u, ctB64u, keyB64) {
+  const keyBytes = bytesFromB64(keyB64);
+  const key = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-GCM" }, false, ["decrypt"]);
+  const iv = bytesFromB64(ivB64u);
+  const ct = bytesFromB64(ctB64u);
+  const ptBuf = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
+  return new TextDecoder().decode(ptBuf);
+}
+
+async function sendEmail(env, { to, subject, text, html }) {
+  if (!env.RESEND_API_KEY || !env.RESEND_FROM_EMAIL || !isValidEmail(to)) return { ok: false, skipped: true };
+
+  const resp = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: env.RESEND_FROM_EMAIL,
+      to: [to],
+      subject,
+      text,
+      html,
+    }),
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text();
+    console.log("email send failed", resp.status, body.slice(0, 300));
+    return { ok: false, status: resp.status };
+  }
+  return { ok: true };
+}
+
 const DEFAULT_BASE_URL = "https://ghostshell.host";
 const FALLBACK_STRIPE_PRICE_ID = "price_1SxSy8BwPkwpEkfOwje2eX1k";
 
@@ -171,6 +210,10 @@ async function ensureRuntimeSchema(db) {
     "ALTER TABLE certificates ADD COLUMN registered_by TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN used_cert_id TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN recovery_email_hash TEXT",
+    "ALTER TABLE purchase_tokens ADD COLUMN recovery_email_iv TEXT",
+    "ALTER TABLE purchase_tokens ADD COLUMN recovery_email_enc TEXT",
+    "ALTER TABLE purchase_tokens ADD COLUMN checkout_email_sent_at_utc TEXT",
+    "ALTER TABLE purchase_tokens ADD COLUMN completion_email_sent_at_utc TEXT",
   ];
 
   for (const sql of maybeAlterStatements) {
@@ -336,7 +379,7 @@ async function fetchStripeCheckoutSession(sessionId, env) {
   return { ok: true, status: stripeResp.status, session };
 }
 
-async function getOrCreatePurchaseTokenForSession(sessionId, session, env) {
+async function getOrCreatePurchaseTokenForSession(sessionId, session, env, baseUrl = DEFAULT_BASE_URL) {
   // Ensure runtime columns exist before first insert paths (checkout/test flows)
   await ensureRuntimeSchema(env.DB);
 
@@ -358,19 +401,65 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env) {
   const recoveryEmailRaw = ((session.metadata?.recovery_email || session.customer_details?.email || "")).toLowerCase().trim();
   const recoveryEmailHash = recoveryEmailRaw ? await sha256Hex(recoveryEmailRaw) : null;
 
+  let recoveryEmailIv = null;
+  let recoveryEmailEnc = null;
+  if (recoveryEmailRaw && env.EMAIL_ENC_KEY) {
+    const enc = await aesGcmEncrypt(recoveryEmailRaw, env.EMAIL_ENC_KEY);
+    recoveryEmailIv = enc.iv_b64u;
+    recoveryEmailEnc = enc.ct_b64u;
+  }
+
+  const now = nowUtcIso();
+
   try {
     await env.DB.prepare(
-      "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?, ?)"
-    ).bind(token, sessionId, paymentIntent, emailHash, recoveryEmailHash, nowUtcIso()).run();
+      "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, recovery_email_iv, recovery_email_enc, created_at_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    ).bind(token, sessionId, paymentIntent, emailHash, recoveryEmailHash, recoveryEmailIv, recoveryEmailEnc, now).run();
   } catch (e) {
     const msg = String(e?.message || "").toLowerCase();
-    if (msg.includes("recovery_email_hash")) {
+    if (msg.includes("recovery_email_hash") || msg.includes("recovery_email_iv") || msg.includes("recovery_email_enc")) {
       await env.DB.prepare(
         "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?)"
-      ).bind(token, sessionId, paymentIntent, emailHash, nowUtcIso()).run();
+      ).bind(token, sessionId, paymentIntent, emailHash, now).run();
     } else {
       throw e;
     }
+  }
+
+  // Send "complete your certificate" email immediately after payment
+  if (recoveryEmailRaw && isValidEmail(recoveryEmailRaw)) {
+    const registerUrl = `${baseUrl}/register/?token=${encodeURIComponent(token)}&by=human`;
+    const { ok: emailOk } = await sendEmail(env, {
+      to: recoveryEmailRaw,
+      subject: "Complete your GhostShell Birth Certificate",
+      text: [
+        "Your payment is confirmed — thank you.",
+        "",
+        "Complete your agent's birth certificate here:",
+        registerUrl,
+        "",
+        "This link is unique to your purchase. Keep it safe.",
+        "If you need help, reply to this email.",
+        "",
+        "— GhostShell Registry",
+      ].join("\n"),
+      html: `
+        <p>Your payment is confirmed — thank you.</p>
+        <p>Complete your agent's birth certificate here:</p>
+        <p><a href="${registerUrl}">${registerUrl}</a></p>
+        <p>This link is unique to your purchase. Keep it safe.<br>
+        If you need help, reply to this email.</p>
+        <p>— GhostShell Registry</p>
+      `,
+    });
+    if (emailOk) {
+      try {
+        await env.DB.prepare(
+          "UPDATE purchase_tokens SET completion_email_sent_at_utc = ? WHERE stripe_session_id = ?"
+        ).bind(nowUtcIso(), sessionId).run();
+      } catch (_) { /* non-fatal */ }
+    }
+    console.log("[email] completion", recoveryEmailRaw, emailOk ? "sent" : "skipped/failed");
   }
 
   return token;
@@ -395,6 +484,7 @@ function isCheckoutCompleteForIssuance(session) {
 
 async function handoffToken(request, env) {
   const url = new URL(request.url);
+  const baseUrl = getBaseUrl(request, env);
   const sessionId = (url.searchParams.get("session_id") || "").trim();
 
   if (!sessionId) {
@@ -411,7 +501,7 @@ async function handoffToken(request, env) {
     return json({ error: "not_paid" }, 409);
   }
 
-  const token = await getOrCreatePurchaseTokenForSession(sessionId, session, env);
+  const token = await getOrCreatePurchaseTokenForSession(sessionId, session, env, baseUrl);
   const tokenEncoded = encodeURIComponent(token);
 
   return json({
@@ -447,7 +537,7 @@ async function postCheckoutRedirect(request, env) {
     return Response.redirect(`${baseUrl}/issue/`, 303);
   }
 
-  const token = await getOrCreatePurchaseTokenForSession(sessionId, stripe.session, env);
+  const token = await getOrCreatePurchaseTokenForSession(sessionId, stripe.session, env, baseUrl);
   const location = `${baseUrl}/register/?token=${encodeURIComponent(token)}&by=human`;
   return Response.redirect(location, 303);
 }
@@ -460,7 +550,7 @@ async function getHandoff(request, env) {
   if (sessionId) {
     const stripe = await fetchStripeCheckoutSession(sessionId, env);
     if (stripe.ok && isCheckoutCompleteForIssuance(stripe.session)) {
-      const token = await getOrCreatePurchaseTokenForSession(sessionId, stripe.session, env);
+      const token = await getOrCreatePurchaseTokenForSession(sessionId, stripe.session, env, DEFAULT_BASE_URL);
       const location = `/register/?token=${encodeURIComponent(token)}&by=human`;
       return new Response(null, {
         status: 302,
@@ -636,7 +726,7 @@ async function testCheckout(request, env) {
   };
 
   // Generate a purchase token and write to DB (same logic as real flow)
-  const token = await getOrCreatePurchaseTokenForSession(testSessionId, mockSession, env);
+  const token = await getOrCreatePurchaseTokenForSession(testSessionId, mockSession, env, baseUrl);
 
   // Redirect to the same post-checkout flow (which will see session as paid)
   const location = `${baseUrl}/api/cert/post-checkout?session_id=${encodeURIComponent(testSessionId)}`;
@@ -651,6 +741,38 @@ async function stripeWebhook(request, env) {
   if (!ok) return new Response("Invalid signature", { status: 400 });
 
   const event = JSON.parse(raw);
+
+  // Abandoned checkout reminder: session expired without payment
+  if (event.type === "checkout.session.expired") {
+    const expiredSession = event.data.object;
+    const expiredMd = expiredSession.metadata || {};
+    const abandonedEmail = (expiredMd.recovery_email || expiredSession.customer_details?.email || "").toLowerCase().trim();
+    if (abandonedEmail && isValidEmail(abandonedEmail)) {
+      const baseUrl = DEFAULT_BASE_URL;
+      const issueUrl = `${baseUrl}/issue/`;
+      await sendEmail(env, {
+        to: abandonedEmail,
+        subject: "You left your GhostShell Birth Certificate behind",
+        text: [
+          "You started registering an agent in the GhostShell Registry but didn't complete checkout.",
+          "",
+          "When you're ready, continue here:",
+          issueUrl,
+          "",
+          "— GhostShell Registry",
+        ].join("\n"),
+        html: `
+          <p>You started registering an agent in the GhostShell Registry but didn't complete checkout.</p>
+          <p>When you're ready, continue here:</p>
+          <p><a href="${issueUrl}">${issueUrl}</a></p>
+          <p>— GhostShell Registry</p>
+        `,
+      });
+      console.log("[email] abandoned_checkout", abandonedEmail);
+    }
+    return new Response("OK", { status: 200 });
+  }
+
   if (event.type !== "checkout.session.completed") return new Response("Ignored", { status: 200 });
 
   const session = event.data.object;
