@@ -95,7 +95,7 @@
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);position:relative;letter-spacing:.03em;text-shadow:0.35px 0 rgba(17,24,39,.55),-0.15px 0 rgba(17,24,39,.25);filter:contrast(1.02) saturate(0.95)}
     .type b{font-weight:800;color:rgba(17,24,39,.96)}
 
-    .grid{margin-top:10px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px 16px;align-items:baseline}
+    .grid{margin-top:10px;display:grid;grid-template-columns:220px 1fr;gap:8px 16px;align-items:baseline}
     .grid > div:nth-child(4n+2){transform:translateX(.5px)}
     .grid > div:nth-child(6n+1){transform:translateX(-.4px)}
     .grid > div:nth-child(7n+0){transform:translateY(.3px)}
@@ -104,11 +104,8 @@
     .k{color:rgba(17,24,39,.66)}
     .k::after{content:":";display:inline-block;margin-left:.4ch;color:rgba(17,24,39,.42)}
     .v{color:var(--ink);font-weight:700;min-width:0}
-    .v.clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
     .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    /* clip should only ellipsis when it truly runs out of available width */
-    .clip{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
+    .clip{display:inline-block;max-width:44ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
 
     .note{display:none}
 
@@ -157,8 +154,7 @@
 
         <div class="micr" aria-label="Record hash (machine line)" data-build="38c9ee5+nonce-line">
           <span class="hashline"><span class="k">record_hash:</span> <span class="k">sha256</span> c7f6 a0b1 2e8a 9d3f 4c1d 0aa9 a6f0 c8b1 e7aa 2f2a 3b1c 9d0e 1122 3344 5566 7788</span>
-          <span class="hashline"><span class="k">record_nonce:</span> n_7f3c9b1a2d4e6f80</span>
-          <span class="hashline"><span class="k">public_record:</span> <a href="/demos/redacted/" style="color:inherit;text-decoration:none;border-bottom:1px solid rgba(17,24,39,.22)">ghostshell.host/demos/redacted/</a></span>
+          <span class="hashline"><span class="k">record_nonce:</span> n_7f3c9b1a2d4e6f80  <span class="k">public_record:</span> <a href="/demos/redacted/" style="color:inherit;text-decoration:none;border-bottom:1px solid rgba(17,24,39,.22)">ghostshell.host/demos/redacted/</a></span>
         </div>
       </div>
     </div>
