@@ -17,6 +17,10 @@ export default {
       return createCheckout(request, env);
     }
 
+    if (url.pathname === "/api/checkout" && request.method === "POST") {
+      return purchaseFirstCheckout(env);
+    }
+
     if (url.pathname === "/api/stripe/webhook" && request.method === "POST") {
       return stripeWebhook(request, env);
     }
@@ -206,6 +210,33 @@ async function createCheckout(request, env) {
   } else {
     body.set("metadata[delivery_consent]", "no");
   }
+
+  const resp = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
+  });
+
+  const data = await resp.json();
+  if (!resp.ok) return json({ error: "Stripe error", details: data }, 500);
+
+  return Response.redirect(data.url, 303);
+}
+
+async function purchaseFirstCheckout(env) {
+  if (!env.STRIPE_SECRET_KEY || !env.STRIPE_PRICE_ID || !env.BASE_URL) {
+    return json({ error: "Missing STRIPE_SECRET_KEY / STRIPE_PRICE_ID / BASE_URL" }, 500);
+  }
+
+  const body = new URLSearchParams();
+  body.set("mode", "payment");
+  body.set("success_url", `${env.BASE_URL}/handoff?session_id={CHECKOUT_SESSION_ID}`);
+  body.set("cancel_url", `${env.BASE_URL}/issue/`);
+  body.append("line_items[0][price]", env.STRIPE_PRICE_ID);
+  body.append("line_items[0][quantity]", "1");
 
   const resp = await fetch("https://api.stripe.com/v1/checkout/sessions", {
     method: "POST",
