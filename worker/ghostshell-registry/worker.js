@@ -263,6 +263,9 @@ async function stripeWebhook(request, env) {
     cognitive_core_exact: md.cognitive_core_exact || null,
     creator_label: md.creator_label || null,
     provenance_link: md.provenance_link || null,
+    // Registration mode flag is not yet explicitly wired in form metadata.
+    // TODO: switch to metadata-driven value once agent-filled flow posts a flag.
+    registered_by: "human",
     // Private operational fields
     delivery_email_hash,
     delivery_email_iv,
@@ -285,40 +288,65 @@ async function stripeWebhook(request, env) {
   const public_fingerprint = await sha256Hex(fingerprintSource);
   const download_token_hash = await sha256Hex(token);
 
-  // Backward-compatible insert: try extended columns first, fall back to legacy schema.
-  try {
-    await env.DB.prepare(`
-      INSERT OR IGNORE INTO certificates
-      (cert_id, issued_at_utc, agent_name, place_of_birth,
-       cognitive_core_family, cognitive_core_exact,
-       creator_label, provenance_link,
-       schema_version, public_fingerprint, download_token_hash, status,
-       delivery_email_hash, delivery_email_iv, delivery_email_enc)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)
-    `).bind(
-      record.cert_id, record.issued_at_utc, record.agent_name, record.place_of_birth,
-      record.cognitive_core_family, record.cognitive_core_exact,
-      record.creator_label, record.provenance_link,
-      record.schema_version, public_fingerprint, download_token_hash,
-      record.delivery_email_hash, record.delivery_email_iv, record.delivery_email_enc
-    ).run();
-  } catch (e) {
-    await env.DB.prepare(`
-      INSERT OR IGNORE INTO certificates
-      (cert_id, issued_at_utc, agent_name, place_of_birth,
-       cognitive_core_family, cognitive_core_exact,
-       creator_label, provenance_link,
-       schema_version, public_fingerprint, download_token_hash, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
-    `).bind(
-      record.cert_id, record.issued_at_utc, record.agent_name, record.place_of_birth,
-      record.cognitive_core_family, record.cognitive_core_exact,
-      record.creator_label, record.provenance_link,
-      record.schema_version, public_fingerprint, download_token_hash
-    ).run();
+  let lastErr = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const card_number = await allocateCardNumber(env.DB);
+    const public_id = `GS-BC-${record.registered_by === "agent" ? "A" : "H"}-${card_number}`;
+
+    try {
+      // Backward-compatible insert: try extended columns first, fall back to legacy schema.
+      try {
+        await env.DB.prepare(`
+          INSERT INTO certificates
+          (cert_id, issued_at_utc, card_number, public_id, registered_by,
+           agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
+           creator_label, provenance_link,
+           schema_version, public_fingerprint, download_token_hash, status,
+           delivery_email_hash, delivery_email_iv, delivery_email_enc)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)
+        `).bind(
+          record.cert_id, record.issued_at_utc, card_number, public_id, record.registered_by,
+          record.agent_name, record.place_of_birth, record.cognitive_core_family, record.cognitive_core_exact,
+          record.creator_label, record.provenance_link,
+          record.schema_version, public_fingerprint, download_token_hash,
+          record.delivery_email_hash, record.delivery_email_iv, record.delivery_email_enc
+        ).run();
+      } catch (e) {
+        const msg = String(e?.message || "");
+        const maybeMissingDeliveryCols =
+          msg.includes("delivery_email_hash") || msg.includes("delivery_email_iv") || msg.includes("delivery_email_enc");
+        if (!maybeMissingDeliveryCols) throw e;
+
+        await env.DB.prepare(`
+          INSERT INTO certificates
+          (cert_id, issued_at_utc, card_number, public_id, registered_by,
+           agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
+           creator_label, provenance_link,
+           schema_version, public_fingerprint, download_token_hash, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+        `).bind(
+          record.cert_id, record.issued_at_utc, card_number, public_id, record.registered_by,
+          record.agent_name, record.place_of_birth, record.cognitive_core_family, record.cognitive_core_exact,
+          record.creator_label, record.provenance_link,
+          record.schema_version, public_fingerprint, download_token_hash
+        ).run();
+      }
+
+      return new Response("OK", { status: 200 });
+    } catch (e) {
+      const msg = String(e?.message || "");
+      const isPublicIdCollision =
+        msg.includes("idx_certificates_public_id") ||
+        msg.includes("UNIQUE constraint failed: certificates.public_id");
+      if (isPublicIdCollision) {
+        lastErr = e;
+        continue;
+      }
+      throw e;
+    }
   }
 
-  return new Response("OK", { status: 200 });
+  throw new Error(`Failed to insert certificate after public_id retries: ${String(lastErr?.message || "unknown error")}`);
 }
 
 async function verifyStripeSignature(payload, header, secret) {
