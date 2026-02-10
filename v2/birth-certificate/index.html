@@ -5,29 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Issue Birth Certificate (v2)</title>
   <style>
-    :root{--bg:#0b0d12;--panel:#121722;--text:#ebf2fb;--muted:#9eaaba;--line:#2a3342;--a:#7c5cff;--sans:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    :root{--bg:#070a12;--panel:#0f1524f0;--text:#e8eef8;--muted:#9ba9c1;--line:#243049;--a:#7c5cff;--sans:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     *{box-sizing:border-box} html,body{margin:0}
     body{font-family:var(--sans);background:var(--bg);color:var(--text)}
-    .wrap{padding:14px;max-width:560px}
-    .card{background:rgba(18,23,34,.85);border:1px solid var(--line);border-radius:14px;padding:16px}
-    h1{margin:0 0 6px;font-size:20px;letter-spacing:-.02em}
+    .wrap{padding:14px;max-width:540px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+    h1{margin:0 0 6px;font-size:21px;letter-spacing:-.02em}
     .sub{margin:0 0 14px;color:var(--muted);font-size:14px}
-    label{display:block;margin-top:12px;font-weight:600;font-size:14px}
-    input,select{width:100%;margin-top:6px;padding:10px 11px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);font:inherit}
-    .hint{margin-top:4px;color:var(--muted);font-size:12px;line-height:1.35}
+    label{display:block;margin-top:12px;font-size:14px;font-weight:600}
+    input,select{width:100%;margin-top:6px;padding:11px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);font:inherit}
     .price{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
     .price b{font-size:22px}
-    .small{color:var(--muted);font-size:12px}
-    .btn{margin-top:14px;width:100%;border:0;border-radius:11px;padding:12px 14px;font:inherit;font-weight:700;background:linear-gradient(90deg,var(--a),#9b7bff);color:#fff;cursor:pointer}
-    .mini{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.45}
+    .small{font-size:12px;color:var(--muted)}
+    .btn{margin-top:14px;width:100%;border:0;border-radius:11px;padding:12px 14px;background:linear-gradient(90deg,var(--a),#9b7bff);color:#fff;font:inherit;font-weight:700;cursor:pointer}
     :focus-visible{outline:3px solid rgba(124,92,255,.35);outline-offset:2px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <form class="card" id="certForm" method="POST" action="https://ghostshell-registry.jason-v-butler-9f5.workers.dev/api/cert/create-checkout">
+    <form class="card" method="POST" action="https://ghostshell-registry.jason-v-butler-9f5.workers.dev/api/cert/create-checkout">
       <h1>Issue a Birth Certificate</h1>
-      <p class="sub">Minimal launch form.</p>
+      <p class="sub">Minimal checkout form.</p>
 
       <label for="agent_name">Agent name *</label>
       <input id="agent_name" name="agent_name" required placeholder="e.g., Joule" autocomplete="off" />
@@ -45,15 +43,8 @@
         <option value="Other">Other</option>
       </select>
 
-      <label for="creator_label">Creator label (optional)</label>
-      <input id="creator_label" name="creator_label" placeholder="pseudonym" autocomplete="off" />
-
-      <label for="provenance_link">Linked certificate ID (optional)</label>
-      <input id="provenance_link" name="provenance_link" placeholder="GS-BC-..." autocomplete="off" />
-
       <div class="price"><b>US$9.99</b><span class="small">one-time</span></div>
       <button class="btn" type="submit">Continue to payment</button>
-      <div class="mini">Public fields: agent name, place of origin, core family. Use pseudonyms.</div>
     </form>
   </div>
 
