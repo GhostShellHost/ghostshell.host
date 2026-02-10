@@ -99,6 +99,59 @@ function makeToken() {
   return b64url(rand);
 }
 
+function getUTCYearYY(date = new Date()) {
+  return String(date.getUTCFullYear()).slice(-2);
+}
+
+function crockfordBase32Encode(n) {
+  const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  const v = Number(n);
+  if (!Number.isInteger(v) || v < 0) {
+    throw new Error("crockfordBase32Encode expects a non-negative integer");
+  }
+  if (v === 0) return "0";
+
+  let x = v;
+  let out = "";
+  while (x > 0) {
+    out = alphabet[x % 32] + out;
+    x = Math.floor(x / 32);
+  }
+  return out;
+}
+
+async function allocateCardNumber(db) {
+  const yy = getUTCYearYY(new Date());
+
+  // Keep it simple but safe enough for D1 without schema changes:
+  // - ensure year row exists (INSERT OR IGNORE)
+  // - atomically increment in one UPDATE
+  // - read back value and encode
+  // Retry a few times for transient races.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await db.prepare("INSERT OR IGNORE INTO yearly_sequences (yy, seq) VALUES (?, 0)").bind(yy).run();
+
+    const upd = await db.prepare("UPDATE yearly_sequences SET seq = seq + 1 WHERE yy = ?").bind(yy).run();
+    const changed = Number(upd?.meta?.changes || 0);
+    if (changed < 1) continue;
+
+    const row = await db.prepare("SELECT seq FROM yearly_sequences WHERE yy = ?").bind(yy).first();
+    const seq = Number(row?.seq);
+    if (Number.isInteger(seq) && seq > 0) {
+      return `${yy}-${crockfordBase32Encode(seq)}`;
+    }
+  }
+
+  throw new Error("Failed to allocate card number");
+}
+
+/*
+Unit-test-like examples for Crockford Base32 encoder:
+- crockfordBase32Encode(1)  => "1"
+- crockfordBase32Encode(17) => "H"   // alphabet index 17
+- crockfordBase32Encode(32) => "10"
+*/
+
 async function createCheckout(request, env) {
   const fd = await request.formData();
 
