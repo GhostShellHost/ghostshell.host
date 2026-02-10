@@ -141,9 +141,11 @@
     .grid{
       margin-top:10px;
       display:grid;
-      grid-template-columns:220px 1fr;
+      grid-template-columns:220px 44ch;
       gap:8px 16px;
       align-items:baseline;
+      justify-content:start;
+      grid-auto-rows:minmax(20px,auto);
     }
     /* slight typewriter misalignment */
     .grid > div:nth-child(4n+2){transform:translateX(.5px)}
@@ -157,7 +159,7 @@
 
     .k{color:rgba(17,24,39,.66)}
     .k::after{content:":";display:inline-block;margin-left:.4ch;color:rgba(17,24,39,.42)}
-    .v{color:var(--ink);font-weight:700;min-width:0}
+    .v{color:var(--ink);font-weight:700;min-width:0;display:inline-block;width:44ch;max-width:44ch}
     .sep{color:var(--ink)}
     .catalog .redact{transform:rotate(-.4deg)}
     .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

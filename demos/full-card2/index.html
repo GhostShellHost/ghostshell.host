@@ -95,7 +95,7 @@
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);position:relative;letter-spacing:.03em;text-shadow:0.35px 0 rgba(17,24,39,.55),-0.15px 0 rgba(17,24,39,.25);filter:contrast(1.02) saturate(0.95)}
     .type b{font-weight:800;color:rgba(17,24,39,.96)}
 
-    .grid{margin-top:10px;display:grid;grid-template-columns:220px 1fr;gap:8px 16px;align-items:baseline}
+    .grid{margin-top:10px;display:grid;grid-template-columns:220px 44ch;gap:8px 16px;align-items:baseline;justify-content:start;grid-auto-rows:minmax(20px,auto)}
     .grid > div:nth-child(4n+2){transform:translateX(.5px)}
     .grid > div:nth-child(6n+1){transform:translateX(-.4px)}
     .grid > div:nth-child(7n+0){transform:translateY(.3px)}
@@ -103,7 +103,7 @@
 
     .k{color:rgba(17,24,39,.66)}
     .k::after{content:":";display:inline-block;margin-left:.4ch;color:rgba(17,24,39,.42)}
-    .v{color:var(--ink);font-weight:700;min-width:0}
+    .v{color:var(--ink);font-weight:700;min-width:0;display:inline-block;width:44ch;max-width:44ch}
     .hash{display:inline-block;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .clip{display:inline-block;max-width:44ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
 
