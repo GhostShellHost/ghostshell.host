@@ -6,4 +6,3 @@
 /*.json /:splat.json 200
 /*.txt /:splat.txt 200
 /*.map /:splat.map 200
-/* /index.html 200
