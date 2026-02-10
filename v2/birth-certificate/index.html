@@ -16,6 +16,7 @@
     .k{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
     label{display:block;margin-top:10px;font-size:13px;font-weight:600}
     input,select{width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);font:inherit}
+    select option{background:#0f1524;color:#e8eef8}
     .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
     .check{display:flex;gap:8px;align-items:flex-start;margin-top:10px;color:var(--muted);font-size:12px;line-height:1.4}
     .check input{width:16px;height:16px;margin-top:2px}
@@ -61,7 +62,17 @@
         </select>
 
         <label for="cognitive_core_exact_select">Exact model *</label>
-        <select id="cognitive_core_exact_select"></select>
+        <select id="cognitive_core_exact_select">
+          <option value="gpt-4o">gpt-4o</option>
+          <option value="gpt-4.1">gpt-4.1</option>
+          <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+          <option value="gpt-4o-mini">gpt-4o-mini</option>
+          <option value="o3">o3</option>
+          <option value="o4-mini">o4-mini</option>
+          <option value="gpt-5">gpt-5</option>
+          <option value="gpt-5.3-codex">gpt-5.3-codex</option>
+          <option value="__other__">Other…</option>
+        </select>
         <input id="cognitive_core_exact_other" placeholder="Type model name" autocomplete="off" style="display:none" />
         <input id="cognitive_core_exact" name="cognitive_core_exact" type="hidden" />
       </div>
@@ -104,7 +115,7 @@
       const exactHidden = document.getElementById('cognitive_core_exact');
 
       const MODELS = {
-        'GPT-family': ['gpt-4o','gpt-4.1','gpt-4.1-mini','gpt-4o-mini','o3','o4-mini','gpt-5'],
+        'GPT-family': ['gpt-4o','gpt-4.1','gpt-4.1-mini','gpt-4o-mini','o3','o4-mini','gpt-5','gpt-5.3-codex'],
         'Claude-family': ['claude-sonnet-4-5','claude-opus-4-1','claude-haiku-3.5'],
         'Gemini-family': ['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-pro'],
         'Llama-family': ['llama-3.1-8b','llama-3.1-70b','llama-3.1-405b'],
