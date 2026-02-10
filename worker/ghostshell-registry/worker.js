@@ -391,7 +391,7 @@ async function latestOrigin(env) {
 
 async function certVerifyPage(certId, env) {
   const selectPublicFields =
-    "SELECT cert_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, public_fingerprint, status FROM certificates WHERE ";
+    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, public_fingerprint, status FROM certificates WHERE ";
 
   // Resolve by canonical cert_id first, then fallback to public_id alias.
   let row = await env.DB.prepare(
@@ -429,7 +429,7 @@ return html(`<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>${safe(row.cert_id)} • GhostShell Registry</title>
+  <title>${safe(row.public_id || row.cert_id)} • GhostShell Registry</title>
   <style>
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:860px;margin:60px auto;padding:0 18px;line-height:1.5}
     .badge{display:inline-block;padding:4px 10px;border:1px solid #ddd;border-radius:999px;font-size:12px}
@@ -447,7 +447,8 @@ return html(`<!doctype html>
   <h1>GhostShell Birth Certificate</h1>
 
   <div class="box">
-    <div><strong>Certificate ID:</strong> <span class="mono">${safe(row.cert_id)}</span></div>
+    <div><strong>Registry Record ID:</strong> <span class="mono">${safe(row.public_id || row.cert_id)}</span></div>
+    <div class="small" style="margin-top:6px"><strong>Canonical Record ID:</strong> <span class="mono">${safe(row.cert_id)}</span></div>
 
     <div class="row">
       <div><strong>Status</strong></div>
@@ -501,7 +502,7 @@ async function certDownloadPrintable(certId, token, env) {
   if (!token) return new Response("Missing token", { status: 401 });
 
   const row = await env.DB.prepare(
-    "SELECT cert_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, download_token_hash, status FROM certificates WHERE cert_id = ?"
+    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, download_token_hash, status FROM certificates WHERE cert_id = ?"
   ).bind(certId).first();
 
   if (!row) return new Response("Not found", { status: 404 });
@@ -512,7 +513,7 @@ async function certDownloadPrintable(certId, token, env) {
 
   const safe = s => (s ?? "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return html(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${safe(row.cert_id)} • Birth Certificate</title>
+<title>${safe(row.public_id || row.cert_id)} • Birth Certificate</title>
 <style>
 body{font-family:Georgia,serif;max-width:900px;margin:40px auto;padding:0;background:#f7f5f1}
 #certWrap{padding:40px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.12)}
@@ -555,9 +556,10 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
     <p><strong>Place of birth:</strong> ${safe(row.place_of_birth)}</p>
     <p><strong>Cognitive core (at registration):</strong> ${safe(row.cognitive_core_family)} ${safe(row.cognitive_core_exact)}</p>
     <hr>
-    <p><strong>Certificate ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
+    <p><strong>Registry Record ID:</strong> <span class="mono">${safe(row.public_id || row.cert_id)}</span></p>
+    <p class="small"><strong>Canonical Record ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
     <p><strong>Creator label (pseudonym):</strong> ${safe(row.creator_label || 'Undisclosed')}</p>
-    <p class="small">Verification: ${env.BASE_URL}/cert/${encodeURIComponent(row.cert_id)}</p>
+    <p class="small">Verification: ${env.BASE_URL}/cert/${encodeURIComponent(row.public_id || row.cert_id)}</p>
   </div>
 </div>
 
@@ -581,7 +583,7 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
           if (!blob) throw new Error('PNG render failed');
           const a = document.createElement('a');
           a.href = URL.createObjectURL(blob);
-          a.download = '${safe(row.cert_id)}.png';
+          a.download = '${safe(row.public_id || row.cert_id)}.png';
           document.body.appendChild(a);
           a.click();
           a.remove();
