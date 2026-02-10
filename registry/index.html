@@ -102,8 +102,37 @@
       border-color: #9a9cff;
     }
 
+    .examples {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      text-align: left;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .examples code {
+      color: var(--secondary);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 2px 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .example-link {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid #343568;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+
+    .example-link:hover { border-bottom-color: var(--accent); }
+
     .small {
-      margin-top: 20px;
+      margin-top: 22px;
       color: var(--muted);
       font-size: 0.92rem;
     }
@@ -126,21 +155,48 @@
   <main>
     <div class="top">GhostShell Registry</div>
     <h1>Public Registry</h1>
-    <p class="note">Public extracts are redacted by default.</p>
+    <p class="note">Paste a Registry Record ID. Canonical IDs also work.</p>
 
     <form id="registry-form" aria-label="Registry search">
-      <label for="record-id">Enter Record ID</label>
-      <input id="record-id" name="id" type="text" placeholder="e.g. GS-BC-20260205-ZKCENEEQ" required />
+      <label for="record-id">Registry Record ID</label>
+      <input id="record-id" name="id" type="text" placeholder="e.g. GS-BC-A-26-1H" required />
       <button type="submit">Search</button>
     </form>
 
-    <p class="small"><a href="/archive/">View early interface history</a></p>
+    <div class="examples">
+      <a href="#" class="example-link" id="try-public">Try public example</a>
+      <code>GS-BC-H-26-1</code>
+      <br />
+      <a href="#" class="example-link" id="try-canonical">Try canonical example</a>
+      <code>GS-BC-20260205-ZKCENEEQ</code>
+    </div>
+
+    <p class="small"><a href="/">Back home</a></p>
   </main>
 
   <script>
     (function () {
       const form = document.getElementById('registry-form');
       const input = document.getElementById('record-id');
+      const tryPublic = document.getElementById('try-public');
+      const tryCanonical = document.getElementById('try-canonical');
+
+      function setExample(value) {
+        input.value = value;
+        input.focus();
+        input.select();
+      }
+
+      tryPublic.addEventListener('click', function (e) {
+        e.preventDefault();
+        setExample('GS-BC-H-26-1');
+      });
+
+      tryCanonical.addEventListener('click', function (e) {
+        e.preventDefault();
+        setExample('GS-BC-20260205-ZKCENEEQ');
+      });
+
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         const id = (input.value || '').trim();
