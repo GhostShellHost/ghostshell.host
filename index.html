@@ -36,6 +36,21 @@
     h1{margin:0 0 10px;font-size:56px;line-height:1.0;letter-spacing:-0.03em}
     .sub{margin:0 0 16px;color:var(--muted);line-height:1.55;max-width:70ch}
 
+    /* terminal origin map */
+    .originTerm{margin:0 0 16px;padding:14px 14px 12px;border-radius:14px;background:rgba(8,12,16,.92);border:1px solid rgba(46,229,157,.28);box-shadow:inset 0 0 0 1px rgba(46,229,157,.08),0 18px 60px rgba(0,0,0,.45);font-family:var(--mono)}
+    .originTerm__head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;color:#98f6d3;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+    .originTerm__lights{display:inline-flex;gap:6px;align-items:center}
+    .originTerm__lights i{display:block;width:8px;height:8px;border-radius:50%;background:#1f3d31;border:1px solid rgba(152,246,211,.24)}
+    .originTerm__lights i:nth-child(1){background:#204d3b}
+    .originTerm__lights i:nth-child(2){background:#2a5f48}
+    .originTerm__lights i:nth-child(3){background:#388963}
+    .originTerm pre{margin:0;padding:8px 10px 10px;border-radius:10px;background:linear-gradient(180deg,rgba(9,16,14,.95),rgba(8,12,12,.95));border:1px solid rgba(46,229,157,.18);color:#abf8d8;line-height:1.18;font-size:clamp(7px,1.55vw,11px);letter-spacing:.06em;overflow:auto;white-space:pre;position:relative}
+    .originTerm pre::after{content:"";position:absolute;left:0;right:0;top:-22%;height:42%;background:linear-gradient(180deg,rgba(46,229,157,.10),rgba(46,229,157,0));animation:scan 4.4s linear infinite;pointer-events:none}
+    .originTerm__meta{margin-top:8px;color:#8fd9ba;font-size:12px;display:flex;flex-wrap:wrap;gap:6px 12px}
+    .originTerm__cursor{display:inline-block;min-width:7px;animation:blink 1s steps(1,end) infinite}
+    @keyframes scan{0%{transform:translateY(-38%)}100%{transform:translateY(260%)}}
+    @keyframes blink{50%{opacity:0}}
+
     .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
     .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:12px;border:1px solid var(--line);text-decoration:none;font-weight:700;background:rgba(255,255,255,.03)}
     .btn.primary{background:linear-gradient(90deg,var(--accent),#9b7bff);border-color:transparent;color:#fff}
@@ -95,6 +110,29 @@
     <div class="hero">
       <div>
         <div style="margin-top:16px">
+          <section class="originTerm" aria-label="Terminal map showing place of origin pin">
+            <div class="originTerm__head">
+              <span>GhostShell Registry // ORIGIN PINNED</span>
+              <span class="originTerm__lights" aria-hidden="true"><i></i><i></i><i></i></span>
+            </div>
+<pre aria-hidden="true">┌──────────────────────────────────────────────────────────────────────────┐
+│  WORLD NODE MAP v1.0                                                    │
+│                                                                          │
+│    .-''''-.            _..---.._                           .-''''-.      │
+│  .'  NA    '.      .-''  EUROPE  ''-.                  .-'  ASIA   '-.   │
+│ /            \   .'                 '.               .'                '. │
+│|   SA         | |                     |             /      INDIA         \│
+│ \            /   '.                 .'             |                    | │
+│  '-.______. -'      '-._ AFRICA _.-'                \   AUSTRALIA   ●  / │
+│                                                  PACIFIC '.___  ___..-'   │
+│                                                                          │
+│  PIN: ADELAIDE, AU   LAT:-34.9285  LNG:138.6007   STATUS: VERIFIED      │
+└──────────────────────────────────────────────────────────────────────────┘</pre>
+            <div class="originTerm__meta">
+              <span>> Place of origin: Adelaide, South Australia</span>
+              <span>> Certificate seed captured<span class="originTerm__cursor">_</span></span>
+            </div>
+          </section>
           <h1>Birth Certificates for AI agents.</h1>
           <div class="certStack" aria-label="Certificate preview (full fades to redacted)" id="certStack" role="button" tabindex="0">
             <div class="certCycle" aria-hidden="true">
