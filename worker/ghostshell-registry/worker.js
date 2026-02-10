@@ -4,10 +4,10 @@
 //
 // Deploy steps: see /WORKER-DEPLOY.md
 //
-// VERSION: 2026-02-10.008 (manual paste deploy)
+// VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-10.008";
+export const WORKER_VERSION = "2026-02-10.009";
 
 export default {
   async fetch(request, env) {
@@ -153,6 +153,40 @@ function crockfordBase32Encode(n) {
     x = Math.floor(x / 32);
   }
   return out;
+}
+
+async function ensureRuntimeSchema(db) {
+  // Keep runtime resilient even if D1 migrations were only partially applied.
+  await db.prepare(
+    "CREATE TABLE IF NOT EXISTS yearly_sequences (yy TEXT PRIMARY KEY, seq INTEGER NOT NULL DEFAULT 0)"
+  ).run();
+
+  const maybeAlterStatements = [
+    "ALTER TABLE certificates ADD COLUMN card_number TEXT",
+    "ALTER TABLE certificates ADD COLUMN public_id TEXT",
+    "ALTER TABLE certificates ADD COLUMN registered_by TEXT",
+    "ALTER TABLE purchase_tokens ADD COLUMN used_cert_id TEXT",
+  ];
+
+  for (const sql of maybeAlterStatements) {
+    try {
+      await db.prepare(sql).run();
+    } catch (e) {
+      const msg = String(e?.message || "").toLowerCase();
+      const ignorable =
+        msg.includes("duplicate column name") ||
+        msg.includes("already exists") ||
+        msg.includes("duplicate") ||
+        msg.includes("no such table: purchase_tokens");
+      if (!ignorable) throw e;
+    }
+  }
+
+  try {
+    await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_certificates_public_id ON certificates(public_id)").run();
+  } catch (_) {
+    // Non-fatal: legacy DBs may have conflicting data/nulls temporarily.
+  }
 }
 
 async function allocateCardNumber(db) {
@@ -405,6 +439,7 @@ async function getHandoff(request, env) {
 
 async function redeemPurchaseToken(request, env) {
   const baseUrl = getBaseUrl(request, env);
+  await ensureRuntimeSchema(env.DB);
   const fd = await request.formData();
   const token = (fd.get("token") || "").toString().trim();
   const registered_by_raw = (fd.get("registered_by") || "human").toString().trim().toLowerCase();
