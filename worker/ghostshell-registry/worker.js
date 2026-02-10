@@ -4,10 +4,10 @@
 //
 // Deploy steps: see /WORKER-DEPLOY.md
 //
-// VERSION: 2026-02-10.003 (manual paste deploy)
+// VERSION: 2026-02-10.004 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-10.003";
+export const WORKER_VERSION = "2026-02-10.004";
 
 export default {
   async fetch(request, env) {
@@ -29,7 +29,7 @@ export default {
       return handoffToken(request, env);
     }
 
-    if (url.pathname === "/handoff" && request.method === "GET") {
+    if ((url.pathname === "/handoff" || url.pathname === "/handoff/") && request.method === "GET") {
       return getHandoff(request, env);
     }
 
