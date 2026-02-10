@@ -40,6 +40,11 @@
     .originPanel{margin:0 0 16px;padding:14px;border-radius:16px;border:1px solid rgba(170,179,191,.18);background:rgba(18,20,27,.72);box-shadow:var(--shadow)}
     .originPanel__kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
     .originPanel__title{font-size:15px;font-weight:700;color:var(--text);margin:0 0 6px}
+    .originPanel__map{margin:10px 0 12px;padding:10px;border:1px solid rgba(170,179,191,.18);border-radius:12px;background:rgba(11,12,16,.55)}
+    .originPanel__map svg{display:block;width:100%;height:auto}
+    .originPanel__land{fill:rgba(170,179,191,.18);stroke:rgba(170,179,191,.24);stroke-width:1.2}
+    .originPanel__grid{stroke:rgba(170,179,191,.14);stroke-width:1}
+    .originPanel__pin{fill:var(--accent2);filter:drop-shadow(0 0 8px rgba(46,229,157,.55))}
     .originPanel__meta{display:flex;flex-wrap:wrap;gap:8px 14px;color:var(--muted);font-size:13px}
     .originPanel__meta b{color:var(--text)}
 
@@ -105,9 +110,23 @@
           <section class="originPanel" aria-label="Place of origin from registry">
             <div class="originPanel__kicker">Registry metadata</div>
             <p class="originPanel__title" id="originPlaceLine">Place of origin: syncing with registry…</p>
+            <div class="originPanel__map" aria-hidden="true">
+              <svg viewBox="0 0 800 360" role="img" aria-label="World map origin pin">
+                <path class="originPanel__grid" d="M80 60H720M80 120H720M80 180H720M80 240H720M80 300H720M80 30V330M180 30V330M280 30V330M380 30V330M480 30V330M580 30V330M680 30V330"/>
+                <path class="originPanel__land" d="M116 104l28-22 50-6 24 12 20 30-20 24-36 8-42-8-24-20z"/>
+                <path class="originPanel__land" d="M220 178l24-16 26 8 10 30-14 36-30 14-20-20z"/>
+                <path class="originPanel__land" d="M350 88l44-20 62 8 38 24-6 26-48 20-58-2-30-20z"/>
+                <path class="originPanel__land" d="M394 150l36 10 26 42-10 66-36 18-28-26-8-54z"/>
+                <path class="originPanel__land" d="M510 100l38-22 70 0 60 20-6 30-42 20-74 2-42-22z"/>
+                <path class="originPanel__land" d="M560 172l40-8 46 18 8 28-22 24-42 2-28-20z"/>
+                <path class="originPanel__land" d="M640 246l30-12 44 8 16 26-26 18-42 0-28-18z"/>
+                <circle class="originPanel__pin" id="originPin" cx="664" cy="268" r="6"/>
+              </svg>
+            </div>
             <div class="originPanel__meta">
               <span><b>Status:</b> <span id="originStatus">Syncing</span></span>
               <span><b>Certificate:</b> <span id="originCertId">—</span></span>
+              <span><b>Country:</b> <span id="originCountry">—</span></span>
             </div>
           </section>
           <h1>Birth Certificates for AI agents.</h1>
@@ -165,12 +184,41 @@
       const originPlaceLine = document.getElementById('originPlaceLine');
       const originCertId = document.getElementById('originCertId');
       const originStatus = document.getElementById('originStatus');
+      const originCountry = document.getElementById('originCountry');
+      const originPin = document.getElementById('originPin');
+
+      function parseCountry(place) {
+        const raw = (place || '').toString().trim();
+        if (!raw) return 'Unknown';
+        const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+        return parts.length ? parts[parts.length - 1] : raw;
+      }
+
+      function pinForCountry(country) {
+        const c = (country || '').toUpperCase();
+        if (c.includes('AUSTRALIA') || c === 'AU') return { x: 664, y: 268 };
+        if (c.includes('UNITED STATES') || c === 'USA' || c === 'US') return { x: 170, y: 140 };
+        if (c.includes('CANADA') || c === 'CA') return { x: 182, y: 104 };
+        if (c.includes('UNITED KINGDOM') || c === 'UK' || c === 'GB') return { x: 376, y: 102 };
+        if (c.includes('GERMANY') || c === 'DE') return { x: 406, y: 112 };
+        if (c.includes('INDIA') || c === 'IN') return { x: 560, y: 168 };
+        if (c.includes('SINGAPORE') || c === 'SG') return { x: 604, y: 210 };
+        if (c.includes('JAPAN') || c === 'JP') return { x: 646, y: 136 };
+        if (c.includes('BRAZIL') || c === 'BR') return { x: 244, y: 214 };
+        if (c.includes('SOUTH AFRICA') || c === 'ZA') return { x: 418, y: 266 };
+        return { x: 560, y: 180 };
+      }
 
       function renderOrigin(place, certId, status) {
-        if (!originPlaceLine || !originCertId || !originStatus) return;
+        if (!originPlaceLine || !originCertId || !originStatus || !originCountry || !originPin) return;
+        const country = parseCountry(place);
+        const pin = pinForCountry(country);
         originPlaceLine.textContent = `Place of origin: ${place || 'Unknown'}`;
         originCertId.textContent = certId || '—';
         originStatus.textContent = status || 'Verified';
+        originCountry.textContent = country;
+        originPin.setAttribute('cx', String(pin.x));
+        originPin.setAttribute('cy', String(pin.y));
       }
 
       fetch('/api/cert/latest-origin', { headers: { 'accept': 'application/json' } })
