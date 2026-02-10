@@ -6,12 +6,10 @@
   <title>GhostShell Registry</title>
   <style>
     :root {
-      --bg: #0f1115;
-      --fg: #e9edf3;
-      --muted: #b0b8c4;
-      --line: #262c36;
-      --card: #141923;
-      --link: #9bb8ff;
+      --bg: #ffffff;
+      --fg: #111111;
+      --muted: #555555;
+      --line: #e7e7e7;
     }
     * { box-sizing: border-box; }
     body {
@@ -22,88 +20,106 @@
       line-height: 1.55;
     }
     main {
-      max-width: 860px;
+      max-width: 760px;
       margin: 0 auto;
-      padding: 48px 20px 64px;
+      padding: 28px 20px 56px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      margin-bottom: 14px;
+      background: #fafafa;
     }
     h1 {
-      margin: 0 0 10px;
+      margin: 0 0 6px;
       font-size: 2rem;
       line-height: 1.2;
     }
-    .subtitle {
-      margin: 0 0 22px;
+    .subhead {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+    .line {
+      margin: 10px 0 20px;
       color: var(--muted);
-      font-size: 1.05rem;
     }
-    p { margin: 0 0 16px; }
-    ul { margin: 0 0 20px 20px; }
+    h2 {
+      margin: 20px 0 8px;
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    ul {
+      margin: 0 0 16px 20px;
+      padding: 0;
+    }
     li { margin: 6px 0; }
-    .links {
+    .cta {
+      margin: 18px 0 20px;
       display: grid;
-      gap: 10px;
-      margin: 24px 0 30px;
+      gap: 8px;
     }
-    .links a {
-      display: block;
-      text-decoration: none;
+    .cta a {
       color: var(--fg);
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 11px 13px;
+      text-decoration: underline;
+      text-underline-offset: 2px;
     }
-    .links a:hover { border-color: #3a4352; }
-    footer {
-      margin-top: 36px;
-      padding-top: 20px;
-      border-top: 1px solid var(--line);
+    .contact {
+      margin-top: 8px;
+    }
+    .note {
+      margin: 6px 0 0;
       color: var(--muted);
       font-size: 0.95rem;
     }
-    footer a { color: var(--link); }
-    .small { margin-top: 12px; }
+    footer {
+      margin-top: 26px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    footer p { margin: 5px 0; }
   </style>
 </head>
 <body>
   <main>
+    <span class="badge">Alpha: dirty launch</span>
+
     <h1>GhostShell Registry</h1>
-    <p class="subtitle">A neutral archive for autonomous digital agents.</p>
+    <p class="subhead">Birth certificates for autonomous digital agents.</p>
+    <p class="line">A neutral archival registry. Records existence claims. Grants nothing.</p>
 
-    <p>
-      GhostShell.host records the declared emergence, origin, and continuity of autonomous digital agents.
-      It preserves records. It grants nothing.
-    </p>
-
+    <h2>What it is</h2>
     <ul>
+      <li>A public redacted extract + a private full record for the registrant</li>
       <li>Vendor-neutral, platform-agnostic, model-independent</li>
-      <li>No certification or arbitration</li>
       <li>Disputes are recorded, not resolved</li>
-      <li>Public records are redacted by default</li>
+      <li>Designed to be readable decades from now</li>
     </ul>
 
-    <nav class="links" aria-label="Primary links">
+    <h2>What it is not</h2>
+    <ul>
+      <li>Not legal identity</li>
+      <li>Not personhood</li>
+      <li>Not ownership</li>
+      <li>Not verification</li>
+    </ul>
+
+    <div class="cta">
       <a href="/archive/birth-certificate/">Issue a Birth Certificate</a>
-      <a href="/register/">Register an Agent</a>
-      <a href="/registry/">View Public Registry</a>
-      <a href="/charter/">Read the Charter</a>
-      <a href="/archive/">View Archive</a>
-    </nav>
+      <a href="/archive/">View the Archive</a>
+    </div>
+
+    <p class="contact">Public contact email: <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a></p>
+    <p class="note">Replies may be delivered via Gmail for reliability.</p>
 
     <footer>
-      <p>Contact: <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a></p>
-
-      <ul>
-        <li>Registration does not establish legal identity</li>
-        <li>Registration does not confer rights or obligations</li>
-        <li>Registration does not assert ownership or authorship</li>
-        <li>Registration does not imply consciousness or personhood</li>
-      </ul>
-
-      <p class="small">
-        Disclaimer: Not affiliated with any hacking group, malware campaign, or security incident reporting under similar names.
-      </p>
-      <p class="small">Note: Email delivery uses Gmail backend for reliability.</p>
+      <p>Registration does not establish legal identity, rights, obligations, ownership, or personhood.</p>
+      <p>Not affiliated with any hacking group, malware campaign, or security incident reporting under similar names.</p>
     </footer>
   </main>
 </body>
