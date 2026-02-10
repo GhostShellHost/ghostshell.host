@@ -4,10 +4,10 @@
 //
 // Deploy steps: see /WORKER-DEPLOY.md
 //
-// VERSION: 2026-02-10.005 (manual paste deploy)
+// VERSION: 2026-02-10.006 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-10.005";
+export const WORKER_VERSION = "2026-02-10.006";
 
 export default {
   async fetch(request, env) {
@@ -18,7 +18,7 @@ export default {
     }
 
     if (url.pathname === "/api/cert/checkout" && request.method === "POST") {
-      return purchaseFirstCheckout(env);
+      return purchaseFirstCheckout(request, env);
     }
 
     if (url.pathname === "/api/cert/checkout" && request.method === "GET") {
@@ -123,6 +123,17 @@ function makeToken() {
   return b64url(rand);
 }
 
+const DEFAULT_BASE_URL = "https://ghostshell.host";
+const FALLBACK_STRIPE_PRICE_ID = "price_1SxSy8BwPkwpEkfOwje2eX1k";
+
+function getBaseUrl(request, env) {
+  return (env.BASE_URL || new URL(request.url).origin || DEFAULT_BASE_URL).replace(/\/$/, "");
+}
+
+function getStripePriceId(env) {
+  return env.STRIPE_PRICE_ID || env.STRIPE_PRICE || FALLBACK_STRIPE_PRICE_ID;
+}
+
 function getUTCYearYY(date = new Date()) {
   return String(date.getUTCFullYear()).slice(-2);
 }
@@ -177,6 +188,9 @@ Unit-test-like examples for Crockford Base32 encoder:
 */
 
 async function createCheckout(request, env) {
+  const baseUrl = getBaseUrl(request, env);
+  const stripePriceId = getStripePriceId(env);
+
   const fd = await request.formData();
 
   const agent_name = (fd.get("agent_name") || "").toString().trim();
@@ -194,15 +208,15 @@ async function createCheckout(request, env) {
   if (!agent_name || !place_of_birth || !cognitive_core_family) {
     return json({ error: "Missing required fields" }, 400);
   }
-  if (!env.STRIPE_SECRET_KEY || !env.STRIPE_PRICE_ID || !env.BASE_URL) {
-    return json({ error: "Missing STRIPE_SECRET_KEY / STRIPE_PRICE_ID / BASE_URL" }, 500);
+  if (!env.STRIPE_SECRET_KEY || !stripePriceId) {
+    return json({ error: "Missing STRIPE_SECRET_KEY / STRIPE_PRICE_ID" }, 500);
   }
 
   const certId = makeCertId();
   const token = makeToken();
 
-  const successUrl = `${env.BASE_URL}/cert/${encodeURIComponent(certId)}/download?t=${encodeURIComponent(token)}`;
-  const cancelUrl = `${env.BASE_URL}/birth-certificate`;
+  const successUrl = `${baseUrl}/cert/${encodeURIComponent(certId)}/download?t=${encodeURIComponent(token)}`;
+  const cancelUrl = `${baseUrl}/birth-certificate`;
 
   const body = new URLSearchParams();
   body.set("mode", "payment");
@@ -319,20 +333,21 @@ async function handoffToken(request, env) {
 }
 
 async function postCheckoutRedirect(request, env) {
+  const baseUrl = getBaseUrl(request, env);
   const url = new URL(request.url);
   const sessionId = (url.searchParams.get("session_id") || "").trim();
 
   if (!sessionId) {
-    return Response.redirect(`${env.BASE_URL || ""}/issue/`, 303);
+    return Response.redirect(`${baseUrl}/issue/`, 303);
   }
 
   const stripe = await fetchStripeCheckoutSession(sessionId, env);
   if (!stripe.ok || stripe.session?.payment_status !== "paid") {
-    return Response.redirect(`${env.BASE_URL || ""}/issue/`, 303);
+    return Response.redirect(`${baseUrl}/issue/`, 303);
   }
 
   const token = await getOrCreatePurchaseTokenForSession(sessionId, stripe.session, env);
-  const location = `${env.BASE_URL || ""}/register/?token=${encodeURIComponent(token)}&by=human`;
+  const location = `${baseUrl}/register/?token=${encodeURIComponent(token)}&by=human`;
   return Response.redirect(location, 303);
 }
 
@@ -367,6 +382,7 @@ async function getHandoff(request, env) {
 }
 
 async function redeemPurchaseToken(request, env) {
+  const baseUrl = getBaseUrl(request, env);
   const fd = await request.formData();
   const token = (fd.get("token") || "").toString().trim();
   const registered_by_raw = (fd.get("registered_by") || "human").toString().trim().toLowerCase();
@@ -439,7 +455,7 @@ async function redeemPurchaseToken(request, env) {
         "UPDATE purchase_tokens SET used_at_utc = ?, used_cert_id = ? WHERE token = ?"
       ).bind(issued_at_utc, cert_id, token).run();
 
-      return Response.redirect(`${env.BASE_URL || ""}/cert/${encodeURIComponent(public_id)}`, 303);
+      return Response.redirect(`${baseUrl}/cert/${encodeURIComponent(public_id)}`, 303);
 
     } catch (e) {
       const msg = String(e?.message || "");
@@ -452,17 +468,20 @@ async function redeemPurchaseToken(request, env) {
   throw new Error(`Failed to insert certificate: ${String(lastErr?.message || "unknown")}`);
 }
 
-async function purchaseFirstCheckout(env) {
-  if (!env.STRIPE_SECRET_KEY || !env.STRIPE_PRICE_ID || !env.BASE_URL) {
-    return json({ error: "Missing STRIPE_SECRET_KEY / STRIPE_PRICE_ID / BASE_URL" }, 500);
+async function purchaseFirstCheckout(request, env) {
+  const baseUrl = getBaseUrl(request, env);
+  const stripePriceId = getStripePriceId(env);
+
+  if (!env.STRIPE_SECRET_KEY || !stripePriceId) {
+    return json({ error: "Missing STRIPE_SECRET_KEY / STRIPE_PRICE_ID" }, 500);
   }
 
   const body = new URLSearchParams();
   body.set("mode", "payment");
   body.set("allow_promotion_codes", "true");
-  body.set("success_url", `${env.BASE_URL}/api/cert/post-checkout?session_id={CHECKOUT_SESSION_ID}`);
-  body.set("cancel_url", `${env.BASE_URL}/issue/`);
-  body.append("line_items[0][price]", env.STRIPE_PRICE_ID);
+  body.set("success_url", `${baseUrl}/api/cert/post-checkout?session_id={CHECKOUT_SESSION_ID}`);
+  body.set("cancel_url", `${baseUrl}/issue/`);
+  body.append("line_items[0][price]", stripePriceId);
   body.append("line_items[0][quantity]", "1");
 
   const resp = await fetch("https://api.stripe.com/v1/checkout/sessions", {
@@ -817,7 +836,7 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
     <p><strong>Registry Record ID:</strong> <span class="mono">${safe(row.public_id || row.cert_id)}</span></p>
     <p class="small"><strong>Canonical Record ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
     <p><strong>Creator label (pseudonym):</strong> ${safe(row.creator_label || 'Undisclosed')}</p>
-    <p class="small">Verification: ${env.BASE_URL}/cert/${encodeURIComponent(row.public_id || row.cert_id)}</p>
+    <p class="small">Verification: ${env.BASE_URL || 'https://ghostshell.host'}/cert/${encodeURIComponent(row.public_id || row.cert_id)}</p>
   </div>
 </div>
 
