@@ -135,22 +135,42 @@
       border-color: #ff6b6b;
     }
 
-    .test-wrap {
-      margin-top: 10px;
+    .purchase-wrap {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .email-input {
+      background: #10141c;
+      border: 1px solid #2b3446;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 14px;
+      min-width: min(440px, 92vw);
+      font: inherit;
+    }
+
+    .actions {
       display: flex;
       gap: 8px;
       justify-content: center;
       flex-wrap: wrap;
     }
 
-    .test-key {
-      background: #10141c;
-      border: 1px solid #3a1f23;
-      color: var(--text);
-      border-radius: 999px;
-      padding: 10px 14px;
-      min-width: 220px;
-      font: inherit;
+    .hint {
+      color: #ff9c9c;
+      font-size: 0.9rem;
+      min-height: 1.2em;
+      margin: 0;
+    }
+
+    .btn:disabled,
+    .btn-test:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
     }
 
     .under {
@@ -197,16 +217,58 @@
 
     <div class="price">USD $9.99 — one-time</div>
 
-    <form method="POST" action="/api/cert/checkout">
-      <button class="btn" type="submit">Buy Birth Certificate</button>
+    <form id="purchase-form" method="POST" action="/api/cert/checkout" class="purchase-wrap" novalidate>
+      <input
+        id="recovery_email"
+        class="email-input"
+        type="email"
+        name="recovery_email"
+        placeholder="Recovery email (required)"
+        autocomplete="email"
+        required
+      >
+
+      <div class="actions">
+        <button id="buy-btn" class="btn" type="submit">Buy Birth Certificate</button>
+        <button id="test-btn" class="btn btn-test" type="submit" formaction="/api/cert/test-checkout">TEST: Bypass Stripe (remove before launch)</button>
+      </div>
+      <p id="email-hint" class="hint" aria-live="polite"></p>
     </form>
 
-    <form method="POST" action="/api/cert/test-checkout" class="test-wrap">
-      <button class="btn btn-test" type="submit">TEST: Bypass Stripe (remove before launch)</button>
-    </form>
-
+    <p class="under">Recovery email is private and used only for completion/recovery support.</p>
     <p class="under">After payment, you will be redirected to complete registration.</p>
     <p class="under">Payments are processed securely by Stripe. GhostShell never sees or stores card details.</p>
   </main>
+  <script>
+    (() => {
+      const emailInput = document.getElementById('recovery_email');
+      const buyBtn = document.getElementById('buy-btn');
+      const testBtn = document.getElementById('test-btn');
+      const hint = document.getElementById('email-hint');
+      const form = document.getElementById('purchase-form');
+
+      const validEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((v || '').trim());
+
+      function syncState(showHint = false) {
+        const ok = validEmail(emailInput.value);
+        buyBtn.disabled = !ok;
+        testBtn.disabled = !ok;
+        hint.textContent = (!ok && showHint) ? 'Recovery email required before checkout.' : '';
+      }
+
+      emailInput.addEventListener('input', () => syncState(false));
+      emailInput.addEventListener('blur', () => syncState(true));
+
+      form.addEventListener('submit', (e) => {
+        if (!validEmail(emailInput.value)) {
+          e.preventDefault();
+          syncState(true);
+          emailInput.focus();
+        }
+      });
+
+      syncState(false);
+    })();
+  </script>
 <!-- TIMESTAMP_FOOTER --><div style="position:fixed;bottom:0;right:0;background:#000;color:#fff;font-size:10px;padding:2px 4px;z-index:9999;opacity:0.7;font-family:monospace;">Deployed: 2026-02-11 00:41 GMT+10:30</div><!-- END_TIMESTAMP_FOOTER --></body>
 </html>

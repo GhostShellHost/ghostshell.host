@@ -170,6 +170,7 @@ async function ensureRuntimeSchema(db) {
     "ALTER TABLE certificates ADD COLUMN public_id TEXT",
     "ALTER TABLE certificates ADD COLUMN registered_by TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN used_cert_id TEXT",
+    "ALTER TABLE purchase_tokens ADD COLUMN recovery_email_hash TEXT",
   ];
 
   for (const sql of maybeAlterStatements) {
@@ -244,6 +245,12 @@ async function createCheckout(request, env) {
   const creator_label = (fd.get("creator_label") || "").toString().trim();
   const provenance_link = (fd.get("provenance_link") || "").toString().trim();
 
+  // Recovery email: required for completion tracking and support
+  const recovery_email = (fd.get("recovery_email") || "").toString().trim();
+  if (!recovery_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recovery_email)) {
+    return json({ error: "Recovery email is required" }, 400);
+  }
+
   // Stretch goal: optional private delivery email (not public, not identity proof)
   const delivery_email = (fd.get("delivery_email") || "").toString().trim();
   const delivery_consent = (fd.get("delivery_consent") || "").toString().trim();
@@ -257,9 +264,10 @@ async function createCheckout(request, env) {
 
   const certId = makeCertId();
   const token = makeToken();
+  const emailHash = await sha256Hex(recovery_email.toLowerCase().trim());
 
   const successUrl = `${baseUrl}/cert/${encodeURIComponent(certId)}/download?t=${encodeURIComponent(token)}`;
-  const cancelUrl = `${baseUrl}/birth-certificate`;
+  const cancelUrl = `${baseUrl}/issue/`;
 
   const body = new URLSearchParams();
   body.set("mode", "payment");
@@ -277,6 +285,8 @@ async function createCheckout(request, env) {
   body.set("metadata[cognitive_core_exact]", cognitive_core_exact);
   body.set("metadata[creator_label]", creator_label);
   body.set("metadata[provenance_link]", provenance_link);
+  body.set("metadata[recovery_email]", recovery_email);
+  body.set("metadata[recovery_email_hash]", emailHash);
 
   // Private delivery email: only include if user explicitly consents.
   // (Email delivery may be implemented later; this enables future resend support.)
@@ -340,9 +350,14 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env) {
   const emailRaw = (session.customer_details?.email || "").toLowerCase().trim();
   const emailHash = emailRaw ? await sha256Hex(emailRaw) : null;
   const paymentIntent = session.payment_intent || null;
+
+  // Recovery email: prefer metadata field, fall back to Stripe customer email
+  const recoveryEmailRaw = ((session.metadata?.recovery_email || session.customer_details?.email || "")).toLowerCase().trim();
+  const recoveryEmailHash = recoveryEmailRaw ? await sha256Hex(recoveryEmailRaw) : null;
+
   await env.DB.prepare(
-    "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?)"
-  ).bind(token, sessionId, paymentIntent, emailHash, nowUtcIso()).run();
+    "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?, ?)"
+  ).bind(token, sessionId, paymentIntent, emailHash, recoveryEmailHash, nowUtcIso()).run();
 
   return token;
 }
@@ -546,6 +561,13 @@ async function purchaseFirstCheckout(request, env) {
   const baseUrl = getBaseUrl(request, env);
   const stripePriceId = getStripePriceId(env);
 
+  const fd = await request.formData();
+  const recovery_email = (fd.get("recovery_email") || "").toString().trim();
+
+  if (!recovery_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recovery_email)) {
+    return Response.redirect(`${baseUrl}/issue/?error=email_required`, 303);
+  }
+
   if (!env.STRIPE_SECRET_KEY || !stripePriceId) {
     return json({ error: "Missing STRIPE_SECRET_KEY / STRIPE_PRICE_ID" }, 500);
   }
@@ -557,6 +579,8 @@ async function purchaseFirstCheckout(request, env) {
   body.set("cancel_url", `${baseUrl}/issue/`);
   body.append("line_items[0][price]", stripePriceId);
   body.append("line_items[0][quantity]", "1");
+  body.set("customer_email", recovery_email);
+  body.set("metadata[recovery_email]", recovery_email);
 
   const resp = await fetch("https://api.stripe.com/v1/checkout/sessions", {
     method: "POST",
@@ -576,25 +600,25 @@ async function purchaseFirstCheckout(request, env) {
 async function testCheckout(request, env) {
   const baseUrl = getBaseUrl(request, env);
   const fd = await request.formData();
-  const testKey = (fd.get("test_key") || "").toString().trim();
 
-  // For testing: accept any test key (or none) - remove before launch
-  // if (!env.TEST_KEY || testKey !== env.TEST_KEY) {
-  //   return new Response("Unauthorized", { status: 401 });
-  // }
+  const recovery_email = (fd.get("recovery_email") || "").toString().trim();
+  if (!recovery_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recovery_email)) {
+    return Response.redirect(`${baseUrl}/issue/?error=email_required`, 303);
+  }
 
   // Create a test session ID (prefixed so we can identify test sessions)
   const randomBytes = crypto.getRandomValues(new Uint8Array(12));
   const randomHex = Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('');
   const testSessionId = `test_${Date.now()}_${randomHex}`;
 
-  // Simulate a paid Stripe session
+  // Simulate a paid Stripe session (with recovery email in metadata)
   const mockSession = {
     id: testSessionId,
     payment_status: "paid",
     status: "complete",
     amount_total: 0,
-    customer_details: { email: "test@ghostshell.host" },
+    customer_details: { email: recovery_email },
+    metadata: { recovery_email },
   };
 
   // Generate a purchase token and write to DB (same logic as real flow)
