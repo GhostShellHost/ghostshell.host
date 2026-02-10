@@ -7,7 +7,7 @@
 // VERSION: 2026-02-07.001 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-08.001";
+export const WORKER_VERSION = "2026-02-10.003";
 
 export default {
   async fetch(request, env) {
@@ -23,6 +23,10 @@ export default {
 
     if (url.pathname === "/api/cert/checkout" && request.method === "GET") {
       return new Response("Method not allowed. Use POST.", { status: 405 });
+    }
+
+    if (url.pathname === "/api/cert/handoff-token" && request.method === "GET") {
+      return handoffToken(request, env);
     }
 
     if (url.pathname === "/handoff" && request.method === "GET") {
@@ -247,128 +251,97 @@ function makePurchaseToken() {
   return out;
 }
 
-async function getHandoff(request, env) {
-  const url = new URL(request.url);
-  const sessionId = url.searchParams.get("session_id");
-
-  const errorPage = (msg, link) => html(`<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GhostShell Handoff</title>
-<style>
-  body{background:#0B0B0D;color:#e8e8e8;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
-  .card{max-width:480px;width:100%;padding:40px;background:#141418;border:1px solid #222;border-radius:16px;text-align:center}
-  a{color:#8B8DFF}
-</style></head>
-<body><div class="card"><h2>${msg}</h2>${link}</div></body></html>`);
-
-  if (!sessionId) {
-    return errorPage("Missing session ID.", `<p><a href="/issue/">← Back to issue page</a></p>`);
-  }
-
-  // Fetch Stripe session
+async function fetchStripeCheckoutSession(sessionId, env) {
+  console.log("[handoff-token] stripe session lookup", sessionId);
   const stripeResp = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
     headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
   });
+
   if (!stripeResp.ok) {
-    return errorPage("Could not verify payment.", `<p><a href="/issue/">← Try again</a></p>`);
+    return { ok: false, status: stripeResp.status, session: null };
   }
+
   const session = await stripeResp.json();
+  return { ok: true, status: stripeResp.status, session };
+}
 
-  if (session.payment_status !== "paid") {
-    return errorPage("Payment not confirmed.", `<p>Your payment status is <strong>${session.payment_status}</strong>.<br><a href="/issue/">← Return to issue page</a></p>`);
-  }
-
-  // Look up or create purchase token
+async function getOrCreatePurchaseTokenForSession(sessionId, session, env) {
   let row = await env.DB.prepare(
     "SELECT token FROM purchase_tokens WHERE stripe_session_id = ?"
   ).bind(sessionId).first();
 
-  let token;
-  if (row) {
-    token = row.token;
-  } else {
-    token = makePurchaseToken();
-    const emailRaw = (session.customer_details?.email || "").toLowerCase().trim();
-    const emailHash = emailRaw ? await sha256Hex(emailRaw) : null;
-    const paymentIntent = session.payment_intent || null;
-    await env.DB.prepare(
-      "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?)"
-    ).bind(token, sessionId, paymentIntent, emailHash, nowUtcIso()).run();
+  if (row?.token) {
+    console.log("[handoff-token] token reused", sessionId);
+    return row.token;
   }
 
-  const humanUrl = `/register/?token=${encodeURIComponent(token)}&by=human`;
-  const agentUrl = `/register/?token=${encodeURIComponent(token)}&by=agent`;
-  const baseUrl = env.BASE_URL || "https://ghostshell.host";
-  const agentFullUrl = `${baseUrl}/register/?token=${encodeURIComponent(token)}&by=agent`;
+  const token = makePurchaseToken();
+  const emailRaw = (session.customer_details?.email || "").toLowerCase().trim();
+  const emailHash = emailRaw ? await sha256Hex(emailRaw) : null;
+  const paymentIntent = session.payment_intent || null;
+  await env.DB.prepare(
+    "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?)"
+  ).bind(token, sessionId, paymentIntent, emailHash, nowUtcIso()).run();
 
-  return html(`<!doctype html>
-<html><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Payment Confirmed — GhostShell</title>
-<style>
-  *{box-sizing:border-box}
-  body{background:#0B0B0D;color:#e8e8e8;font-family:system-ui,-apple-system,sans-serif;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-  .card{max-width:540px;width:100%;background:#141418;border:1px solid #222;border-radius:18px;padding:40px}
-  h1{font-size:1.4rem;font-weight:700;margin:0 0 6px}
-  .sub{color:#888;font-size:.9rem;margin-bottom:28px}
-  .token-box{background:#0B0B0D;border:1px solid #333;border-radius:10px;padding:16px;font-family:ui-monospace,monospace;font-size:1.1rem;letter-spacing:.05em;display:flex;align-items:center;justify-content:space-between;gap:12px;word-break:break-all}
-  .copy-btn{background:#1e1e24;border:1px solid #333;color:#aaa;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:.8rem;white-space:nowrap;flex-shrink:0}
-  .copy-btn:hover{background:#2a2a35;color:#e8e8e8}
-  .actions{display:flex;flex-direction:column;gap:10px;margin-top:24px}
-  .btn{display:block;text-align:center;padding:12px 20px;border-radius:10px;font-size:.95rem;font-weight:600;text-decoration:none;border:none;cursor:pointer}
-  .btn-primary{background:#8B8DFF;color:#0B0B0D}
-  .btn-primary:hover{background:#a0a2ff}
-  .btn-secondary{background:#1e1e24;color:#e8e8e8;border:1px solid #333}
-  .btn-secondary:hover{background:#2a2a35}
-  .agent-link{display:none;margin-top:10px;background:#0B0B0D;border:1px solid #333;border-radius:10px;padding:12px;font-size:.82rem;font-family:ui-monospace,monospace;word-break:break-all;color:#aaa}
-  .note{margin-top:20px;font-size:.8rem;color:#666;text-align:center}
-  .check{color:#5fdb8f;font-size:1.5rem;margin-bottom:10px}
-  nav{text-align:center;margin-top:28px;font-size:.85rem;color:#555}
-  nav a{color:#555;text-decoration:none}
-  nav a:hover{color:#888}
-</style>
-</head>
-<body>
-<div class="card">
-  <div class="check">✓</div>
-  <h1>Payment confirmed</h1>
-  <p class="sub">Your registration token is below. Use it to issue a GhostShell Birth Certificate.</p>
-
-  <div class="token-box">
-    <span id="token">${token}</span>
-    <button class="copy-btn" onclick="copyToken()">Copy</button>
-  </div>
-
-  <div class="actions">
-    <a class="btn btn-primary" href="${humanUrl}">Register as human</a>
-    <button class="btn btn-secondary" onclick="toggleAgent()">Give to agent ↓</button>
-    <div class="agent-link" id="agent-link">
-      Copy this link and pass it to the agent:<br><br>
-      <span id="agent-url">${agentFullUrl}</span>
-      <button class="copy-btn" style="margin-top:8px;display:block" onclick="copyAgent()">Copy link</button>
-    </div>
-  </div>
-
-  <p class="note">⚠ Single-use token. Keep it safe. Once used, it cannot be reused.</p>
-  <nav><a href="/">ghostshell.host</a> · <a href="/registry/">registry</a></nav>
-</div>
-<script>
-function copyToken() {
-  navigator.clipboard.writeText(document.getElementById('token').textContent);
-  event.target.textContent = 'Copied!';
-  setTimeout(() => event.target.textContent = 'Copy', 1500);
+  return token;
 }
-function toggleAgent() {
-  const el = document.getElementById('agent-link');
-  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+
+async function handoffToken(request, env) {
+  const url = new URL(request.url);
+  const sessionId = (url.searchParams.get("session_id") || "").trim();
+
+  if (!sessionId) {
+    return json({ error: "missing_session_id" }, 400);
+  }
+
+  const stripe = await fetchStripeCheckoutSession(sessionId, env);
+  if (!stripe.ok) {
+    return json({ error: "invalid_session" }, 404);
+  }
+
+  const session = stripe.session;
+  if (session.payment_status !== "paid") {
+    return json({ error: "not_paid" }, 409);
+  }
+
+  const token = await getOrCreatePurchaseTokenForSession(sessionId, session, env);
+  const tokenEncoded = encodeURIComponent(token);
+
+  return json({
+    token,
+    human_url: `/register/?token=${tokenEncoded}&by=human`,
+    agent_url: `/register/?token=${tokenEncoded}&by=agent`,
+  });
 }
-function copyAgent() {
-  navigator.clipboard.writeText(document.getElementById('agent-url').textContent);
-  event.target.textContent = 'Copied!';
-  setTimeout(() => event.target.textContent = 'Copy link', 1500);
-}
-</script>
-</body></html>`);
+
+async function getHandoff(request, env) {
+  const url = new URL(request.url);
+  console.log("handoff redirect", url.toString());
+
+  const sessionId = (url.searchParams.get("session_id") || "").trim();
+  if (sessionId) {
+    const stripe = await fetchStripeCheckoutSession(sessionId, env);
+    if (stripe.ok && stripe.session?.payment_status === "paid") {
+      const token = await getOrCreatePurchaseTokenForSession(sessionId, stripe.session, env);
+      const location = `/register/?token=${encodeURIComponent(token)}&by=human`;
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: location,
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+  }
+
+  const location = `/handoff/${url.search || ""}`;
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: location,
+      "Cache-Control": "no-store",
+    },
+  });
 }
 
 async function redeemPurchaseToken(request, env) {
@@ -378,8 +351,8 @@ async function redeemPurchaseToken(request, env) {
   const registered_by = registered_by_raw === "agent" ? "agent" : "human";
 
   const agent_name = (fd.get("agent_name") || "").toString().trim();
-  const place_of_birth = (fd.get("place_of_birth") || "").toString().trim();
-  const cognitive_core_family = (fd.get("cognitive_core_family") || "").toString().trim();
+  const place_of_birth = ((fd.get("place_of_birth") || "").toString().trim()) || "Unknown";
+  const cognitive_core_family = ((fd.get("cognitive_core_family") || "").toString().trim()) || "Undisclosed";
   const cognitive_core_exact = (fd.get("cognitive_core_exact") || "").toString().trim();
   const creator_label = (fd.get("creator_label") || "").toString().trim();
   const provenance_link = (fd.get("provenance_link") || "").toString().trim();
@@ -395,7 +368,7 @@ async function redeemPurchaseToken(request, env) {
 <body><div class="card"><h2>⚠ Registration failed</h2><p>${msg}</p><p><a href="/issue/">← Start over</a></p></div></body></html>`, 400);
 
   if (!token) return errPage("Missing registration token.");
-  if (!agent_name || !place_of_birth || !cognitive_core_family) return errPage("Missing required fields.");
+  if (!agent_name) return errPage("Agent Name is required.");
 
   // Validate token
   const tokenRow = await env.DB.prepare(
@@ -465,7 +438,7 @@ async function purchaseFirstCheckout(env) {
   const body = new URLSearchParams();
   body.set("mode", "payment");
   body.set("allow_promotion_codes", "true");
-  body.set("success_url", `${env.BASE_URL}/handoff?session_id={CHECKOUT_SESSION_ID}`);
+  body.set("success_url", `${env.BASE_URL}/handoff/?session_id={CHECKOUT_SESSION_ID}`);
   body.set("cancel_url", `${env.BASE_URL}/issue/`);
   body.append("line_items[0][price]", env.STRIPE_PRICE_ID);
   body.append("line_items[0][quantity]", "1");
