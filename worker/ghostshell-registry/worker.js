@@ -4,10 +4,10 @@
 //
 // Deploy steps: see /WORKER-DEPLOY.md
 //
-// VERSION: 2026-02-10.004 (manual paste deploy)
+// VERSION: 2026-02-10.005 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-10.004";
+export const WORKER_VERSION = "2026-02-10.005";
 
 export default {
   async fetch(request, env) {
@@ -27,6 +27,10 @@ export default {
 
     if (url.pathname === "/api/cert/handoff-token" && request.method === "GET") {
       return handoffToken(request, env);
+    }
+
+    if (url.pathname === "/api/cert/post-checkout" && request.method === "GET") {
+      return postCheckoutRedirect(request, env);
     }
 
     if ((url.pathname === "/handoff" || url.pathname === "/handoff/") && request.method === "GET") {
@@ -314,6 +318,24 @@ async function handoffToken(request, env) {
   });
 }
 
+async function postCheckoutRedirect(request, env) {
+  const url = new URL(request.url);
+  const sessionId = (url.searchParams.get("session_id") || "").trim();
+
+  if (!sessionId) {
+    return Response.redirect(`${env.BASE_URL || ""}/issue/`, 303);
+  }
+
+  const stripe = await fetchStripeCheckoutSession(sessionId, env);
+  if (!stripe.ok || stripe.session?.payment_status !== "paid") {
+    return Response.redirect(`${env.BASE_URL || ""}/issue/`, 303);
+  }
+
+  const token = await getOrCreatePurchaseTokenForSession(sessionId, stripe.session, env);
+  const location = `${env.BASE_URL || ""}/register/?token=${encodeURIComponent(token)}&by=human`;
+  return Response.redirect(location, 303);
+}
+
 async function getHandoff(request, env) {
   const url = new URL(request.url);
   console.log("handoff redirect", url.toString());
@@ -438,7 +460,7 @@ async function purchaseFirstCheckout(env) {
   const body = new URLSearchParams();
   body.set("mode", "payment");
   body.set("allow_promotion_codes", "true");
-  body.set("success_url", `${env.BASE_URL}/handoff/?session_id={CHECKOUT_SESSION_ID}`);
+  body.set("success_url", `${env.BASE_URL}/api/cert/post-checkout?session_id={CHECKOUT_SESSION_ID}`);
   body.set("cancel_url", `${env.BASE_URL}/issue/`);
   body.append("line_items[0][price]", env.STRIPE_PRICE_ID);
   body.append("line_items[0][quantity]", "1");
