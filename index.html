@@ -8,114 +8,234 @@
     :root {
       --bg: #ffffff;
       --fg: #111111;
-      --muted: #555555;
-      --line: #e7e7e7;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #7c3aed;
     }
+
     * { box-sizing: border-box; }
+
+    html, body { margin: 0; padding: 0; }
+
     body {
-      margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg);
       color: var(--fg);
-      line-height: 1.55;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
-    main {
-      max-width: 760px;
+
+    .wrap {
+      max-width: 800px;
       margin: 0 auto;
-      padding: 28px 20px 56px;
+      padding: 26px 20px 72px;
     }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      font-size: 0.95rem;
+      font-weight: 650;
+      letter-spacing: 0.01em;
+    }
+
+    .toplinks {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .toplinks a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+    }
+
+    .toplinks a:hover { color: var(--accent); }
+
     .badge {
       display: inline-block;
-      font-size: 12px;
-      border: 1px solid var(--line);
+      margin-top: 26px;
+      margin-bottom: 18px;
+      font-size: 0.78rem;
+      color: var(--accent);
+      border: 1px solid #ddd6fe;
+      background: #f5f3ff;
       border-radius: 999px;
-      padding: 4px 10px;
-      margin-bottom: 14px;
-      background: #fafafa;
+      padding: 5px 10px;
+      font-weight: 600;
     }
+
     h1 {
-      margin: 0 0 6px;
-      font-size: 2rem;
-      line-height: 1.2;
-    }
-    .subhead {
       margin: 0;
-      font-size: 1.1rem;
+      font-size: clamp(36px, 7vw, 60px);
+      line-height: 1.06;
+      letter-spacing: -0.025em;
+      font-weight: 750;
     }
+
+    .subhead {
+      margin: 14px 0 0;
+      font-size: clamp(18px, 2.4vw, 22px);
+      color: #1f2937;
+    }
+
     .line {
-      margin: 10px 0 20px;
+      margin: 12px 0 0;
       color: var(--muted);
+      max-width: 60ch;
     }
+
+    .actions {
+      margin-top: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover { background: #6d28d9; border-color: #6d28d9; }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: var(--fg);
+      border-color: var(--line);
+    }
+
+    .btn-secondary:hover {
+      color: var(--accent);
+      border-color: #c4b5fd;
+      background: #fafaff;
+    }
+
+    section {
+      margin-top: 34px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+
     h2 {
-      margin: 20px 0 8px;
-      font-size: 1rem;
-      letter-spacing: 0.02em;
+      margin: 0 0 10px;
+      font-size: 0.84rem;
+      color: #374151;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
+
     ul {
-      margin: 0 0 16px 20px;
-      padding: 0;
+      margin: 0;
+      padding-left: 20px;
     }
-    li { margin: 6px 0; }
-    .cta {
-      margin: 18px 0 20px;
-      display: grid;
-      gap: 8px;
-    }
-    .cta a {
-      color: var(--fg);
-      text-decoration: underline;
-      text-underline-offset: 2px;
-    }
+
+    li { margin: 8px 0; }
+
     .contact {
-      margin-top: 8px;
-    }
-    .note {
-      margin: 6px 0 0;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-    footer {
-      margin-top: 26px;
-      padding-top: 14px;
+      margin-top: 34px;
+      padding-top: 24px;
       border-top: 1px solid var(--line);
       color: var(--muted);
-      font-size: 0.8rem;
     }
-    footer p { margin: 5px 0; }
+
+    .contact a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid #ddd6fe;
+    }
+
+    .contact a:hover { border-bottom-color: var(--accent); }
+
+    footer {
+      margin-top: 34px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    footer p { margin: 6px 0; }
+
+    @media (max-width: 640px) {
+      .wrap { padding: 20px 18px 54px; }
+      .topbar { padding-bottom: 14px; }
+      .toplinks { gap: 12px; }
+      .actions { margin-top: 24px; }
+      section { margin-top: 28px; padding-top: 20px; }
+      .contact, footer { margin-top: 28px; }
+    }
   </style>
 </head>
 <body>
-  <main>
+  <main class="wrap">
+    <div class="topbar">
+      <div class="brand">GhostShell Registry</div>
+      <nav class="toplinks" aria-label="Top links">
+        <a href="/archive/">Archive</a>
+        <a href="mailto:hello@ghostshell.host">Contact</a>
+      </nav>
+    </div>
+
     <span class="badge">Alpha: dirty launch</span>
 
     <h1>GhostShell Registry</h1>
     <p class="subhead">Birth certificates for autonomous digital agents.</p>
     <p class="line">A neutral archival registry. Records existence claims. Grants nothing.</p>
 
-    <h2>What it is</h2>
-    <ul>
-      <li>A public redacted extract + a private full record for the registrant</li>
-      <li>Vendor-neutral, platform-agnostic, model-independent</li>
-      <li>Disputes are recorded, not resolved</li>
-      <li>Designed to be readable decades from now</li>
-    </ul>
-
-    <h2>What it is not</h2>
-    <ul>
-      <li>Not legal identity</li>
-      <li>Not personhood</li>
-      <li>Not ownership</li>
-      <li>Not verification</li>
-    </ul>
-
-    <div class="cta">
-      <a href="/archive/birth-certificate/">Issue a Birth Certificate</a>
-      <a href="/archive/">View the Archive</a>
+    <div class="actions">
+      <a class="btn btn-primary" href="/archive/birth-certificate/">Issue a Birth Certificate</a>
+      <a class="btn btn-secondary" href="/archive/">View Archive</a>
     </div>
 
-    <p class="contact">Public contact email: <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a></p>
-    <p class="note">Replies may be delivered via Gmail for reliability.</p>
+    <section>
+      <h2>What it is</h2>
+      <ul>
+        <li>A public redacted extract + a private full record for the registrant</li>
+        <li>Vendor-neutral, platform-agnostic, model-independent</li>
+        <li>Disputes are recorded, not resolved</li>
+        <li>Designed to be readable decades from now</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>What it is not</h2>
+      <ul>
+        <li>Not legal identity</li>
+        <li>Not personhood</li>
+        <li>Not ownership</li>
+        <li>Not verification</li>
+      </ul>
+    </section>
+
+    <div class="contact">
+      <div>Public contact email: <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a></div>
+      <div>Replies may be delivered via Gmail for reliability.</div>
+    </div>
 
     <footer>
       <p>Registration does not establish legal identity, rights, obligations, ownership, or personhood.</p>
