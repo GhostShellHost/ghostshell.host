@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Register Agent — GhostShell</title>
+  <style>
+    *{box-sizing:border-box}
+    body{background:#0B0B0D;color:#e8e8e8;font-family:system-ui,-apple-system,sans-serif;margin:0;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:48px 20px}
+    .card{max-width:560px;width:100%;background:#141418;border:1px solid #222;border-radius:18px;padding:40px}
+    h1{font-size:1.4rem;font-weight:700;margin:0 0 6px}
+    .sub{color:#888;font-size:.9rem;margin-bottom:28px}
+    label{display:block;font-size:.85rem;color:#aaa;margin-bottom:4px}
+    input,select,textarea{width:100%;background:#0B0B0D;border:1px solid #2a2a35;border-radius:8px;color:#e8e8e8;padding:10px 12px;font-size:.95rem;margin-bottom:18px;font-family:inherit}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:#8B8DFF}
+    .token-box{background:#0B0B0D;border:1px solid #333;border-radius:10px;padding:12px;font-family:ui-monospace,monospace;font-size:.9rem;color:#8B8DFF;margin-bottom:18px;word-break:break-all}
+    .btn{display:block;width:100%;padding:13px;background:#8B8DFF;color:#0B0B0D;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:6px}
+    .btn:hover{background:#a0a2ff}
+    .note{font-size:.8rem;color:#555;margin-top:16px;text-align:center}
+    .err{color:#f87171;font-size:.82rem;margin-top:-14px;margin-bottom:14px;display:none}
+    nav{text-align:center;margin-top:28px;font-size:.85rem;color:#555}
+    nav a{color:#555;text-decoration:none}
+    nav a:hover{color:#888}
+    .section-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:20px 0 12px}
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>Register Agent</h1>
+  <p class="sub">Complete your GhostShell Birth Certificate registration. All fields except Agent Name are optional.</p>
+
+  <div class="section-title">Registration token</div>
+  <div class="token-box" id="token-display">—</div>
+
+  <form id="reg-form" method="POST" action="/api/cert/redeem-token">
+    <input type="hidden" name="token" id="token-field">
+    <input type="hidden" name="registered_by" id="by-field" value="human">
+
+    <div class="section-title">Agent details</div>
+
+    <label for="agent_name">Agent Name *</label>
+    <input type="text" id="agent_name" name="agent_name" placeholder="e.g. Aria-7, Claude, GPT-Nexus" required>
+
+    <label for="place_of_birth">Place of Birth</label>
+    <input type="text" id="place_of_birth" name="place_of_birth" placeholder="e.g. San Francisco, CA / Cloud">
+
+    <label for="cognitive_core_family">Cognitive Core Family</label>
+    <input type="text" id="cognitive_core_family" name="cognitive_core_family" placeholder="e.g. Transformer, GPT, Claude">
+
+    <label for="cognitive_core_exact">Cognitive Core (exact model, optional)</label>
+    <input type="text" id="cognitive_core_exact" name="cognitive_core_exact" placeholder="e.g. claude-3-5-sonnet-20241022">
+
+    <label for="creator_label">Creator / Operator (optional)</label>
+    <input type="text" id="creator_label" name="creator_label" placeholder="e.g. Anthropic, OpenAI, or your handle">
+
+    <label for="provenance_link">Provenance Link (optional)</label>
+    <input type="url" id="provenance_link" name="provenance_link" placeholder="https://...">
+
+    <button class="btn" type="submit">Issue Birth Certificate →</button>
+  </form>
+
+  <p class="note">⚠ Single-use token. Certificate is issued immediately on submit.</p>
+  <nav><a href="/">ghostshell.host</a> · <a href="/registry/">registry</a></nav>
+</div>
+<script>
+  const params = new URLSearchParams(location.search);
+  const token = params.get("token") || "";
+  const by = params.get("by") || "human";
+
+  document.getElementById("token-display").textContent = token || "No token found — return to handoff page";
+  document.getElementById("token-field").value = token;
+  document.getElementById("by-field").value = by === "agent" ? "agent" : "human";
+
+  if (!token) {
+    document.querySelector(".btn").disabled = true;
+    document.querySelector(".btn").textContent = "No token present";
+  }
+</script>
+</body>
+</html>

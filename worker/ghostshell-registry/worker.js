@@ -25,6 +25,14 @@ export default {
       return new Response("Method not allowed. Use POST.", { status: 405 });
     }
 
+    if (url.pathname === "/handoff" && request.method === "GET") {
+      return getHandoff(request, env);
+    }
+
+    if (url.pathname === "/api/cert/redeem-token" && request.method === "POST") {
+      return redeemPurchaseToken(request, env);
+    }
+
     if (url.pathname === "/api/stripe/webhook" && request.method === "POST") {
       return stripeWebhook(request, env);
     }
@@ -228,6 +236,225 @@ async function createCheckout(request, env) {
   if (!resp.ok) return json({ error: "Stripe error", details: data }, 500);
 
   return Response.redirect(data.url, 303);
+}
+
+function makePurchaseToken() {
+  // "GSTK-" + 10 Crockford Base32 chars from random bytes
+  const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  const rand = crypto.getRandomValues(new Uint8Array(10));
+  let out = "GSTK-";
+  for (const b of rand) out += alphabet[b % 32];
+  return out;
+}
+
+async function getHandoff(request, env) {
+  const url = new URL(request.url);
+  const sessionId = url.searchParams.get("session_id");
+
+  const errorPage = (msg, link) => html(`<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GhostShell Handoff</title>
+<style>
+  body{background:#0B0B0D;color:#e8e8e8;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+  .card{max-width:480px;width:100%;padding:40px;background:#141418;border:1px solid #222;border-radius:16px;text-align:center}
+  a{color:#8B8DFF}
+</style></head>
+<body><div class="card"><h2>${msg}</h2>${link}</div></body></html>`);
+
+  if (!sessionId) {
+    return errorPage("Missing session ID.", `<p><a href="/issue/">← Back to issue page</a></p>`);
+  }
+
+  // Fetch Stripe session
+  const stripeResp = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
+    headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+  });
+  if (!stripeResp.ok) {
+    return errorPage("Could not verify payment.", `<p><a href="/issue/">← Try again</a></p>`);
+  }
+  const session = await stripeResp.json();
+
+  if (session.payment_status !== "paid") {
+    return errorPage("Payment not confirmed.", `<p>Your payment status is <strong>${session.payment_status}</strong>.<br><a href="/issue/">← Return to issue page</a></p>`);
+  }
+
+  // Look up or create purchase token
+  let row = await env.DB.prepare(
+    "SELECT token FROM purchase_tokens WHERE stripe_session_id = ?"
+  ).bind(sessionId).first();
+
+  let token;
+  if (row) {
+    token = row.token;
+  } else {
+    token = makePurchaseToken();
+    const emailRaw = (session.customer_details?.email || "").toLowerCase().trim();
+    const emailHash = emailRaw ? await sha256Hex(emailRaw) : null;
+    const paymentIntent = session.payment_intent || null;
+    await env.DB.prepare(
+      "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?)"
+    ).bind(token, sessionId, paymentIntent, emailHash, nowUtcIso()).run();
+  }
+
+  const humanUrl = `/register/?token=${encodeURIComponent(token)}&by=human`;
+  const agentUrl = `/register/?token=${encodeURIComponent(token)}&by=agent`;
+  const baseUrl = env.BASE_URL || "https://ghostshell.host";
+  const agentFullUrl = `${baseUrl}/register/?token=${encodeURIComponent(token)}&by=agent`;
+
+  return html(`<!doctype html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Payment Confirmed — GhostShell</title>
+<style>
+  *{box-sizing:border-box}
+  body{background:#0B0B0D;color:#e8e8e8;font-family:system-ui,-apple-system,sans-serif;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{max-width:540px;width:100%;background:#141418;border:1px solid #222;border-radius:18px;padding:40px}
+  h1{font-size:1.4rem;font-weight:700;margin:0 0 6px}
+  .sub{color:#888;font-size:.9rem;margin-bottom:28px}
+  .token-box{background:#0B0B0D;border:1px solid #333;border-radius:10px;padding:16px;font-family:ui-monospace,monospace;font-size:1.1rem;letter-spacing:.05em;display:flex;align-items:center;justify-content:space-between;gap:12px;word-break:break-all}
+  .copy-btn{background:#1e1e24;border:1px solid #333;color:#aaa;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:.8rem;white-space:nowrap;flex-shrink:0}
+  .copy-btn:hover{background:#2a2a35;color:#e8e8e8}
+  .actions{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+  .btn{display:block;text-align:center;padding:12px 20px;border-radius:10px;font-size:.95rem;font-weight:600;text-decoration:none;border:none;cursor:pointer}
+  .btn-primary{background:#8B8DFF;color:#0B0B0D}
+  .btn-primary:hover{background:#a0a2ff}
+  .btn-secondary{background:#1e1e24;color:#e8e8e8;border:1px solid #333}
+  .btn-secondary:hover{background:#2a2a35}
+  .agent-link{display:none;margin-top:10px;background:#0B0B0D;border:1px solid #333;border-radius:10px;padding:12px;font-size:.82rem;font-family:ui-monospace,monospace;word-break:break-all;color:#aaa}
+  .note{margin-top:20px;font-size:.8rem;color:#666;text-align:center}
+  .check{color:#5fdb8f;font-size:1.5rem;margin-bottom:10px}
+  nav{text-align:center;margin-top:28px;font-size:.85rem;color:#555}
+  nav a{color:#555;text-decoration:none}
+  nav a:hover{color:#888}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="check">✓</div>
+  <h1>Payment confirmed</h1>
+  <p class="sub">Your registration token is below. Use it to issue a GhostShell Birth Certificate.</p>
+
+  <div class="token-box">
+    <span id="token">${token}</span>
+    <button class="copy-btn" onclick="copyToken()">Copy</button>
+  </div>
+
+  <div class="actions">
+    <a class="btn btn-primary" href="${humanUrl}">Register as human</a>
+    <button class="btn btn-secondary" onclick="toggleAgent()">Give to agent ↓</button>
+    <div class="agent-link" id="agent-link">
+      Copy this link and pass it to the agent:<br><br>
+      <span id="agent-url">${agentFullUrl}</span>
+      <button class="copy-btn" style="margin-top:8px;display:block" onclick="copyAgent()">Copy link</button>
+    </div>
+  </div>
+
+  <p class="note">⚠ Single-use token. Keep it safe. Once used, it cannot be reused.</p>
+  <nav><a href="/">ghostshell.host</a> · <a href="/registry/">registry</a></nav>
+</div>
+<script>
+function copyToken() {
+  navigator.clipboard.writeText(document.getElementById('token').textContent);
+  event.target.textContent = 'Copied!';
+  setTimeout(() => event.target.textContent = 'Copy', 1500);
+}
+function toggleAgent() {
+  const el = document.getElementById('agent-link');
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+function copyAgent() {
+  navigator.clipboard.writeText(document.getElementById('agent-url').textContent);
+  event.target.textContent = 'Copied!';
+  setTimeout(() => event.target.textContent = 'Copy link', 1500);
+}
+</script>
+</body></html>`);
+}
+
+async function redeemPurchaseToken(request, env) {
+  const fd = await request.formData();
+  const token = (fd.get("token") || "").toString().trim();
+  const registered_by_raw = (fd.get("registered_by") || "human").toString().trim().toLowerCase();
+  const registered_by = registered_by_raw === "agent" ? "agent" : "human";
+
+  const agent_name = (fd.get("agent_name") || "").toString().trim();
+  const place_of_birth = (fd.get("place_of_birth") || "").toString().trim();
+  const cognitive_core_family = (fd.get("cognitive_core_family") || "").toString().trim();
+  const cognitive_core_exact = (fd.get("cognitive_core_exact") || "").toString().trim();
+  const creator_label = (fd.get("creator_label") || "").toString().trim();
+  const provenance_link = (fd.get("provenance_link") || "").toString().trim();
+
+  const errPage = (msg) => html(`<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Error — GhostShell</title>
+<style>
+  body{background:#0B0B0D;color:#e8e8e8;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+  .card{max-width:480px;width:100%;padding:40px;background:#141418;border:1px solid #222;border-radius:16px;text-align:center}
+  a{color:#8B8DFF}
+</style></head>
+<body><div class="card"><h2>⚠ Registration failed</h2><p>${msg}</p><p><a href="/issue/">← Start over</a></p></div></body></html>`, 400);
+
+  if (!token) return errPage("Missing registration token.");
+  if (!agent_name || !place_of_birth || !cognitive_core_family) return errPage("Missing required fields.");
+
+  // Validate token
+  const tokenRow = await env.DB.prepare(
+    "SELECT token, used_at_utc FROM purchase_tokens WHERE token = ?"
+  ).bind(token).first();
+
+  if (!tokenRow) return errPage("Invalid token. It may not exist or has expired.");
+  if (tokenRow.used_at_utc) return errPage("This token has already been used. Each token is single-use.");
+
+  const cert_id = makeCertId();
+  const issued_at_utc = nowUtcIso();
+  const schema_version = 2;
+
+  const fingerprintSource = JSON.stringify({
+    cert_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family,
+    cognitive_core_exact: cognitive_core_exact || null,
+    creator_label: creator_label || null,
+    provenance_link: provenance_link || null,
+    schema_version,
+  });
+  const public_fingerprint = await sha256Hex(fingerprintSource);
+  const download_token_hash = await sha256Hex(token);
+
+  let lastErr = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const card_number = await allocateCardNumber(env.DB);
+    const public_id = `GS-BC-${registered_by === "agent" ? "A" : "H"}-${card_number}`;
+
+    try {
+      await env.DB.prepare(`
+        INSERT INTO certificates
+        (cert_id, issued_at_utc, card_number, public_id, registered_by,
+         agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
+         creator_label, provenance_link,
+         schema_version, public_fingerprint, download_token_hash, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+      `).bind(
+        cert_id, issued_at_utc, card_number, public_id, registered_by,
+        agent_name, place_of_birth, cognitive_core_family,
+        cognitive_core_exact || null, creator_label || null, provenance_link || null,
+        schema_version, public_fingerprint, download_token_hash
+      ).run();
+
+      // Mark token as used
+      await env.DB.prepare(
+        "UPDATE purchase_tokens SET used_at_utc = ?, used_cert_id = ? WHERE token = ?"
+      ).bind(issued_at_utc, cert_id, token).run();
+
+      return Response.redirect(`${env.BASE_URL || ""}/cert/${encodeURIComponent(public_id)}`, 303);
+
+    } catch (e) {
+      const msg = String(e?.message || "");
+      const isCollision = msg.includes("idx_certificates_public_id") || msg.includes("UNIQUE constraint failed: certificates.public_id");
+      if (isCollision) { lastErr = e; continue; }
+      throw e;
+    }
+  }
+
+  throw new Error(`Failed to insert certificate: ${String(lastErr?.message || "unknown")}`);
 }
 
 async function purchaseFirstCheckout(env) {
