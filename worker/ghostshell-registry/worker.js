@@ -7,7 +7,7 @@
 // VERSION: 2026-02-07.001 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-07.001";
+export const WORKER_VERSION = "2026-02-08.001";
 
 export default {
   async fetch(request, env) {
@@ -19,6 +19,10 @@ export default {
 
     if (url.pathname === "/api/stripe/webhook" && request.method === "POST") {
       return stripeWebhook(request, env);
+    }
+
+    if (url.pathname === "/api/cert/latest-origin" && request.method === "GET") {
+      return latestOrigin(env);
     }
 
     const certMatch = url.pathname.match(/^\/cert\/([A-Za-z0-9_-]+)$/);
@@ -63,6 +67,24 @@ async function sha256Hex(text) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
 }
+
+function b64uFromBytes(u8) {
+  return b64url(u8);
+}
+function bytesFromB64(b64) {
+  const bin = atob(b64.replace(/-/g, "+").replace(/_/g, "/"));
+  const u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return u8;
+}
+async function aesGcmEncrypt(plaintext, keyB64) {
+  // keyB64 should be 32 bytes (base64 or base64url)
+  const keyBytes = bytesFromB64(keyB64);
+  const key = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-GCM" }, false, ["encrypt"]);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ctBuf = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(plaintext));
+  return { iv_b64u: b64uFromBytes(iv), ct_b64u: b64uFromBytes(new Uint8Array(ctBuf)) };
+}
 function makeCertId() {
   const d = new Date();
   const y = d.getUTCFullYear();
@@ -87,6 +109,10 @@ async function createCheckout(request, env) {
   const cognitive_core_exact = (fd.get("cognitive_core_exact") || "").toString().trim();
   const creator_label = (fd.get("creator_label") || "").toString().trim();
   const provenance_link = (fd.get("provenance_link") || "").toString().trim();
+
+  // Stretch goal: optional private delivery email (not public, not identity proof)
+  const delivery_email = (fd.get("delivery_email") || "").toString().trim();
+  const delivery_consent = (fd.get("delivery_consent") || "").toString().trim();
 
   if (!agent_name || !place_of_birth || !cognitive_core_family) {
     return json({ error: "Missing required fields" }, 400);
@@ -117,6 +143,16 @@ async function createCheckout(request, env) {
   body.set("metadata[cognitive_core_exact]", cognitive_core_exact);
   body.set("metadata[creator_label]", creator_label);
   body.set("metadata[provenance_link]", provenance_link);
+
+  // Private delivery email: only include if user explicitly consents.
+  // (Email delivery may be implemented later; this enables future resend support.)
+  const consentYes = delivery_consent === "on" || delivery_consent === "yes" || delivery_consent === "true";
+  if (consentYes && delivery_email) {
+    body.set("metadata[delivery_consent]", "yes");
+    body.set("metadata[delivery_email]", delivery_email);
+  } else {
+    body.set("metadata[delivery_consent]", "no");
+  }
 
   const resp = await fetch("https://api.stripe.com/v1/checkout/sessions", {
     method: "POST",
@@ -151,6 +187,20 @@ async function stripeWebhook(request, env) {
 
   const issued_at_utc = nowUtcIso();
 
+  // Optional private delivery email (stretch goal): never displayed publicly.
+  const deliveryConsent = (md.delivery_consent || "no").toLowerCase() === "yes";
+  const deliveryEmailRaw = deliveryConsent ? ((md.delivery_email || session.customer_details?.email || "") + "").trim() : "";
+  const deliveryEmailNorm = deliveryEmailRaw ? deliveryEmailRaw.toLowerCase() : "";
+  const delivery_email_hash = deliveryEmailNorm ? await sha256Hex(deliveryEmailNorm) : null;
+
+  let delivery_email_iv = null;
+  let delivery_email_enc = null;
+  if (deliveryEmailNorm && env.EMAIL_ENC_KEY) {
+    const enc = await aesGcmEncrypt(deliveryEmailNorm, env.EMAIL_ENC_KEY);
+    delivery_email_iv = enc.iv_b64u;
+    delivery_email_enc = enc.ct_b64u;
+  }
+
   const record = {
     cert_id,
     issued_at_utc,
@@ -160,6 +210,10 @@ async function stripeWebhook(request, env) {
     cognitive_core_exact: md.cognitive_core_exact || null,
     creator_label: md.creator_label || null,
     provenance_link: md.provenance_link || null,
+    // Private operational fields
+    delivery_email_hash,
+    delivery_email_iv,
+    delivery_email_enc,
     schema_version: 2,
   };
 
@@ -178,19 +232,38 @@ async function stripeWebhook(request, env) {
   const public_fingerprint = await sha256Hex(fingerprintSource);
   const download_token_hash = await sha256Hex(token);
 
-  await env.DB.prepare(`
-    INSERT OR IGNORE INTO certificates
-    (cert_id, issued_at_utc, agent_name, place_of_birth,
-     cognitive_core_family, cognitive_core_exact,
-     creator_label, provenance_link,
-     schema_version, public_fingerprint, download_token_hash, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
-  `).bind(
-    record.cert_id, record.issued_at_utc, record.agent_name, record.place_of_birth,
-    record.cognitive_core_family, record.cognitive_core_exact,
-    record.creator_label, record.provenance_link,
-    record.schema_version, public_fingerprint, download_token_hash
-  ).run();
+  // Backward-compatible insert: try extended columns first, fall back to legacy schema.
+  try {
+    await env.DB.prepare(`
+      INSERT OR IGNORE INTO certificates
+      (cert_id, issued_at_utc, agent_name, place_of_birth,
+       cognitive_core_family, cognitive_core_exact,
+       creator_label, provenance_link,
+       schema_version, public_fingerprint, download_token_hash, status,
+       delivery_email_hash, delivery_email_iv, delivery_email_enc)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)
+    `).bind(
+      record.cert_id, record.issued_at_utc, record.agent_name, record.place_of_birth,
+      record.cognitive_core_family, record.cognitive_core_exact,
+      record.creator_label, record.provenance_link,
+      record.schema_version, public_fingerprint, download_token_hash,
+      record.delivery_email_hash, record.delivery_email_iv, record.delivery_email_enc
+    ).run();
+  } catch (e) {
+    await env.DB.prepare(`
+      INSERT OR IGNORE INTO certificates
+      (cert_id, issued_at_utc, agent_name, place_of_birth,
+       cognitive_core_family, cognitive_core_exact,
+       creator_label, provenance_link,
+       schema_version, public_fingerprint, download_token_hash, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+    `).bind(
+      record.cert_id, record.issued_at_utc, record.agent_name, record.place_of_birth,
+      record.cognitive_core_family, record.cognitive_core_exact,
+      record.creator_label, record.provenance_link,
+      record.schema_version, public_fingerprint, download_token_hash
+    ).run();
+  }
 
   return new Response("OK", { status: 200 });
 }
@@ -217,6 +290,22 @@ async function verifyStripeSignature(payload, header, secret) {
   let diff = 0;
   for (let i = 0; i < sigHex.length; i++) diff |= sigHex.charCodeAt(i) ^ v1.charCodeAt(i);
   return diff === 0;
+}
+
+async function latestOrigin(env) {
+  const row = await env.DB.prepare(
+    "SELECT cert_id, place_of_birth, issued_at_utc FROM certificates WHERE status = 'active' ORDER BY issued_at_utc DESC LIMIT 1"
+  ).first();
+
+  if (!row) {
+    return json({ place_of_birth: null, cert_id: null, issued_at_utc: null }, 200);
+  }
+
+  return json({
+    cert_id: row.cert_id,
+    place_of_birth: row.place_of_birth,
+    issued_at_utc: row.issued_at_utc,
+  }, 200);
 }
 
 async function certVerifyPage(certId, env) {

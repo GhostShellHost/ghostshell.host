@@ -115,7 +115,7 @@
               <span>GhostShell Registry // ORIGIN PINNED</span>
               <span class="originTerm__lights" aria-hidden="true"><i></i><i></i><i></i></span>
             </div>
-<pre aria-hidden="true">┌──────────────────────────────────────────────────────────────────────────┐
+<pre aria-hidden="true" id="originMapAscii">┌──────────────────────────────────────────────────────────────────────────┐
 │  WORLD NODE MAP v1.0                                                    │
 │                                                                          │
 │    .-''''-.            _..---.._                           .-''''-.      │
@@ -126,10 +126,10 @@
 │  '-.______. -'      '-._ AFRICA _.-'                \   AUSTRALIA   ●  / │
 │                                                  PACIFIC '.___  ___..-'   │
 │                                                                          │
-│  PIN: ADELAIDE, AU   LAT:-34.9285  LNG:138.6007   STATUS: VERIFIED      │
+│  PIN: LOADING...    LAT:--.--   LNG:---.----   STATUS: SYNCING          │
 └──────────────────────────────────────────────────────────────────────────┘</pre>
             <div class="originTerm__meta">
-              <span>> Place of origin: Adelaide, South Australia</span>
+              <span id="originPlaceLine">> Place of origin: syncing with registry...</span>
               <span>> Certificate seed captured<span class="originTerm__cursor">_</span></span>
             </div>
           </section>
@@ -184,7 +184,32 @@
         try { issueFrame.contentWindow?.postMessage({ type: 'ghostshell:ping' }, location.origin); } catch(e) {}
       });
 
-      // (No special interaction needed; the preview cycles on its own.)
+      // Pull latest origin from registry
+      const originMapAscii = document.getElementById('originMapAscii');
+      const originPlaceLine = document.getElementById('originPlaceLine');
+
+      function extractCountry(place) {
+        if (!place) return '';
+        const parts = String(place).split(',').map(s => s.trim()).filter(Boolean);
+        return (parts[parts.length - 1] || '').toUpperCase();
+      }
+
+      function renderOrigin(place, certId) {
+        if (!originMapAscii || !originPlaceLine) return;
+        const country = extractCountry(place) || 'UNKNOWN';
+        const pinLine = `│  PIN: ${country.padEnd(14)} LAT:--.--   LNG:---.----   STATUS: VERIFIED          │`;
+        originMapAscii.textContent = originMapAscii.textContent.replace(/│  PIN:.*│/, pinLine);
+        originPlaceLine.textContent = `> Place of origin: ${place || 'Unknown'}${certId ? ` (${certId})` : ''}`;
+      }
+
+      fetch('/api/cert/latest-origin', { headers: { 'accept': 'application/json' } })
+        .then(r => r.ok ? r.json() : Promise.reject(new Error('origin fetch failed')))
+        .then(data => {
+          if (data && data.place_of_birth) renderOrigin(data.place_of_birth, data.cert_id || '');
+        })
+        .catch(() => {
+          renderOrigin('Adelaide, South Australia, Australia', '');
+        });
     })();
   </script>
 </body>
