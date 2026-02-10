@@ -17,8 +17,12 @@ export default {
       return createCheckout(request, env);
     }
 
-    if (url.pathname === "/api/checkout" && request.method === "POST") {
+    if (url.pathname === "/api/cert/checkout" && request.method === "POST") {
       return purchaseFirstCheckout(env);
+    }
+
+    if (url.pathname === "/api/cert/checkout" && request.method === "GET") {
+      return new Response("Method not allowed. Use POST.", { status: 405 });
     }
 
     if (url.pathname === "/api/stripe/webhook" && request.method === "POST") {
