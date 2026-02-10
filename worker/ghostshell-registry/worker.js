@@ -572,7 +572,9 @@ async function testCheckout(request, env) {
   // }
 
   // Create a test session ID (prefixed so we can identify test sessions)
-  const testSessionId = `test_${Date.now()}_${crypto.getRandomValues(new Uint8Array(6)).join('')}`;
+  const randomBytes = crypto.getRandomValues(new Uint8Array(12));
+  const randomHex = Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  const testSessionId = `test_${Date.now()}_${randomHex}`;
 
   // Simulate a paid Stripe session
   const mockSession = {
