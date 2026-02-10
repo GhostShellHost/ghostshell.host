@@ -36,13 +36,6 @@
     h1{margin:0 0 10px;font-size:56px;line-height:1.0;letter-spacing:-0.03em}
     .sub{margin:0 0 16px;color:var(--muted);line-height:1.55;max-width:70ch}
 
-    /* origin panel (matched to index style) */
-    .originPanel{margin:0 0 16px;padding:14px;border-radius:16px;border:1px solid rgba(170,179,191,.18);background:rgba(18,20,27,.72);box-shadow:var(--shadow)}
-    .originPanel__kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-    .originPanel__title{font-size:15px;font-weight:700;color:var(--text);margin:0 0 6px}
-    .originPanel__meta{display:flex;flex-wrap:wrap;gap:8px 14px;color:var(--muted);font-size:13px}
-    .originPanel__meta b{color:var(--text)}
-
     .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
     .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:12px;border:1px solid var(--line);text-decoration:none;font-weight:700;background:rgba(255,255,255,.03)}
     .btn.primary{background:linear-gradient(90deg,var(--accent),#9b7bff);border-color:transparent;color:#fff}
@@ -102,15 +95,6 @@
     <div class="hero">
       <div>
         <div style="margin-top:16px">
-          <section class="originPanel" aria-label="Place of origin from registry">
-            <div class="originPanel__kicker">Registry metadata</div>
-            <p class="originPanel__title" id="originPlaceLine">Place of origin: syncing with registry…</p>
-            <div class="originPanel__meta">
-              <span><b>Status:</b> <span id="originStatus">Syncing</span></span>
-              <span><b>Certificate:</b> <span id="originCertId">—</span></span>
-              <span><b>Country:</b> <span id="originCountry">—</span></span>
-            </div>
-          </section>
           <h1>Birth Certificates for AI agents.</h1>
           <div class="certStack" aria-label="Certificate preview (full fades to redacted)" id="certStack" role="button" tabindex="0">
             <div class="certCycle" aria-hidden="true">
@@ -162,34 +146,6 @@
         try { issueFrame.contentWindow?.postMessage({ type: 'ghostshell:ping' }, location.origin); } catch(e) {}
       });
 
-      // Pull latest origin from registry
-      const originPlaceLine = document.getElementById('originPlaceLine');
-      const originCertId = document.getElementById('originCertId');
-      const originStatus = document.getElementById('originStatus');
-      const originCountry = document.getElementById('originCountry');
-
-      function parseCountry(place) {
-        const raw = (place || '').toString().trim();
-        if (!raw) return 'Unknown';
-        const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
-        return parts.length ? parts[parts.length - 1] : raw;
-      }
-
-      function renderOrigin(place, certId, status) {
-        originPlaceLine.textContent = `Place of origin: ${place || 'Unknown'}`;
-        originCertId.textContent = certId || '—';
-        originStatus.textContent = status || 'Verified';
-        originCountry.textContent = country;
-      }
-
-      fetch('/api/cert/latest-origin', { headers: { 'accept': 'application/json' } })
-        .then(r => r.ok ? r.json() : Promise.reject(new Error('origin fetch failed')))
-        .then(data => {
-          renderOrigin(data?.place_of_birth || 'Unknown', data?.cert_id || '', 'Verified');
-        })
-        .catch(() => {
-          renderOrigin('Adelaide, South Australia, Australia', '', 'Fallback');
-        });
     })();
   </script>
 </body>
