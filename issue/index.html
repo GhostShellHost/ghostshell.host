@@ -123,6 +123,36 @@
       border-color: #9aa2ff;
     }
 
+    .btn-test {
+      border-color: #ff4d4d;
+      background: #ff4d4d;
+      color: #1a0b0b;
+      margin-top: 10px;
+    }
+
+    .btn-test:hover {
+      background: #ff6b6b;
+      border-color: #ff6b6b;
+    }
+
+    .test-wrap {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .test-key {
+      background: #10141c;
+      border: 1px solid #3a1f23;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 14px;
+      min-width: 220px;
+      font: inherit;
+    }
+
     .under {
       margin-top: 10px;
       color: var(--muted);
@@ -170,8 +200,14 @@
     <form method="POST" action="/api/cert/checkout">
       <button class="btn" type="submit">Buy Birth Certificate</button>
     </form>
+
+    <form method="POST" action="/api/cert/test-checkout" class="test-wrap" autocomplete="off">
+      <input class="test-key" type="password" name="test_key" placeholder="Internal test key" required>
+      <button class="btn btn-test" type="submit">TEST: Bypass Stripe (remove before launch)</button>
+    </form>
+
     <p class="under">After payment, you will be redirected to complete registration.</p>
     <p class="under">Payments are processed securely by Stripe. GhostShell never sees or stores card details.</p>
   </main>
-</body>
+<!-- TIMESTAMP_FOOTER --><div style="position:fixed;bottom:0;right:0;background:#000;color:#fff;font-size:10px;padding:2px 4px;z-index:9999;opacity:0.7;font-family:monospace;">Deployed: 2026-02-11 00:41 GMT+10:30</div><!-- END_TIMESTAMP_FOOTER --></body>
 </html>

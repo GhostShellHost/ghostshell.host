@@ -7,7 +7,7 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-10.009";
+export const WORKER_VERSION = "2026-02-11.010";
 
 export default {
   async fetch(request, env) {
@@ -23,6 +23,10 @@ export default {
 
     if (url.pathname === "/api/cert/checkout" && request.method === "GET") {
       return new Response("Method not allowed. Use POST.", { status: 405 });
+    }
+
+    if (url.pathname === "/api/cert/test-checkout" && request.method === "POST") {
+      return testCheckout(request, env);
     }
 
     if (url.pathname === "/api/cert/handoff-token" && request.method === "GET") {
@@ -555,6 +559,36 @@ async function purchaseFirstCheckout(request, env) {
   if (!resp.ok) return json({ error: "Stripe error", details: data }, 500);
 
   return Response.redirect(data.url, 303);
+}
+
+async function testCheckout(request, env) {
+  const baseUrl = getBaseUrl(request, env);
+  const fd = await request.formData();
+  const testKey = (fd.get("test_key") || "").toString().trim();
+
+  // Gate behind environment variable TEST_KEY (set via wrangler secret)
+  if (!env.TEST_KEY || testKey !== env.TEST_KEY) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  // Create a test session ID (prefixed so we can identify test sessions)
+  const testSessionId = `test_${Date.now()}_${crypto.getRandomValues(new Uint8Array(6)).join('')}`;
+
+  // Simulate a paid Stripe session
+  const mockSession = {
+    id: testSessionId,
+    payment_status: "paid",
+    status: "complete",
+    amount_total: 0,
+    customer_details: { email: "test@ghostshell.host" },
+  };
+
+  // Generate a purchase token and write to DB (same logic as real flow)
+  const token = await getOrCreatePurchaseTokenForSession(testSessionId, mockSession, env);
+
+  // Redirect to the same post-checkout flow (which will see session as paid)
+  const location = `${baseUrl}/api/cert/post-checkout?session_id=${encodeURIComponent(testSessionId)}`;
+  return Response.redirect(location, 303);
 }
 
 async function stripeWebhook(request, env) {
