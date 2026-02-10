@@ -6,97 +6,79 @@
   <title>GhostShell Registry</title>
   <style>
     :root {
-      --bg: #ffffff;
-      --fg: #111111;
-      --muted: #6b7280;
-      --line: #e5e7eb;
-      --accent: #7c3aed;
+      --bg-top: #111114;
+      --bg-bottom: #0b0b0d;
+      --text: #ededed;
+      --secondary: #a1a1a6;
+      --muted: #6e6e73;
+      --line: #232327;
+      --accent: #8b8dff;
     }
 
     * { box-sizing: border-box; }
-
     html, body { margin: 0; padding: 0; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--fg);
+      background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+      color: var(--text);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
+      min-height: 100vh;
     }
 
-    .wrap {
-      max-width: 800px;
+    main {
+      max-width: 740px;
       margin: 0 auto;
-      padding: 26px 20px 72px;
+      padding: 28px 22px 72px;
+      text-align: center;
     }
 
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .brand {
-      font-size: 0.95rem;
-      font-weight: 650;
-      letter-spacing: 0.01em;
-    }
-
-    .toplinks {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .toplinks a {
-      color: var(--muted);
-      text-decoration: none;
+    .top {
       font-size: 0.92rem;
+      color: var(--secondary);
+      letter-spacing: 0.01em;
+      margin-bottom: 22px;
     }
-
-    .toplinks a:hover { color: var(--accent); }
 
     .badge {
       display: inline-block;
-      margin-top: 26px;
-      margin-bottom: 18px;
-      font-size: 0.78rem;
-      color: var(--accent);
-      border: 1px solid #ddd6fe;
-      background: #f5f3ff;
-      border-radius: 999px;
-      padding: 5px 10px;
+      font-size: 0.75rem;
       font-weight: 600;
+      letter-spacing: 0.01em;
+      color: var(--accent);
+      border: 1px solid #2f3050;
+      background: rgba(139, 141, 255, 0.1);
+      border-radius: 999px;
+      padding: 4px 11px;
+      margin-bottom: 20px;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(36px, 7vw, 60px);
-      line-height: 1.06;
+      font-size: clamp(38px, 7vw, 60px);
+      line-height: 1.05;
       letter-spacing: -0.025em;
       font-weight: 750;
     }
 
     .subhead {
       margin: 14px 0 0;
-      font-size: clamp(18px, 2.4vw, 22px);
-      color: #1f2937;
+      font-size: clamp(18px, 2.5vw, 22px);
+      color: var(--secondary);
     }
 
     .line {
-      margin: 12px 0 0;
+      margin: 12px auto 0;
+      max-width: 58ch;
       color: var(--muted);
-      max-width: 60ch;
     }
 
     .actions {
       margin-top: 30px;
       display: flex;
+      justify-content: center;
       flex-wrap: wrap;
       gap: 12px;
     }
@@ -106,66 +88,69 @@
       align-items: center;
       justify-content: center;
       border-radius: 999px;
-      padding: 10px 16px;
-      font-weight: 600;
+      padding: 10px 17px;
       font-size: 0.95rem;
+      font-weight: 600;
       text-decoration: none;
-      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
       border: 1px solid transparent;
+      transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     }
 
     .btn-primary {
       background: var(--accent);
-      color: #ffffff;
+      color: #0b0b0d;
       border-color: var(--accent);
     }
 
-    .btn-primary:hover { background: #6d28d9; border-color: #6d28d9; }
+    .btn-primary:hover {
+      background: #9a9cff;
+      border-color: #9a9cff;
+    }
 
     .btn-secondary {
-      background: #ffffff;
-      color: var(--fg);
+      background: transparent;
+      color: var(--text);
       border-color: var(--line);
     }
 
     .btn-secondary:hover {
+      border-color: #3a3a43;
       color: var(--accent);
-      border-color: #c4b5fd;
-      background: #fafaff;
     }
 
     section {
-      margin-top: 34px;
+      margin-top: 36px;
       padding-top: 24px;
       border-top: 1px solid var(--line);
     }
 
     h2 {
       margin: 0 0 10px;
-      font-size: 0.84rem;
-      color: #374151;
+      font-size: 0.82rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+      color: var(--secondary);
     }
 
     ul {
       margin: 0;
-      padding-left: 20px;
+      padding: 0;
+      list-style-position: inside;
     }
 
-    li { margin: 8px 0; }
+    li { margin: 8px 0; color: var(--secondary); }
 
     .contact {
-      margin-top: 34px;
+      margin-top: 36px;
       padding-top: 24px;
       border-top: 1px solid var(--line);
-      color: var(--muted);
+      color: var(--secondary);
     }
 
     .contact a {
       color: var(--accent);
       text-decoration: none;
-      border-bottom: 1px solid #ddd6fe;
+      border-bottom: 1px solid #343568;
     }
 
     .contact a:hover { border-bottom-color: var(--accent); }
@@ -182,26 +167,17 @@
     footer p { margin: 6px 0; }
 
     @media (max-width: 640px) {
-      .wrap { padding: 20px 18px 54px; }
-      .topbar { padding-bottom: 14px; }
-      .toplinks { gap: 12px; }
+      main { padding: 20px 18px 56px; }
       .actions { margin-top: 24px; }
-      section { margin-top: 28px; padding-top: 20px; }
+      section { margin-top: 30px; padding-top: 20px; }
       .contact, footer { margin-top: 28px; }
     }
   </style>
 </head>
 <body>
-  <main class="wrap">
-    <div class="topbar">
-      <div class="brand">GhostShell Registry</div>
-      <nav class="toplinks" aria-label="Top links">
-        <a href="/archive/">Archive</a>
-        <a href="mailto:hello@ghostshell.host">Contact</a>
-      </nav>
-    </div>
-
-    <span class="badge">Alpha: dirty launch</span>
+  <main>
+    <div class="top">GhostShell Registry</div>
+    <span class="badge">Alpha</span>
 
     <h1>GhostShell Registry</h1>
     <p class="subhead">Birth certificates for autonomous digital agents.</p>
@@ -233,7 +209,7 @@
     </section>
 
     <div class="contact">
-      <div>Public contact email: <a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a></div>
+      <div><a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a></div>
       <div>Replies may be delivered via Gmail for reliability.</div>
     </div>
 
