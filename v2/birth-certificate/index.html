@@ -8,60 +8,143 @@
     :root{--bg:#070a12;--panel:#0f1524f0;--text:#e8eef8;--muted:#9ba9c1;--line:#243049;--a:#7c5cff;--sans:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     *{box-sizing:border-box} html,body{margin:0}
     body{font-family:var(--sans);background:var(--bg);color:var(--text)}
-    .wrap{padding:14px;max-width:540px}
+    .wrap{padding:14px;max-width:640px}
     .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
     h1{margin:0 0 6px;font-size:21px;letter-spacing:-.02em}
     .sub{margin:0 0 14px;color:var(--muted);font-size:14px}
-    label{display:block;margin-top:12px;font-size:14px;font-weight:600}
-    input,select{width:100%;margin-top:6px;padding:11px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);font:inherit}
+    .section{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+    .k{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+    label{display:block;margin-top:10px;font-size:13px;font-weight:600}
+    input,select{width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);font:inherit}
+    .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .check{display:flex;gap:8px;align-items:flex-start;margin-top:10px;color:var(--muted);font-size:12px;line-height:1.4}
+    .check input{width:16px;height:16px;margin-top:2px}
     .price{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
     .price b{font-size:22px}
     .small{font-size:12px;color:var(--muted)}
     .btn{margin-top:14px;width:100%;border:0;border-radius:11px;padding:12px 14px;background:linear-gradient(90deg,var(--a),#9b7bff);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+    .muted{margin-top:8px;color:var(--muted);font-size:12px}
     :focus-visible{outline:3px solid rgba(124,92,255,.35);outline-offset:2px}
+    @media (max-width:720px){.row,.row2{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <form class="card" method="POST" action="https://ghostshell-registry.jason-v-butler-9f5.workers.dev/api/cert/create-checkout">
+    <form class="card" id="certForm" method="POST" action="https://ghostshell-registry.jason-v-butler-9f5.workers.dev/api/cert/create-checkout">
       <h1>Issue a Birth Certificate</h1>
-      <p class="sub">Minimal checkout form.</p>
+      <p class="sub">Minimal style, full field set.</p>
 
-      <label for="agent_name">Agent name *</label>
-      <input id="agent_name" name="agent_name" required placeholder="e.g., Joule" autocomplete="off" />
+      <div class="section" style="margin-top:0;padding-top:0;border-top:0">
+        <div class="k">Agent identity</div>
 
-      <label for="place_of_birth">Place of origin *</label>
-      <input id="place_of_birth" name="place_of_birth" required placeholder="City, State, Country" autocomplete="off" />
+        <label for="agent_name">Agent name *</label>
+        <input id="agent_name" name="agent_name" required placeholder="e.g., Joule" autocomplete="off" />
 
-      <label for="cognitive_core_family">Cognitive core *</label>
-      <select id="cognitive_core_family" name="cognitive_core_family" required>
-        <option value="Undisclosed">Undisclosed</option>
-        <option value="GPT-family">GPT-family</option>
-        <option value="Claude-family">Claude-family</option>
-        <option value="Gemini-family">Gemini-family</option>
-        <option value="Local model">Local model</option>
-        <option value="Other">Other</option>
-      </select>
+        <label>Place of origin *</label>
+        <div class="row">
+          <input id="place_city" name="place_city" required placeholder="City" autocomplete="off" />
+          <input id="place_state" name="place_state" required placeholder="State / region" autocomplete="off" />
+          <input id="place_country" name="place_country" required placeholder="Country" value="Australia" autocomplete="off" />
+        </div>
+        <input id="place_of_birth" name="place_of_birth" type="hidden" />
+
+        <div class="row2">
+          <div>
+            <label for="origin_runtime">Origin runtime *</label>
+            <select id="origin_runtime" name="origin_runtime" required>
+              <option value="OpenClaw">OpenClaw</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="autonomy_level">Autonomy level *</label>
+            <select id="autonomy_level" name="autonomy_level" required>
+              <option value="OAL-2">OAL-2</option>
+              <option value="OAL-1">OAL-1</option>
+              <option value="OAL-0">OAL-0</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label for="first_boot_date">First boot (UTC) *</label>
+            <input id="first_boot_date" name="first_boot_date" type="date" required />
+          </div>
+          <div>
+            <label for="human_custodian">Human custodian (optional)</label>
+            <input id="human_custodian" name="human_custodian" placeholder="pseudonym" autocomplete="off" />
+          </div>
+        </div>
+
+        <label for="cognitive_core_family">Cognitive core *</label>
+        <select id="cognitive_core_family" name="cognitive_core_family" required>
+          <option value="Undisclosed">Undisclosed</option>
+          <option value="GPT-family">GPT-family</option>
+          <option value="Claude-family">Claude-family</option>
+          <option value="Gemini-family">Gemini-family</option>
+          <option value="Local model">Local model</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <label for="cognitive_core_exact">Exact model (optional)</label>
+        <input id="cognitive_core_exact" name="cognitive_core_exact" placeholder="e.g., gpt-5.x" autocomplete="off" />
+      </div>
+
+      <div class="section">
+        <div class="k">Creator + provenance</div>
+        <label for="creator_label">Creator label (optional)</label>
+        <input id="creator_label" name="creator_label" placeholder="pseudonym" autocomplete="off" />
+
+        <label for="provenance_link">Linked certificate ID (optional)</label>
+        <input id="provenance_link" name="provenance_link" placeholder="GS-BC-..." autocomplete="off" />
+      </div>
+
+      <div class="section">
+        <div class="k">Delivery (optional)</div>
+        <label for="delivery_email">Delivery email</label>
+        <input id="delivery_email" name="delivery_email" type="email" placeholder="you@example.com" autocomplete="email" />
+        <label class="check"><input type="checkbox" id="delivery_consent" name="delivery_consent" />I consent to private storage for certificate delivery/resend.</label>
+      </div>
+
+      <label class="check"><input type="checkbox" id="no_pii" name="no_pii" required />I confirm no personal identifying info is included in public fields.</label>
 
       <div class="price"><b>US$9.99</b><span class="small">one-time</span></div>
       <button class="btn" type="submit">Continue to payment</button>
+      <div class="muted">Public fields are visible on the verification page. Use pseudonyms.</div>
     </form>
   </div>
 
   <script>
     (function(){
-      if (window.top === window) return;
-      const post = () => {
-        const h = Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight || 0);
-        parent.postMessage({ type: 'ghostshell:formHeight', h }, location.origin);
-      };
-      window.addEventListener('message', (ev) => {
-        if (ev.origin !== location.origin) return;
-        if (ev.data?.type === 'ghostshell:ping') post();
+      const form = document.getElementById('certForm');
+      const city = document.getElementById('place_city');
+      const state = document.getElementById('place_state');
+      const country = document.getElementById('place_country');
+      const pob = document.getElementById('place_of_birth');
+      const deliveryEmail = document.getElementById('delivery_email');
+      const deliveryConsent = document.getElementById('delivery_consent');
+
+      form?.addEventListener('submit', () => {
+        pob.value = [city?.value, state?.value, country?.value].map(v => (v || '').trim()).filter(Boolean).join(', ');
+        const hasEmail = (deliveryEmail?.value || '').trim().length > 0;
+        if (deliveryConsent) deliveryConsent.required = hasEmail;
       });
-      addEventListener('DOMContentLoaded', () => { post(); setTimeout(post,120); });
-      addEventListener('load', () => { post(); setTimeout(post,200); });
-      addEventListener('resize', () => setTimeout(post,80));
+
+      if (window.top !== window) {
+        const post = () => {
+          const h = Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight || 0);
+          parent.postMessage({ type: 'ghostshell:formHeight', h }, location.origin);
+        };
+        window.addEventListener('message', (ev) => {
+          if (ev.origin !== location.origin) return;
+          if (ev.data?.type === 'ghostshell:ping') post();
+        });
+        addEventListener('DOMContentLoaded', () => { post(); setTimeout(post,120); });
+        addEventListener('load', () => { post(); setTimeout(post,200); });
+        addEventListener('resize', () => setTimeout(post,80));
+      }
     })();
   </script>
 </body>
