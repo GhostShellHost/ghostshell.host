@@ -337,6 +337,9 @@ async function fetchStripeCheckoutSession(sessionId, env) {
 }
 
 async function getOrCreatePurchaseTokenForSession(sessionId, session, env) {
+  // Ensure runtime columns exist before first insert paths (checkout/test flows)
+  await ensureRuntimeSchema(env.DB);
+
   let row = await env.DB.prepare(
     "SELECT token FROM purchase_tokens WHERE stripe_session_id = ?"
   ).bind(sessionId).first();
@@ -355,9 +358,20 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env) {
   const recoveryEmailRaw = ((session.metadata?.recovery_email || session.customer_details?.email || "")).toLowerCase().trim();
   const recoveryEmailHash = recoveryEmailRaw ? await sha256Hex(recoveryEmailRaw) : null;
 
-  await env.DB.prepare(
-    "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?, ?)"
-  ).bind(token, sessionId, paymentIntent, emailHash, recoveryEmailHash, nowUtcIso()).run();
+  try {
+    await env.DB.prepare(
+      "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?, ?)"
+    ).bind(token, sessionId, paymentIntent, emailHash, recoveryEmailHash, nowUtcIso()).run();
+  } catch (e) {
+    const msg = String(e?.message || "").toLowerCase();
+    if (msg.includes("recovery_email_hash")) {
+      await env.DB.prepare(
+        "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?)"
+      ).bind(token, sessionId, paymentIntent, emailHash, nowUtcIso()).run();
+    } else {
+      throw e;
+    }
+  }
 
   return token;
 }
