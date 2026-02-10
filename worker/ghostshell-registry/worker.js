@@ -390,9 +390,24 @@ async function latestOrigin(env) {
 }
 
 async function certVerifyPage(certId, env) {
-  const row = await env.DB.prepare(
-    "SELECT cert_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, public_fingerprint, status FROM certificates WHERE cert_id = ?"
+  const selectPublicFields =
+    "SELECT cert_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, public_fingerprint, status FROM certificates WHERE ";
+
+  // Resolve by canonical cert_id first, then fallback to public_id alias.
+  let row = await env.DB.prepare(
+    `${selectPublicFields}cert_id = ?`
   ).bind(certId).first();
+
+  if (!row) {
+    const foundByPublicId = await env.DB.prepare(
+      `${selectPublicFields}public_id = ?`
+    ).bind(certId).all();
+
+    const results = foundByPublicId?.results || [];
+    if (results.length === 1) {
+      row = results[0];
+    }
+  }
 
   if (!row) {
     return html("<h1>GhostShell Certificate</h1><p>Not found.</p>", 404, {
