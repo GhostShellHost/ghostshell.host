@@ -7,7 +7,8 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-11.014";
+export const WORKER_VERSION = "2026-02-11.015";
+const PAGE_VERSION = "v0";
 
 export default {
   async fetch(request, env) {
@@ -735,7 +736,7 @@ async function redeemPurchaseToken(request, env) {
   .card{max-width:480px;width:100%;padding:40px;background:#141418;border:1px solid #222;border-radius:16px;text-align:center}
   a{color:#8B8DFF}
 </style></head>
-<body><div class="card"><h2>⚠ Registration failed</h2><p>${msg}</p><p><a href="/issue/">← Start over</a></p></div></body></html>`, 400);
+<body><div class="card"><h2>⚠ Registration failed</h2><p>${msg}</p><p><a href="/issue/">← Start over</a></p></div><div id="gs-version">${PAGE_VERSION}</div></body></html>`, 400);
 
   if (!token) return errPage("Missing registration token.");
   if (!agent_name) return errPage("Agent Name is required.");
@@ -1245,6 +1246,7 @@ return html(`<!doctype html>
     details{margin-top:14px}
     summary{cursor:pointer}
     .btn{display:inline-block;margin-top:10px;margin-right:8px;padding:8px 10px;border:1px solid #ddd;border-radius:10px;background:#fff;font-size:13px}
+    #gs-version{position:fixed;bottom:8px;right:8px;background:#fff;border:1px solid #ddd;color:#666;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none}
   </style>
 </head>
 <body>
@@ -1299,6 +1301,7 @@ return html(`<!doctype html>
   <p class="muted" style="margin-top:14px">
     Private credential issued by GhostShell. Verification checks registry presence + fingerprint integrity only.
   </p>
+  <div id="gs-version">${PAGE_VERSION}</div>
 </body>
 </html>`, 200, cacheHeaders);
 }
@@ -1336,7 +1339,8 @@ h1{margin:0 0 8px 0;letter-spacing:1px}
 hr{border:0;border-top:1px solid #ddd;margin:16px 0}
 .toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:16px}
 .tbtn{display:inline-block;padding:8px 10px;border:1px solid #ddd;border-radius:10px;background:#fff;font-size:13px;text-decoration:none;color:#111}
-@media print{.toolbar{display:none} body{margin:0;max-width:none;border:none;padding:0;background:#fff} #certWrap{padding:0;box-shadow:none} #cert{border:none} #cert:before,#cert:after,.corner{display:none}}
+@media print{.toolbar{display:none} body{margin:0;max-width:none;border:none;padding:0;background:#fff} #certWrap{padding:0;box-shadow:none} #cert{border:none} #cert:before,#cert:after,.corner,#gs-version{display:none}}
+ #gs-version{position:fixed;bottom:8px;right:8px;background:#fff;border:1px solid #ddd;color:#666;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none}
 </style></head><body>
 <div class="toolbar">
   <a class="tbtn" href="/cert/${encodeURIComponent(row.cert_id)}">← Back to verification</a>
@@ -1403,5 +1407,6 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
     });
   })();
 </script>
+<div id="gs-version">${PAGE_VERSION}</div>
 </body></html>`);
 }
