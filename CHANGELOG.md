@@ -4,6 +4,11 @@ Format: Version — Date — What changed
 
 ---
 
+## v0.007 — 2026-02-12
+- **UI**: Tightened spacing on ontological status description (now directly under dropdown)
+- **Format**: Description now shows as "**Tool** — Does tasks when asked..." (value emphasized)
+- **Fix**: Removed `input` listener (redundant), simplified to `change` only
+
 ## v0.006 — 2026-02-12
 - **UX**: Removed `?` help icon from ontological status; added instant inline descriptions below dropdown
 - **UI**: Descriptions now same size as other text, update instantly on selection
