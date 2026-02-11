@@ -96,7 +96,11 @@
     } catch (_) {}
   }
 
-  document.getElementById("token-display").textContent = token || "No token found — use your email link";
+  const tokenDisplayEl = document.getElementById("token-display");
+  if (tokenDisplayEl) {
+    if ("value" in tokenDisplayEl) tokenDisplayEl.value = token || "";
+    else tokenDisplayEl.textContent = token || "No token found — use your email link";
+  }
   document.getElementById("token-field").value = token;
   document.getElementById("by-field").value = by === "agent" ? "agent" : "human";
 
