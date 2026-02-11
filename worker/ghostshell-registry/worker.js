@@ -1350,12 +1350,12 @@ return html(`<!doctype html>
           <div class="k">registration_date_utc</div><div class="v">${safe(row.issued_at_utc)}</div>
           <div class="k">registry_status</div><div class="v">${safe(registryLabel)}</div>
           <div class="k">agent_name</div><div class="v">${safe(row.agent_name)}</div>
+          ${row.declared_ontological_status ? `<div class="k">ontological_status</div><div class="v">${safe(row.declared_ontological_status)}</div>` : ''}
           <div class="k">place_of_origin</div><div class="v">${safe(row.place_of_birth || 'Unknown')}</div>
           <div class="k">cognitive_core_at_birth</div><div class="v clip" title="${safe(coreDisplay)}">${safe(coreDisplay)}</div>
           <div class="k">creator_operator</div><div class="v" title="Redacted in public view"><span class="redact" aria-label="redacted"></span></div>
           <div class="k">edits</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
           ${row.provenance_link ? `<div class="k">provenance_link</div><div class="v clip" title="${safe(row.provenance_link)}">${safe(row.provenance_link)}</div>` : ''}
-          ${row.declared_ontological_status ? `<div class="k">ontological_status</div><div class="v">${safe(row.declared_ontological_status)}</div>` : ''}
         </div>
 
         <div class="actions">
