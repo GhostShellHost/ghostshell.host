@@ -1319,7 +1319,7 @@ return html(`<!doctype html>
     .actions{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
     .btn{display:inline-block;padding:8px 10px;border:1px solid rgba(17,24,39,.24);border-radius:10px;background:rgba(255,255,255,.55);font-size:12px;color:#111;text-decoration:none}
     .muted{margin-top:10px;color:rgba(17,24,39,.72);font-size:12px}
-    #gs-version{position:fixed;bottom:8px;right:8px;background:#0B0B0D;border:1px solid #2a2a35;color:#8B8DFF;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none}
+    #gs-version{position:absolute;bottom:10px;right:12px;color:#8B8DFF;font-size:10px;opacity:.75;font-family:ui-monospace,monospace;pointer-events:none}
     .redact{display:inline-block;height:1.05em;width:18ch;vertical-align:middle;background:#050608;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0.5px 0 rgba(0,0,0,.35);transform:rotate(-.6deg);position:relative;overflow:hidden}
     .redact::before{content:"";position:absolute;inset:-2px;background:radial-gradient(22px 10px at 20% 30%, rgba(255,255,255,.10), transparent 62%),radial-gradient(20px 10px at 70% 60%, rgba(255,255,255,.08), transparent 64%),repeating-linear-gradient(0deg, rgba(255,255,255,.06) 0 1px, transparent 1px 6px);opacity:.10;mix-blend-mode:overlay}
     .redact::after{content:"";position:absolute;left:-6px;right:-6px;top:-2px;bottom:-2px;background:radial-gradient(14px 10px at 10% 40%, rgba(0,0,0,.55), transparent 70%),radial-gradient(14px 10px at 90% 55%, rgba(0,0,0,.55), transparent 70%);opacity:.08;mix-blend-mode:multiply}
@@ -1369,9 +1369,9 @@ return html(`<!doctype html>
         </div>
       </div>
       <div class="muted">Private credential issued by GhostShell. Verification checks registry presence + fingerprint integrity only.</div>
+      <div id="gs-version">${PAGE_VERSION}</div>
     </div>
   </div>
-  <div id="gs-version">${PAGE_VERSION}</div>
 </body>
 </html>`, 200, cacheHeaders);
 }

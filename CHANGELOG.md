@@ -4,6 +4,9 @@ Format: Version — Date — What changed
 
 ---
 
+## v0.012 — 2026-02-12
+- **Record page**: Moved version badge inside the `.paper` certificate card (bottom-right corner), replacing fixed page overlay
+
 ## v0.011 — 2026-02-12
 - **Register page**: Moved version label to bottom of form under `ghostshell.host · registry`
 - **Record page**: Kept version badge in bottom-right corner on public redacted/printable views
