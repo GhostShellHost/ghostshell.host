@@ -1,1 +1,28 @@
-["x] GitHub CI deploy fixed (new Cloudflare API token + GitHub secret)\n- [x] Worker runtime secrets configured:\n  - `STRIPE_SECRET_KEY`\n  - `STRIPE_WEBHOOK_SECRET`\n  - `RESEND_API_KEY`\n  - `RESEND_FROM_EMAIL`\n  - `EMAIL_ENC_KEY`\n  - `OPS_SECRET`\n- [x] `/api/ops/email-summary` endpoint secured & working\n- [x] Weekly cron job created (daily health checks)\n- [x] Test checkout flow fixed:\n  - Now redirects directly to register page (`/register/?token=...&by=human`)\n  - 4 completion emails sent in testing\n\n## \ud83d\udd04 Pending\n\n- [ ] Abandoned checkout email trigger test (needs a timed expired session)\n- [ ] Email footer implementation (Resend + footer)\n- [ ] Full end-to-end registration flow verification\n- [ ] Optional: 30-min email failure alert cron\n\n## Next Steps (choose one)\n\n1. **Email footer** \u2014 add GhostShell footer to all emails (Resend config or Jinja template)\n2. **Abandoned email test** \u2014 wait for a checkout.session.expired webhook to verify\n3. **Full registration test** \u2014 do a real checkout flow to verify Stripe \u2192 token \u2192 email path\n4. **Email failure alerts** \u2014 add periodic health checks reporting failed sends"]
+# GhostShell Automation Checklist
+
+## ✅ Completed
+- [x] GitHub CI deploy fixed (new Cloudflare API token + GitHub secret)
+- [x] Worker runtime secrets configured:
+  - `STRIPE_SECRET_KEY`
+  - `STRIPE_WEBHOOK_SECRET`
+  - `RESEND_API_KEY`
+  - `RESEND_FROM_EMAIL`
+  - `EMAIL_ENC_KEY`
+  - `OPS_SECRET`
+- [x] `/api/ops/email-summary` endpoint secured & working
+- [x] Weekly cron job created (daily health checks)
+- [x] Test checkout flow fixed:
+  - Redirects directly to register page (`/register/?token=...&by=human`)
+  - Completion emails confirmed in testing
+- [x] Email footer implementation (Resend + footer)
+- [x] Full end-to-end registration flow verification
+
+## 🔄 Pending
+- [ ] Abandoned checkout email trigger test
+  - Requires a real `checkout.session.expired` event (or Stripe CLI + valid webhook signing flow)
+- [ ] Optional: 30-min email failure alert cron
+
+## Next Steps (updated)
+1. Validate abandoned checkout reminder with a genuine expired Stripe session.
+2. Add optional failure-only alerting every 30 min.
+3. Verify ops runbook notes for secret rotation (`OPS_SECRET`, Resend key).

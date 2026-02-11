@@ -14,6 +14,14 @@ Single place to track:
 
 ## Recent changes (latest first)
 
+### 2026-02-12
+- Register flow refactor deployed: replaced dual cognitive-core fields with single dropdown + "Other" custom path.
+- Added client-side submit mapping to preserve backend compatibility (`cognitive_core_family` / `cognitive_core_exact`).
+- Verified live production behavior:
+  - standard model selection stores split family/exact values
+  - custom "Other" selection stores `Undisclosed` + custom exact value
+- Confirmed live `/register/` reflects new UI (deployment drift resolved).
+
 ### 2026-02-11
 - Added test checkout bypass flow (`/api/cert/test-checkout`) for safe Stripe-free testing.
 - Updated `/issue` page red test button to one-click (no test key input).
@@ -79,12 +87,9 @@ Single place to track:
 ---
 
 ## Next actions
-1. Confirm Cloudflare runtime auth path for local Wrangler checks (current local API auth error: `10001`).
-2. End-to-end test in production:
-   - successful checkout email
-   - expired checkout reminder email
-   - `/api/ops/email-summary` auth + data accuracy
-3. Add failure-only alert job (optional) every 30 min.
+1. Run abandoned-flow validation with a genuine `checkout.session.expired` event and confirm `abandoned_email_status` writes.
+2. Keep `/api/ops/email-summary` access key management documented (rotation + storage path).
+3. Optional: add failure-only alert job every 30 min.
 
 ---
 
