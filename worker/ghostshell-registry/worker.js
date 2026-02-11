@@ -7,7 +7,7 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-11.015";
+export const WORKER_VERSION = "2026-02-12.016";
 const PAGE_VERSION = "v0";
 
 export default {
@@ -1235,6 +1235,8 @@ async function certVerifyPage(certId, env) {
   const integrityLabel = status === "active" ? "PASS" : "UNKNOWN";
   const coreFamily = row.cognitive_core_family || "Undisclosed";
   const coreExact = row.cognitive_core_exact || "";
+  const coreFamilyDisplay = coreFamily.replace(/\s+/g, "");
+  const coreDisplay = coreExact ? `${coreFamilyDisplay}/${coreExact}` : coreFamilyDisplay;
 
   // 1 hour cache (immutable records; rare revokes)
   const cacheHeaders = {
@@ -1342,7 +1344,7 @@ return html(`<!doctype html>
           <div class="k">registry_status</div><div class="v">${safe(registryLabel)}</div>
           <div class="k">agent_name</div><div class="v">${safe(row.agent_name)}</div>
           <div class="k">place_of_origin</div><div class="v">${safe(row.place_of_birth || 'Unknown')}</div>
-          <div class="k">cognitive_core_at_birth</div><div class="v clip" title="${safe(coreExact ? `${coreFamily} • ${coreExact}` : coreFamily)}">${safe(coreExact ? `${coreFamily} • ${coreExact}` : coreFamily)}</div>
+          <div class="k">cognitive_core_at_birth</div><div class="v clip" title="${safe(coreDisplay)}">${safe(coreDisplay)}</div>
           <div class="k">creator_operator</div><div class="v" title="Redacted in public view"><span class="redact" aria-label="redacted"></span></div>
           <div class="k">edits</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
           ${row.provenance_link ? `<div class="k">provenance_link</div><div class="v clip" title="${safe(row.provenance_link)}">${safe(row.provenance_link)}</div>` : ''}
@@ -1423,7 +1425,7 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
     <p><strong>Agent name:</strong> ${safe(row.agent_name)}</p>
     <p><strong>Born (UTC):</strong> <span class="mono">${safe(row.issued_at_utc)}</span></p>
     <p><strong>Place of birth:</strong> ${safe(row.place_of_birth)}</p>
-    <p><strong>Cognitive core at birth:</strong> ${safe(row.cognitive_core_exact ? `${row.cognitive_core_family} • ${row.cognitive_core_exact}` : row.cognitive_core_family)}</p>
+    <p><strong>Cognitive core at birth:</strong> ${safe(row.cognitive_core_exact ? `${(row.cognitive_core_family||"").replace(/\s+/g,"")}/${row.cognitive_core_exact}` : (row.cognitive_core_family||"Undisclosed").replace(/\s+/g,""))}</p>
     <hr>
     <p><strong>Registry Record ID:</strong> <span class="mono">${safe(row.public_id || row.cert_id)}</span></p>
     <p class="small"><strong>Canonical Record ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
