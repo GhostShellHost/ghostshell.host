@@ -4,6 +4,11 @@ Format: Version — Date — What changed
 
 ---
 
+## v0.008 — 2026-02-12
+- **UX**: Removed repeated selected label from ontological description (no more `Autonomous Agent — ...`)
+- **Format**: Ontological explanation now uses the same `.hint` style as "Model at Birth" helper text
+- **UI**: Cleaner inline explanation text only
+
 ## v0.007 — 2026-02-12
 - **UI**: Tightened spacing on ontological status description (now directly under dropdown)
 - **Format**: Description now shows as "**Tool** — Does tasks when asked..." (value emphasized)

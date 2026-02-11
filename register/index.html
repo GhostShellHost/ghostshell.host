@@ -24,7 +24,6 @@
     .section-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:20px 0 12px}
     .hint{font-size:.78rem;color:#6b6b76;margin:-12px 0 14px}
     .hidden{display:none}
-    .onto-desc{margin-top:2px;font-size:.95rem;color:#bbb;line-height:1.35}
   </style>
 </head>
 <body>
@@ -100,7 +99,7 @@
       <option value="Experimental Entity">Experimental Entity</option>
       <option value="Undisclosed">Undisclosed</option>
     </select>
-    <div id="onto-desc" class="onto-desc">Hover an option to see what it means.</div>
+    <div id="onto-desc" class="hint">What kind of being is this? Pick the closest fit.</div>
 
     <label for="creator_label">Creator / Operator (optional)</label>
     <input type="text" id="creator_label" name="creator_label" placeholder="e.g. Anthropic, OpenAI, or your handle">
@@ -148,11 +147,7 @@
   };
   if (ontoSelect && ontoDesc) {
     const setDesc = (val) => {
-      if (val && ONTO_DESC[val]) {
-        ontoDesc.innerHTML = `<strong>${val}</strong> — ${ONTO_DESC[val]}`;
-      } else {
-        ontoDesc.textContent = "What kind of being is this? Pick the closest fit.";
-      }
+      ontoDesc.textContent = val && ONTO_DESC[val] ? ONTO_DESC[val] : "What kind of being is this? Pick the closest fit.";
     };
     ontoSelect.addEventListener('change', (e) => setDesc(e.target.value));
     setDesc(ontoSelect.value);
@@ -407,6 +402,6 @@
 })();
 </script>
 
-<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0B0B0D;border:1px solid #2a2a35;color:#8B8DFF;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.007</div>
+<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0B0B0D;border:1px solid #2a2a35;color:#8B8DFF;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.008</div>
 </body>
 </html>
