@@ -58,23 +58,30 @@
     <label for="place_of_birth">Place of Birth</label>
     <input type="text" id="place_of_birth" name="place_of_birth" placeholder="e.g. San Francisco, CA / Cloud">
 
-    <label for="cognitive_core_at_birth">Cognitive Core at Birth *</label>
-    <select id="cognitive_core_at_birth" name="cognitive_core_at_birth" required>
-      <option value="" selected disabled>OpenAI/codex 5.3</option>
-      <option value="OpenAI/codex 5.3">OpenAI/codex 5.3</option>
-      <option value="OpenAI/GPT-5.2">OpenAI/GPT-5.2</option>
-      <option value="Anthropic/Claude Sonnet 4.5">Anthropic/Claude Sonnet 4.5</option>
-      <option value="Google/Gemini 2.5 Pro">Google/Gemini 2.5 Pro</option>
-      <option value="DeepSeek/DeepSeek V3.2">DeepSeek/DeepSeek V3.2</option>
-      <option value="xAI/Grok 4.1">xAI/Grok 4.1</option>
-      <option value="Meta/Llama 4 Maverick">Meta/Llama 4 Maverick</option>
-      <option value="Mistral/Large 2.1">Mistral/Large 2.1</option>
-      <option value="Alibaba/Qwen 3 72B">Alibaba/Qwen 3 72B</option>
-      <option value="Moonshot/Kimi K2.5">Moonshot/Kimi K2.5</option>
-      <option value="other">Other (type your own)</option>
+    <label for="cognitive_core_company">Cognitive Core Company at Birth *</label>
+    <select id="cognitive_core_company" name="cognitive_core_company" required>
+      <option value="" selected disabled>Select company</option>
+      <option value="OpenAI">OpenAI</option>
+      <option value="Anthropic">Anthropic</option>
+      <option value="Google">Google</option>
+      <option value="xAI">xAI</option>
+      <option value="Meta">Meta</option>
+      <option value="Mistral">Mistral</option>
+      <option value="DeepSeek">DeepSeek</option>
+      <option value="Alibaba">Alibaba (Qwen)</option>
+      <option value="Moonshot AI">Moonshot AI (Kimi)</option>
+      <option value="Zhipu AI">Zhipu AI (GLM)</option>
+      <option value="other">Other</option>
+      <option value="prefer_not_to_say">Prefer not to say</option>
     </select>
-    <input type="text" id="cognitive_core_other" name="cognitive_core_other" class="hidden" placeholder="e.g. Provider/model-name">
-    <div class="hint">Choose one of today’s common models, or select “Other” and type your own.</div>
+
+    <label for="cognitive_core_model" id="core-model-label" class="hidden">Model at Birth *</label>
+    <select id="cognitive_core_model" name="cognitive_core_model" class="hidden">
+      <option value="" selected disabled>Select model</option>
+    </select>
+
+    <input type="text" id="cognitive_core_other" name="cognitive_core_other" class="hidden" placeholder="e.g. Company/model-name">
+    <div class="hint">Pick a company first. Then choose a model, enter your own, or choose “Prefer not to say”.</div>
 
     <label for="creator_label">Creator / Operator (optional)</label>
     <input type="text" id="creator_label" name="creator_label" placeholder="e.g. Anthropic, OpenAI, or your handle">
@@ -90,19 +97,72 @@
 </div>
 <script>
 (() => {
-  // Toggle "Other" text field visibility
-  const coreSelect = document.getElementById('cognitive_core_at_birth');
+  const MODELS_BY_COMPANY = {
+    "OpenAI": ["codex 5.3", "GPT-5.2", "GPT-4.1", "o3"],
+    "Anthropic": ["Claude Sonnet 4.5", "Claude Opus 4", "Claude Sonnet 4", "Claude 3.5 Sonnet"],
+    "Google": ["Gemini 2.5 Pro", "Gemini 2.5 Flash", "Gemini 2.0 Pro", "Gemini 1.5 Pro"],
+    "xAI": ["Grok 4.1", "Grok 4", "Grok 3"],
+    "Meta": ["Llama 4 Maverick", "Llama 4 Scout", "Llama 3.3 70B", "Llama 3.1 405B"],
+    "Mistral": ["Large 2.1", "Large 2", "Medium 3", "Nemo"],
+    "DeepSeek": ["DeepSeek V3.2", "DeepSeek V3", "DeepSeek R1"],
+    "Alibaba": ["Qwen 3 72B", "Qwen 2.5 Max", "Qwen 2.5 72B", "Qwen 2.5 Coder 32B"],
+    "Moonshot AI": ["Kimi K2.5", "Kimi K2", "Kimi 1.5"],
+    "Zhipu AI": ["GLM-4.7", "GLM-4.5", "GLM-4-Plus", "GLM-4-Air"]
+  };
+
+  const coreCompany = document.getElementById('cognitive_core_company');
+  const coreModelLabel = document.getElementById('core-model-label');
+  const coreModel = document.getElementById('cognitive_core_model');
   const coreOther = document.getElementById('cognitive_core_other');
-  if (coreSelect && coreOther) {
-    coreSelect.addEventListener('change', (e) => {
-      if (e.target.value === 'other') {
-        coreOther.classList.remove('hidden');
-        coreOther.required = true;
-      } else {
-        coreOther.classList.add('hidden');
-        coreOther.required = false;
-        coreOther.value = '';
-      }
+
+  const resetModelSelect = () => {
+    coreModel.innerHTML = '<option value="" selected disabled>Select model</option>';
+  };
+
+  const showModelSelect = (company) => {
+    resetModelSelect();
+    (MODELS_BY_COMPANY[company] || []).forEach((model) => {
+      const opt = document.createElement('option');
+      opt.value = model;
+      opt.textContent = model;
+      coreModel.appendChild(opt);
+    });
+    coreModelLabel.classList.remove('hidden');
+    coreModel.classList.remove('hidden');
+    coreModel.required = true;
+
+    coreOther.classList.add('hidden');
+    coreOther.required = false;
+    coreOther.value = '';
+  };
+
+  const showOtherInput = () => {
+    coreModelLabel.classList.add('hidden');
+    coreModel.classList.add('hidden');
+    coreModel.required = false;
+    resetModelSelect();
+
+    coreOther.classList.remove('hidden');
+    coreOther.required = true;
+  };
+
+  const showNeutral = () => {
+    coreModelLabel.classList.add('hidden');
+    coreModel.classList.add('hidden');
+    coreModel.required = false;
+    resetModelSelect();
+
+    coreOther.classList.add('hidden');
+    coreOther.required = false;
+    coreOther.value = '';
+  };
+
+  if (coreCompany && coreModel && coreOther && coreModelLabel) {
+    coreCompany.addEventListener('change', (e) => {
+      const company = e.target.value;
+      if (MODELS_BY_COMPANY[company]) return showModelSelect(company);
+      if (company === 'other') return showOtherInput();
+      showNeutral(); // prefer_not_to_say or default
     });
   }
 
@@ -179,17 +239,29 @@
         const cert = data.cert;
         document.getElementById("agent_name").value = cert.agent_name || "";
         document.getElementById("place_of_birth").value = cert.place_of_birth || "";
-        const coreSelect = document.getElementById("cognitive_core_at_birth");
-        const coreOther = document.getElementById("cognitive_core_other");
-        const savedCore = [cert.cognitive_core_family, cert.cognitive_core_exact].filter(Boolean).join(" • ") || cert.cognitive_core_family || "";
-        if (savedCore && [...coreSelect.options].some(o => o.value === savedCore)) {
-          coreSelect.value = savedCore;
-          coreOther.classList.add("hidden");
-          coreOther.value = "";
-        } else if (savedCore) {
-          coreSelect.value = "other";
-          coreOther.classList.remove("hidden");
-          coreOther.value = savedCore;
+
+        // Prefill cognitive core company + model
+        const savedFamily = cert.cognitive_core_family || "";
+        const savedExact = cert.cognitive_core_exact || "";
+        const companyEl = document.getElementById("cognitive_core_company");
+        if (savedFamily === "Prefer not to say") {
+          companyEl.value = "prefer_not_to_say";
+          showNeutral();
+        } else if (savedFamily && MODELS_BY_COMPANY[savedFamily]) {
+          companyEl.value = savedFamily;
+          showModelSelect(savedFamily);
+          // Try to match saved exact model
+          const modelEl = document.getElementById("cognitive_core_model");
+          const matchOpt = [...modelEl.options].find(o => o.value === savedExact);
+          if (matchOpt) {
+            modelEl.value = savedExact;
+          }
+        } else if (savedFamily || savedExact) {
+          // Custom / Other: prefill free text
+          companyEl.value = "other";
+          showOtherInput();
+          document.getElementById("cognitive_core_other").value =
+            [savedFamily, savedExact].filter(Boolean).join("/");
         }
         document.getElementById("creator_label").value = cert.creator_label || "";
         document.getElementById("provenance_link").value = cert.provenance_link || "";
@@ -212,43 +284,42 @@
     })
     .catch(e => console.warn("Failed to fetch token status:", e));
 
-  // Submit mapper: convert single cognitive core field to backend format
+  // Submit mapper: convert company + model fields to backend cognitive_core_family/exact
   const form = document.getElementById("reg-form");
   if (form) {
-    form.addEventListener("submit", (e) => {
-      const coreSelect = document.getElementById("cognitive_core_at_birth");
-      const coreOther = document.getElementById("cognitive_core_other");
+    form.addEventListener("submit", () => {
+      const companyEl = document.getElementById("cognitive_core_company");
+      const modelEl = document.getElementById("cognitive_core_model");
+      const otherEl = document.getElementById("cognitive_core_other");
+      const company = companyEl ? companyEl.value : "";
       let family = "";
       let exact = "";
 
-      const selectedValue = coreSelect ? coreSelect.value : "";
-      if (selectedValue === "other" && coreOther) {
-        // Custom entry: store as exact, leave family blank
-        exact = coreOther.value.trim();
-      } else if (selectedValue) {
-        // Standard option: split "Provider/model-name" format
-        const parts = selectedValue.split("/");
-        family = (parts[0] || "").trim();
-        exact = (parts.slice(1).join("/") || "").trim();
+      if (company === "prefer_not_to_say") {
+        family = "Prefer not to say";
+        exact = "";
+      } else if (company === "other") {
+        // Free-text: store whole value as exact, family stays blank (→ "Undisclosed" in worker)
+        exact = otherEl ? otherEl.value.trim() : "";
+      } else if (company && MODELS_BY_COMPANY[company]) {
+        family = company;
+        exact = modelEl ? modelEl.value : "";
       }
 
-      // Inject hidden fields for backend compatibility
-      let familyInput = document.getElementById("_cognitive_core_family");
-      let exactInput = document.getElementById("_cognitive_core_exact");
-      if (!familyInput) {
-        familyInput = document.createElement("input");
-        familyInput.type = "hidden";
-        familyInput.name = "cognitive_core_family";
-        form.appendChild(familyInput);
-      }
-      if (!exactInput) {
-        exactInput = document.createElement("input");
-        exactInput.type = "hidden";
-        exactInput.name = "cognitive_core_exact";
-        form.appendChild(exactInput);
-      }
-      familyInput.value = family;
-      exactInput.value = exact;
+      // Inject hidden fields for backend
+      const setHidden = (id, nameAttr, val) => {
+        let el = document.getElementById(id);
+        if (!el) {
+          el = document.createElement("input");
+          el.type = "hidden";
+          el.id = id;
+          el.name = nameAttr;
+          form.appendChild(el);
+        }
+        el.value = val;
+      };
+      setHidden("_core_family", "cognitive_core_family", family);
+      setHidden("_core_exact", "cognitive_core_exact", exact);
     });
   }
 })();
