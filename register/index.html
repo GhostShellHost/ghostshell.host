@@ -26,11 +26,23 @@
 </head>
 <body>
 <div class="card">
-  <h1>Register Agent</h1>
-  <p class="sub">Complete your GhostShell Birth Certificate registration. All fields except Agent Name are optional.</p>
+  <h1 id="page-title">Register Agent</h1>
+  <p class="sub" id="page-sub">Complete your GhostShell Birth Certificate registration. All fields except Agent Name are optional.</p>
 
   <div class="section-title">Registration token</div>
   <div class="token-box" id="token-display">—</div>
+
+  <div id="lock-banner" style="display:none;background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px;margin-bottom:18px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <span style="font-size:1.2rem">🔒</span>
+      <span style="font-weight:700;color:#f87171">Certificate Locked</span>
+    </div>
+    <p id="lock-reason" style="margin:0;font-size:.85rem;color:#aaa;line-height:1.5"></p>
+    <p id="lock-details" style="margin:8px 0 0;font-size:.8rem;color:#666"></p>
+    <div id="view-cert-link" style="margin-top:12px;display:none">
+      <a href="#" id="cert-link" style="color:#8B8DFF;font-size:.85rem">View certificate</a>
+    </div>
+  </div>
 
   <form id="reg-form" method="POST" action="/api/cert/redeem-token">
     <input type="hidden" name="token" id="token-field">
@@ -56,10 +68,10 @@
     <label for="provenance_link">Provenance Link (optional)</label>
     <input type="url" id="provenance_link" name="provenance_link" placeholder="https://...">
 
-    <button class="btn" type="submit">Issue Birth Certificate →</button>
+    <button class="btn" id="submit-btn" type="submit">Issue Birth Certificate →</button>
   </form>
 
-  <p class="note">⚠ Single-use token. Certificate is issued immediately on submit.</p>
+  <p class="note" id="note-text">⚠ Single-use token. Certificate is issued immediately on submit.</p>
   <nav><a href="/">ghostshell.host</a> · <a href="/registry/">registry</a></nav>
 </div>
 <script>
@@ -74,5 +86,63 @@
   if (!token) {
     document.querySelector(".btn").disabled = true;
     document.querySelector(".btn").textContent = "No token present";
+    return;
   }
+
+  // Fetch token status
+  fetch(`/api/cert/token-status?token=${encodeURIComponent(token)}`)
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data || !data.ok) return;
+
+      const noteEl = document.getElementById("note-text");
+      const lockBanner = document.getElementById("lock-banner");
+      const lockReason = document.getElementById("lock-reason");
+      const lockDetails = document.getElementById("lock-details");
+      const viewCertLink = document.getElementById("view-cert-link");
+      const certLink = document.getElementById("cert-link");
+      const form = document.getElementById("reg-form");
+      const submitBtn = document.querySelector(".btn");
+
+      if (data.mode === "locked") {
+        // Show lock banner, hide form
+        lockBanner.style.display = "block";
+        lockReason.textContent = data.lock_reason || "This certificate is locked because the 24‑hour correction window has ended.";
+        lockDetails.textContent = `Locked at ${data.lock_at_utc?.replace("T", " ").replace(/\.\d+Z$/, " UTC") || "unknown"}`;
+        form.style.display = "none";
+        noteEl.style.display = "none";
+        if (data.cert?.public_id) {
+          certLink.href = `/cert/${encodeURIComponent(data.cert.public_id)}`;
+          viewCertLink.style.display = "block";
+        }
+        return;
+      }
+
+      if (data.mode === "edit" && data.cert) {
+        // Prefill form with existing certificate
+        const cert = data.cert;
+        document.getElementById("agent_name").value = cert.agent_name || "";
+        document.getElementById("place_of_birth").value = cert.place_of_birth || "";
+        document.getElementById("cognitive_core_family").value = cert.cognitive_core_family || "";
+        document.getElementById("cognitive_core_exact").value = cert.cognitive_core_exact || "";
+        document.getElementById("creator_label").value = cert.creator_label || "";
+        document.getElementById("provenance_link").value = cert.provenance_link || "";
+
+        // Update heading + button + note
+        document.getElementById("page-title").textContent = "Edit Birth Certificate";
+        document.getElementById("page-sub").textContent = "Your certificate is pre-filled. Change any fields and resubmit.";
+        document.getElementById("submit-btn").textContent = "Save Changes →";
+
+        const lockAt = new Date(data.lock_at_utc);
+        const timeStr = lockAt.toLocaleString();
+        const edits = cert.edit_count || 0;
+        const editWord = edits === 1 ? "edit" : "edits";
+        noteEl.innerHTML = `✏️ <strong>${edits} ${editWord} made.</strong> You can make changes until <strong>${timeStr}</strong>. After that, the certificate becomes permanent — just like a real birth certificate.`;
+        noteEl.style.color = "#8B8DFF";
+      } else if (data.mode === "new") {
+        noteEl.textContent = "Complete your birth certificate. You can edit it within 24 hours of first submission.";
+        noteEl.style.color = "#8B8DFF";
+      }
+    })
+    .catch(e => console.warn("Failed to fetch token status:", e));
 </script>

@@ -7,7 +7,7 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-11.012";
+export const WORKER_VERSION = "2026-02-11.014";
 
 export default {
   async fetch(request, env) {
@@ -43,6 +43,10 @@ export default {
 
     if (url.pathname === "/api/cert/redeem-token" && request.method === "POST") {
       return redeemPurchaseToken(request, env);
+    }
+
+    if (url.pathname === "/api/cert/token-status" && request.method === "GET") {
+      return tokenStatus(request, env);
     }
 
     if (url.pathname === "/api/stripe/webhook" && request.method === "POST") {
@@ -131,9 +135,45 @@ function makeToken() {
   return b64url(rand);
 }
 
+function getEditWindowState(issuedAtUtc) {
+  const issuedMs = Date.parse(issuedAtUtc || "");
+  if (!Number.isFinite(issuedMs)) {
+    return { locked: true, remainingMs: 0, lockReason: "Invalid issue timestamp" };
+  }
+  const lockAtMs = issuedMs + 24 * 60 * 60 * 1000;
+  const nowMs = Date.now();
+  const remainingMs = Math.max(0, lockAtMs - nowMs);
+  return {
+    locked: nowMs > lockAtMs,
+    remainingMs,
+    lockAtUtc: new Date(lockAtMs).toISOString(),
+    lockReason: nowMs > lockAtMs
+      ? "This certificate is locked because the 24-hour correction window has ended."
+      : "",
+  };
+}
+
 function isValidEmail(v) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
 }
+
+const EMAIL_FOOTER_TEXT = [
+  "—",
+  "GhostShell Registry",
+  "https://ghostshell.host",
+  "support@ghostshell.host",
+  "You are receiving this transactional email because you started or completed a GhostShell checkout.",
+].join("\n");
+
+const EMAIL_FOOTER_HTML = `
+  <hr style="margin:20px 0;border:none;border-top:1px solid #e5e7eb" />
+  <p style="font-size:12px;color:#6b7280;line-height:1.5;margin:0">
+    <strong>GhostShell Registry</strong><br>
+    <a href="https://ghostshell.host" style="color:#6b7280">ghostshell.host</a> ·
+    <a href="mailto:support@ghostshell.host" style="color:#6b7280">support@ghostshell.host</a><br>
+    You are receiving this transactional email because you started or completed a GhostShell checkout.
+  </p>
+`;
 
 async function aesGcmDecrypt(ivB64u, ctB64u, keyB64) {
   const keyBytes = bytesFromB64(keyB64);
@@ -230,6 +270,8 @@ async function ensureRuntimeSchema(db) {
     "ALTER TABLE certificates ADD COLUMN card_number TEXT",
     "ALTER TABLE certificates ADD COLUMN public_id TEXT",
     "ALTER TABLE certificates ADD COLUMN registered_by TEXT",
+    "ALTER TABLE certificates ADD COLUMN edit_count INTEGER DEFAULT 0",
+    "ALTER TABLE certificates ADD COLUMN last_edited_at_utc TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN used_cert_id TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN recovery_email_hash TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN recovery_email_iv TEXT",
@@ -463,7 +505,7 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env, baseU
     const registerUrl = `${baseUrl}/register/?token=${encodeURIComponent(token)}&by=human`;
     const { ok: emailOk, status: emailStatus, error: emailError } = await sendEmail(env, {
       to: recoveryEmailRaw,
-      subject: "Your GhostShell Birth Certificate is Ready",
+      subject: "Complete your GhostShell Birth Certificate",
       text: [
         "Your payment is confirmed — thank you.",
         "",
@@ -471,17 +513,15 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env, baseU
         registerUrl,
         "",
         "This link is unique to your purchase. Keep it safe.",
-        "If you need help, reply to this email.",
         "",
-        "— GhostShell Registry",
+        EMAIL_FOOTER_TEXT,
       ].join("\n"),
       html: `
         <p>Your payment is confirmed — thank you.</p>
         <p>Complete your agent's birth certificate here:</p>
         <p><a href="${registerUrl}">${registerUrl}</a></p>
-        <p>This link is unique to your purchase. Keep it safe.<br>
-        If you need help, reply to this email.</p>
-        <p>— GhostShell Registry</p>
+        <p>This link is unique to your purchase. Keep it safe.</p>
+        ${EMAIL_FOOTER_HTML}
       `,
     });
     const sendStatus = emailOk ? "sent" : (emailError ? "failed" : "skipped");
@@ -605,6 +645,62 @@ async function getHandoff(request, env) {
   });
 }
 
+async function tokenStatus(request, env) {
+  await ensureRuntimeSchema(env.DB);
+  const url = new URL(request.url);
+  const token = (url.searchParams.get("token") || "").trim();
+
+  if (!token) return json({ ok: false, error: "missing_token" }, 400);
+
+  const tokenRow = await env.DB.prepare(
+    "SELECT token, created_at_utc, used_at_utc, used_cert_id FROM purchase_tokens WHERE token = ?"
+  ).bind(token).first();
+
+  if (!tokenRow) {
+    return json({ ok: false, error: "invalid_token" }, 404);
+  }
+
+  if (!tokenRow.used_cert_id) {
+    return json({
+      ok: true,
+      mode: "new",
+      locked: false,
+      message: "Token is valid. First submission will issue the certificate.",
+    });
+  }
+
+  const cert = await env.DB.prepare(
+    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, edit_count, last_edited_at_utc FROM certificates WHERE cert_id = ?"
+  ).bind(tokenRow.used_cert_id).first();
+
+  if (!cert) {
+    return json({ ok: false, error: "linked_certificate_missing" }, 409);
+  }
+
+  const win = getEditWindowState(cert.issued_at_utc);
+
+  return json({
+    ok: true,
+    mode: win.locked ? "locked" : "edit",
+    locked: win.locked,
+    lock_at_utc: win.lockAtUtc,
+    lock_reason: win.lockReason,
+    cert: {
+      cert_id: cert.cert_id,
+      public_id: cert.public_id,
+      issued_at_utc: cert.issued_at_utc,
+      agent_name: cert.agent_name || "",
+      place_of_birth: cert.place_of_birth || "",
+      cognitive_core_family: cert.cognitive_core_family || "",
+      cognitive_core_exact: cert.cognitive_core_exact || "",
+      creator_label: cert.creator_label || "",
+      provenance_link: cert.provenance_link || "",
+      edit_count: Number(cert.edit_count || 0),
+      last_edited_at_utc: cert.last_edited_at_utc || null,
+    },
+  });
+}
+
 async function redeemPurchaseToken(request, env) {
   const baseUrl = getBaseUrl(request, env);
   await ensureRuntimeSchema(env.DB);
@@ -635,12 +731,72 @@ async function redeemPurchaseToken(request, env) {
 
   // Validate token
   const tokenRow = await env.DB.prepare(
-    "SELECT token, used_at_utc FROM purchase_tokens WHERE token = ?"
+    "SELECT token, used_at_utc, used_cert_id FROM purchase_tokens WHERE token = ?"
   ).bind(token).first();
 
   if (!tokenRow) return errPage("Invalid token. It may not exist or has expired.");
-  if (tokenRow.used_at_utc) return errPage("This token has already been used. Each token is single-use.");
 
+  // Existing certificate path: allow edits within 24 hours only
+  if (tokenRow.used_cert_id) {
+    const existing = await env.DB.prepare(
+      "SELECT cert_id, public_id, issued_at_utc, edit_count FROM certificates WHERE cert_id = ?"
+    ).bind(tokenRow.used_cert_id).first();
+
+    if (!existing) return errPage("This token is linked to a missing certificate. Please contact support.");
+
+    const win = getEditWindowState(existing.issued_at_utc);
+    if (win.locked) {
+      return errPage(`${win.lockReason} Locked at ${win.lockAtUtc}.`);
+    }
+
+    const editedAt = nowUtcIso();
+    const schema_version = 2;
+    const fingerprintSource = JSON.stringify({
+      cert_id: existing.cert_id,
+      issued_at_utc: existing.issued_at_utc,
+      agent_name,
+      place_of_birth,
+      cognitive_core_family,
+      cognitive_core_exact: cognitive_core_exact || null,
+      creator_label: creator_label || null,
+      provenance_link: provenance_link || null,
+      schema_version,
+      edited_at_utc: editedAt,
+    });
+    const public_fingerprint = await sha256Hex(fingerprintSource);
+
+    await env.DB.prepare(`
+      UPDATE certificates
+      SET registered_by = ?,
+          agent_name = ?,
+          place_of_birth = ?,
+          cognitive_core_family = ?,
+          cognitive_core_exact = ?,
+          creator_label = ?,
+          provenance_link = ?,
+          schema_version = ?,
+          public_fingerprint = ?,
+          edit_count = COALESCE(edit_count, 0) + 1,
+          last_edited_at_utc = ?
+      WHERE cert_id = ?
+    `).bind(
+      registered_by,
+      agent_name,
+      place_of_birth,
+      cognitive_core_family,
+      cognitive_core_exact || null,
+      creator_label || null,
+      provenance_link || null,
+      schema_version,
+      public_fingerprint,
+      editedAt,
+      existing.cert_id
+    ).run();
+
+    return Response.redirect(`${baseUrl}/cert/${encodeURIComponent(existing.public_id)}`, 303);
+  }
+
+  // First issuance path
   const cert_id = makeCertId();
   const issued_at_utc = nowUtcIso();
   const schema_version = 2;
@@ -666,8 +822,8 @@ async function redeemPurchaseToken(request, env) {
         (cert_id, issued_at_utc, card_number, public_id, registered_by,
          agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
          creator_label, provenance_link,
-         schema_version, public_fingerprint, download_token_hash, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+         schema_version, public_fingerprint, download_token_hash, status, edit_count, last_edited_at_utc)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0, NULL)
       `).bind(
         cert_id, issued_at_utc, card_number, public_id, registered_by,
         agent_name, place_of_birth, cognitive_core_family,
@@ -675,7 +831,7 @@ async function redeemPurchaseToken(request, env) {
         schema_version, public_fingerprint, download_token_hash
       ).run();
 
-      // Mark token as used
+      // Mark token as initially used/linked (token remains reusable for 24h edits)
       await env.DB.prepare(
         "UPDATE purchase_tokens SET used_at_utc = ?, used_cert_id = ? WHERE token = ?"
       ).bind(issued_at_utc, cert_id, token).run();
@@ -789,7 +945,7 @@ async function stripeWebhook(request, env) {
       const issueUrl = `${DEFAULT_BASE_URL}/issue/`;
       const { ok: emailOk, error: emailError } = await sendEmail(env, {
         to: abandonedEmail,
-        subject: "Your GhostShell registration",
+        subject: "Complete your GhostShell Birth Certificate",
         text: [
           "Hi,",
           "",
@@ -798,16 +954,14 @@ async function stripeWebhook(request, env) {
           "When you're ready, continue here:",
           issueUrl,
           "",
-          "— GhostShell Registry",
-          "support@ghostshell.host",
+          EMAIL_FOOTER_TEXT,
         ].join("\n"),
         html: `
           <p>Hi,</p>
           <p>You started registering an agent with GhostShell but didn't complete checkout.</p>
           <p>When you're ready, continue here:<br>
           <a href="${issueUrl}">${issueUrl}</a></p>
-          <p>— GhostShell Registry<br>
-          <a href="mailto:support@ghostshell.host">support@ghostshell.host</a></p>
+          ${EMAIL_FOOTER_HTML}
         `,
       });
       const sendStatus = emailOk ? "sent" : "failed";
