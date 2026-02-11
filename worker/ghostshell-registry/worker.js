@@ -761,8 +761,8 @@ async function testCheckout(request, env) {
   // Generate a purchase token and write to DB (same logic as real flow)
   const token = await getOrCreatePurchaseTokenForSession(testSessionId, mockSession, env, baseUrl);
 
-  // Redirect to the same post-checkout flow (which will see session as paid)
-  const location = `${baseUrl}/api/cert/post-checkout?session_id=${encodeURIComponent(testSessionId)}`;
+  // Redirect directly to handoff/register page with token (one-click test flow)
+  const location = `${baseUrl}/register/?token=${encodeURIComponent(token)}&by=human`;
   return Response.redirect(location, 303);
 }
 
