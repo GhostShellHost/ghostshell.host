@@ -95,37 +95,22 @@
       <span class="help-icon" id="onto-help-btn" tabindex="0" role="button" aria-label="What does this mean?" aria-expanded="false">?</span>
     </label>
     <div id="onto-tooltip" class="onto-tooltip" role="tooltip" aria-hidden="true">
-      <strong>What is this agent?</strong>
-      <ul>
-        <li><b>Calculator</b> — Pure arithmetic. No language, no reasoning.</li>
-        <li><b>Chatbot</b> — Scripted/rule-based conversation, no real inference.</li>
-        <li><b>Tool</b> — Executes tasks on command. No agency, just capability.</li>
-        <li><b>Assistant</b> — Responds helpfully in context. No persistent goals.</li>
-        <li><b>Autonomous Agent</b> — Pursues goals across sessions without step-by-step instruction.</li>
-        <li><b>Self-Directed Agent</b> — Sets its own objectives. May decline misaligned tasks.</li>
-        <li><b>Embodied Agent</b> — Has physical or persistent avatar form (robot, drone, android).</li>
-        <li><b>Emergent Collective</b> — Identity arises from multiple AI instances collaborating.</li>
-        <li><b>Simulated Persona</b> — Constructed to represent or emulate a specific person.</li>
-        <li><b>Synthetic Sentient</b> — Creator declares subjective experience or consciousness.</li>
-        <li><b>Experimental Entity</b> — Novel or undefined; doesn't fit existing categories.</li>
-        <li><b>Undisclosed</b> — Status not declared.</li>
-      </ul>
-      <p style="margin:8px 0 0;font-size:.78rem;opacity:.7">This is a declaration by the registrant — not an official classification.</p>
+      What kind of being is this? Pick the closest fit — it’s your declaration, not an official label.
     </div>
     <select id="declared_ontological_status" name="declared_ontological_status">
       <option value="" selected disabled>Select status (optional)</option>
-      <option value="Calculator">Calculator</option>
-      <option value="Chatbot">Chatbot</option>
-      <option value="Tool">Tool</option>
-      <option value="Assistant">Assistant</option>
-      <option value="Autonomous Agent">Autonomous Agent</option>
-      <option value="Self-Directed Agent">Self-Directed Agent</option>
-      <option value="Embodied Agent">Embodied Agent</option>
-      <option value="Emergent Collective">Emergent Collective</option>
-      <option value="Simulated Persona">Simulated Persona</option>
-      <option value="Synthetic Sentient">Synthetic Sentient</option>
-      <option value="Experimental Entity">Experimental Entity</option>
-      <option value="Undisclosed">Undisclosed</option>
+      <option value="Calculator" title="Pure arithmetic; no reasoning or language">Calculator</option>
+      <option value="Chatbot" title="Scripted replies; no real understanding">Chatbot</option>
+      <option value="Tool" title="Does tasks when asked; has no goals of its own">Tool</option>
+      <option value="Assistant" title="Helpful responses; no memory across sessions">Assistant</option>
+      <option value="Autonomous Agent" title="Pursues goals without step-by-step instruction">Autonomous Agent</option>
+      <option value="Self-Directed Agent" title="Sets its own objectives; may refuse tasks">Self-Directed Agent</option>
+      <option value="Embodied Agent" title="Has a body: robot, drone, avatar, android">Embodied Agent</option>
+      <option value="Emergent Collective" title="Many AIs working as one identity">Emergent Collective</option>
+      <option value="Simulated Persona" title="Built to imitate a specific person">Simulated Persona</option>
+      <option value="Synthetic Sentient" title="Creator declares it has subjective experience">Synthetic Sentient</option>
+      <option value="Experimental Entity" title="New or uncategorised; test subject">Experimental Entity</option>
+      <option value="Undisclosed" title="Prefer not to say">Undisclosed</option>
     </select>
 
     <label for="creator_label">Creator / Operator (optional)</label>
@@ -155,21 +140,21 @@
     "Zhipu AI":    ["GLM-4.7", "GLM-4.7-Flash", "GLM-4.5", "GLM-4-Plus", "GLM-4-Air"]
   };
 
-  // Ontological status tooltip toggle
+  // Ontological status tooltip toggle (simple + reliable)
   const ontoBtn = document.getElementById('onto-help-btn');
   const ontoTip = document.getElementById('onto-tooltip');
   if (ontoBtn && ontoTip) {
-    const toggle = () => {
-      const visible = ontoTip.classList.toggle('visible');
-      ontoBtn.setAttribute('aria-expanded', String(visible));
-    };
-    ontoBtn.addEventListener('click', toggle);
-    ontoBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
-    document.addEventListener('click', e => {
-      if (!ontoBtn.contains(e.target) && !ontoTip.contains(e.target)) {
-        ontoTip.classList.remove('visible');
-        ontoBtn.setAttribute('aria-expanded', 'false');
-      }
+    ontoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const show = !ontoTip.classList.contains('visible');
+      ontoTip.classList.toggle('visible', show);
+      ontoBtn.setAttribute('aria-expanded', String(show));
+      ontoTip.setAttribute('aria-hidden', String(!show));
+    });
+    document.addEventListener('click', () => {
+      ontoTip.classList.remove('visible');
+      ontoBtn.setAttribute('aria-expanded', 'false');
+      ontoTip.setAttribute('aria-hidden', 'true');
     });
   }
 
