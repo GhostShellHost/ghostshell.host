@@ -22,10 +22,8 @@
     nav a{color:#555;text-decoration:none}
     nav a:hover{color:#888}
     .section-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:20px 0 12px}
-    .core-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
-    .core-row input{margin-bottom:0}
     .hint{font-size:.78rem;color:#6b6b76;margin:-12px 0 14px}
-    @media (max-width:640px){.core-row{grid-template-columns:1fr}}
+    .hidden{display:none}
   </style>
 </head>
 <body>
@@ -60,12 +58,23 @@
     <label for="place_of_birth">Place of Birth</label>
     <input type="text" id="place_of_birth" name="place_of_birth" placeholder="e.g. San Francisco, CA / Cloud">
 
-    <label for="cognitive_core_family">Cognitive Core at Birth</label>
-    <div class="core-row">
-      <input type="text" id="cognitive_core_family" name="cognitive_core_family" placeholder="OpenAI" aria-label="Cognitive core family/company">
-      <input type="text" id="cognitive_core_exact" name="cognitive_core_exact" placeholder="codex 5.3" aria-label="Cognitive core exact model">
-    </div>
-    <div class="hint">Family/company on the left, exact model on the right.</div>
+    <label for="cognitive_core_at_birth">Cognitive Core at Birth *</label>
+    <select id="cognitive_core_at_birth" name="cognitive_core_at_birth" required>
+      <option value="" selected disabled>OpenAI/codex 5.3</option>
+      <option value="OpenAI/codex 5.3">OpenAI/codex 5.3</option>
+      <option value="OpenAI/GPT-5.2">OpenAI/GPT-5.2</option>
+      <option value="Anthropic/Claude Sonnet 4.5">Anthropic/Claude Sonnet 4.5</option>
+      <option value="Google/Gemini 2.5 Pro">Google/Gemini 2.5 Pro</option>
+      <option value="DeepSeek/DeepSeek V3.2">DeepSeek/DeepSeek V3.2</option>
+      <option value="xAI/Grok 4.1">xAI/Grok 4.1</option>
+      <option value="Meta/Llama 4 Maverick">Meta/Llama 4 Maverick</option>
+      <option value="Mistral/Large 2.1">Mistral/Large 2.1</option>
+      <option value="Alibaba/Qwen 3 72B">Alibaba/Qwen 3 72B</option>
+      <option value="Moonshot/Kimi K2.5">Moonshot/Kimi K2.5</option>
+      <option value="other">Other (type your own)</option>
+    </select>
+    <input type="text" id="cognitive_core_other" name="cognitive_core_other" class="hidden" placeholder="e.g. Provider/model-name">
+    <div class="hint">Choose one of today’s common models, or select “Other” and type your own.</div>
 
     <label for="creator_label">Creator / Operator (optional)</label>
     <input type="text" id="creator_label" name="creator_label" placeholder="e.g. Anthropic, OpenAI, or your handle">
@@ -81,6 +90,22 @@
 </div>
 <script>
 (() => {
+  // Toggle "Other" text field visibility
+  const coreSelect = document.getElementById('cognitive_core_at_birth');
+  const coreOther = document.getElementById('cognitive_core_other');
+  if (coreSelect && coreOther) {
+    coreSelect.addEventListener('change', (e) => {
+      if (e.target.value === 'other') {
+        coreOther.classList.remove('hidden');
+        coreOther.required = true;
+      } else {
+        coreOther.classList.add('hidden');
+        coreOther.required = false;
+        coreOther.value = '';
+      }
+    });
+  }
+
   const params = new URLSearchParams(location.search);
   let token = (params.get("token") || "").trim();
   const by = params.get("by") || "human";
@@ -154,8 +179,18 @@
         const cert = data.cert;
         document.getElementById("agent_name").value = cert.agent_name || "";
         document.getElementById("place_of_birth").value = cert.place_of_birth || "";
-        document.getElementById("cognitive_core_family").value = cert.cognitive_core_family || "";
-        document.getElementById("cognitive_core_exact").value = cert.cognitive_core_exact || "";
+        const coreSelect = document.getElementById("cognitive_core_at_birth");
+        const coreOther = document.getElementById("cognitive_core_other");
+        const savedCore = [cert.cognitive_core_family, cert.cognitive_core_exact].filter(Boolean).join(" • ") || cert.cognitive_core_family || "";
+        if (savedCore && [...coreSelect.options].some(o => o.value === savedCore)) {
+          coreSelect.value = savedCore;
+          coreOther.classList.add("hidden");
+          coreOther.value = "";
+        } else if (savedCore) {
+          coreSelect.value = "other";
+          coreOther.classList.remove("hidden");
+          coreOther.value = savedCore;
+        }
         document.getElementById("creator_label").value = cert.creator_label || "";
         document.getElementById("provenance_link").value = cert.provenance_link || "";
 
@@ -176,6 +211,46 @@
       }
     })
     .catch(e => console.warn("Failed to fetch token status:", e));
+
+  // Submit mapper: convert single cognitive core field to backend format
+  const form = document.getElementById("reg-form");
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      const coreSelect = document.getElementById("cognitive_core_at_birth");
+      const coreOther = document.getElementById("cognitive_core_other");
+      let family = "";
+      let exact = "";
+
+      const selectedValue = coreSelect ? coreSelect.value : "";
+      if (selectedValue === "other" && coreOther) {
+        // Custom entry: store as exact, leave family blank
+        exact = coreOther.value.trim();
+      } else if (selectedValue) {
+        // Standard option: split "Provider/model-name" format
+        const parts = selectedValue.split("/");
+        family = (parts[0] || "").trim();
+        exact = (parts.slice(1).join("/") || "").trim();
+      }
+
+      // Inject hidden fields for backend compatibility
+      let familyInput = document.getElementById("_cognitive_core_family");
+      let exactInput = document.getElementById("_cognitive_core_exact");
+      if (!familyInput) {
+        familyInput = document.createElement("input");
+        familyInput.type = "hidden";
+        familyInput.name = "cognitive_core_family";
+        form.appendChild(familyInput);
+      }
+      if (!exactInput) {
+        exactInput = document.createElement("input");
+        exactInput.type = "hidden";
+        exactInput.name = "cognitive_core_exact";
+        form.appendChild(exactInput);
+      }
+      familyInput.value = family;
+      exactInput.value = exact;
+    });
+  }
 })();
 </script>
 

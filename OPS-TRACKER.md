@@ -79,16 +79,12 @@ Single place to track:
 ---
 
 ## Next actions
-1. Stabilize Cloudflare Worker secret persistence (production context + deploy confirmation).
-2. Verify GitHub Actions secrets:
-   - `CLOUDFLARE_API_TOKEN`
-   - `CLOUDFLARE_ACCOUNT_ID`
-3. Re-run failed deploy and confirm green.
-4. End-to-end test:
+1. Confirm Cloudflare runtime auth path for local Wrangler checks (current local API auth error: `10001`).
+2. End-to-end test in production:
    - successful checkout email
    - expired checkout reminder email
    - `/api/ops/email-summary` auth + data accuracy
-5. Add failure-only alert job (optional) every 30 min.
+3. Add failure-only alert job (optional) every 30 min.
 
 ---
 
