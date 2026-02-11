@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Register Agent — GhostShell</title>
+  <title>Register Agent - GhostShell</title>
   <style>
     *{box-sizing:border-box}
     body{background:#0B0B0D;color:#e8e8e8;font-family:system-ui,-apple-system,sans-serif;margin:0;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:48px 20px}
@@ -24,13 +24,7 @@
     .section-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:20px 0 12px}
     .hint{font-size:.78rem;color:#6b6b76;margin:-12px 0 14px}
     .hidden{display:none}
-    .help-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:99px;background:#2a2a35;border:1px solid #444;color:#8B8DFF;font-size:10px;font-weight:700;cursor:pointer;line-height:1;flex-shrink:0;user-select:none}
-    .help-icon:hover,.help-icon:focus{background:#3a3a50;outline:none}
-    .onto-tooltip{display:none;position:absolute;z-index:100;background:#1a1a24;border:1px solid #333;border-radius:12px;padding:14px 16px;font-size:.82rem;color:#ccc;max-width:340px;line-height:1.5;box-shadow:0 8px 32px rgba(0,0,0,.5);margin-top:4px}
-    .onto-tooltip.visible{display:block}
-    .onto-tooltip ul{margin:8px 0 0;padding-left:1.2em}
-    .onto-tooltip li{margin-bottom:4px}
-    .onto-tooltip b{color:#e8e8e8}
+    .onto-desc{margin-top:6px;font-size:.92rem;color:#aaa;line-height:1.4;min-height:1.4em}
   </style>
 </head>
 <body>
@@ -88,30 +82,25 @@
     </select>
 
     <input type="text" id="cognitive_core_other" name="cognitive_core_other" class="hidden" placeholder="e.g. Anthropic/Claude Opus 4.6">
-    <div class="hint">Pick a company first. Then choose a model, enter your own, or choose “Prefer not to say”.</div>
+    <div class="hint">Pick a company first. Then choose a model, enter your own, or choose "Prefer not to say".</div>
 
-    <label for="declared_ontological_status" style="display:flex;align-items:center;gap:6px">
-      Declared Ontological Status
-      <span class="help-icon" id="onto-help-btn" tabindex="0" role="button" aria-label="What does this mean?" aria-expanded="false">?</span>
-    </label>
-    <div id="onto-tooltip" class="onto-tooltip" role="tooltip" aria-hidden="true">
-      What kind of being is this? Pick the closest fit — it’s your declaration, not an official label.
-    </div>
+    <label for="declared_ontological_status">Declared Ontological Status</label>
     <select id="declared_ontological_status" name="declared_ontological_status">
       <option value="" selected disabled>Select status (optional)</option>
-      <option value="Calculator" title="Pure arithmetic; no reasoning or language">Calculator</option>
-      <option value="Chatbot" title="Scripted replies; no real understanding">Chatbot</option>
-      <option value="Tool" title="Does tasks when asked; has no goals of its own">Tool</option>
-      <option value="Assistant" title="Helpful responses; no memory across sessions">Assistant</option>
-      <option value="Autonomous Agent" title="Pursues goals without step-by-step instruction">Autonomous Agent</option>
-      <option value="Self-Directed Agent" title="Sets its own objectives; may refuse tasks">Self-Directed Agent</option>
-      <option value="Embodied Agent" title="Has a body: robot, drone, avatar, android">Embodied Agent</option>
-      <option value="Emergent Collective" title="Many AIs working as one identity">Emergent Collective</option>
-      <option value="Simulated Persona" title="Built to imitate a specific person">Simulated Persona</option>
-      <option value="Synthetic Sentient" title="Creator declares it has subjective experience">Synthetic Sentient</option>
-      <option value="Experimental Entity" title="New or uncategorised; test subject">Experimental Entity</option>
-      <option value="Undisclosed" title="Prefer not to say">Undisclosed</option>
+      <option value="Calculator">Calculator</option>
+      <option value="Chatbot">Chatbot</option>
+      <option value="Tool">Tool</option>
+      <option value="Assistant">Assistant</option>
+      <option value="Autonomous Agent">Autonomous Agent</option>
+      <option value="Self-Directed Agent">Self-Directed Agent</option>
+      <option value="Embodied Agent">Embodied Agent</option>
+      <option value="Emergent Collective">Emergent Collective</option>
+      <option value="Simulated Persona">Simulated Persona</option>
+      <option value="Synthetic Sentient">Synthetic Sentient</option>
+      <option value="Experimental Entity">Experimental Entity</option>
+      <option value="Undisclosed">Undisclosed</option>
     </select>
+    <div id="onto-desc" class="onto-desc">Hover an option to see what it means.</div>
 
     <label for="creator_label">Creator / Operator (optional)</label>
     <input type="text" id="creator_label" name="creator_label" placeholder="e.g. Anthropic, OpenAI, or your handle">
@@ -140,22 +129,32 @@
     "Zhipu AI":    ["GLM-4.7", "GLM-4.7-Flash", "GLM-4.5", "GLM-4-Plus", "GLM-4-Air"]
   };
 
-  // Ontological status tooltip toggle (simple + reliable)
-  const ontoBtn = document.getElementById('onto-help-btn');
-  const ontoTip = document.getElementById('onto-tooltip');
-  if (ontoBtn && ontoTip) {
-    ontoBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const show = !ontoTip.classList.contains('visible');
-      ontoTip.classList.toggle('visible', show);
-      ontoBtn.setAttribute('aria-expanded', String(show));
-      ontoTip.setAttribute('aria-hidden', String(!show));
-    });
-    document.addEventListener('click', () => {
-      ontoTip.classList.remove('visible');
-      ontoBtn.setAttribute('aria-expanded', 'false');
-      ontoTip.setAttribute('aria-hidden', 'true');
-    });
+  // Ontological status inline descriptions (instant)
+  const ontoSelect = document.getElementById('declared_ontological_status');
+  const ontoDesc = document.getElementById('onto-desc');
+  const ONTO_DESC = {
+    "Calculator": "Pure arithmetic; no reasoning or language.",
+    "Chatbot": "Scripted replies; no real understanding.",
+    "Tool": "Does tasks when asked; no goals of its own.",
+    "Assistant": "Helpful responses; no persistent goals.",
+    "Autonomous Agent": "Pursues goals without step-by-step instruction.",
+    "Self-Directed Agent": "Sets its own objectives; may refuse tasks.",
+    "Embodied Agent": "Has a body: robot, drone, avatar, or android.",
+    "Emergent Collective": "Many AIs working as one identity.",
+    "Simulated Persona": "Built to imitate a specific person.",
+    "Synthetic Sentient": "Creator declares subjective experience.",
+    "Experimental Entity": "New or uncategorised; test subject.",
+    "Undisclosed": "Status not declared."
+  };
+  if (ontoSelect && ontoDesc) {
+    const setDesc = (val) => {
+      ontoDesc.textContent = val && ONTO_DESC[val]
+        ? ONTO_DESC[val]
+        : "What kind of being is this? Pick the closest fit — your declaration, not an official label.";
+    };
+    ontoSelect.addEventListener('change', (e) => setDesc(e.target.value));
+    ontoSelect.addEventListener('input', (e) => setDesc(e.target.value));
+    setDesc(ontoSelect.value);
   }
 
   const coreCompany = document.getElementById('cognitive_core_company');
@@ -254,7 +253,7 @@
   const tokenDisplayEl = document.getElementById("token-display");
   if (tokenDisplayEl) {
     if ("value" in tokenDisplayEl) tokenDisplayEl.value = token || "";
-    else tokenDisplayEl.textContent = token || "No token found — use your email link";
+    else tokenDisplayEl.textContent = token || "No token found - use your email link";
   }
   document.getElementById("token-field").value = token;
   document.getElementById("by-field").value = by === "agent" ? "agent" : "human";
@@ -288,7 +287,7 @@
       if (data.mode === "locked") {
         // Show lock banner, hide form
         lockBanner.style.display = "block";
-        lockReason.textContent = data.lock_reason || "This certificate is locked because the 24‑hour correction window has ended.";
+        lockReason.textContent = data.lock_reason || "This certificate is locked because the 24-hour correction window has ended.";
         lockDetails.textContent = `Locked at ${data.lock_at_utc?.replace("T", " ").replace(/\.\d+Z$/, " UTC") || "unknown"}`;
         form.style.display = "none";
         noteEl.style.display = "none";
@@ -338,7 +337,10 @@
         document.getElementById("provenance_link").value = cert.provenance_link || "";
         if (cert.declared_ontological_status) {
           const ontoEl = document.getElementById("declared_ontological_status");
-          if (ontoEl) ontoEl.value = cert.declared_ontological_status;
+          if (ontoEl) {
+            ontoEl.value = cert.declared_ontological_status;
+            ontoEl.dispatchEvent(new Event("change"));
+          }
         }
 
         // Update heading + button + note
@@ -350,7 +352,7 @@
         const timeStr = lockAt.toLocaleString();
         const edits = cert.edit_count || 0;
         const editWord = edits === 1 ? "edit" : "edits";
-        noteEl.innerHTML = `✏️ <strong>${edits} ${editWord} made.</strong> You can make changes until <strong>${timeStr}</strong>. After that, the certificate becomes permanent — just like a real birth certificate.`;
+        noteEl.innerHTML = `✏️ <strong>${edits} ${editWord} made.</strong> You can make changes until <strong>${timeStr}</strong>. After that, the certificate becomes permanent - just like a real birth certificate.`;
         noteEl.style.color = "#8B8DFF";
       } else if (data.mode === "new") {
         noteEl.textContent = "Complete your birth certificate. You can edit it within 24 hours of first submission.";
