@@ -8,7 +8,7 @@
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
 export const WORKER_VERSION = "2026-02-12.018";
-const PAGE_VERSION = "v0.010";
+const PAGE_VERSION = "v0.011";
 
 export default {
   async fetch(request, env) {

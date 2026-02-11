@@ -4,6 +4,11 @@ Format: Version — Date — What changed
 
 ---
 
+## v0.011 — 2026-02-12
+- **Register page**: Moved version label to bottom of form under `ghostshell.host · registry`
+- **Record page**: Kept version badge in bottom-right corner on public redacted/printable views
+- **Consistency**: Register + worker page version now `v0.011`
+
 ## v0.010 — 2026-02-12
 - **Version policy**: Page/record version badge is now bumped with each record UI/order change
 - **Consistency**: Register page + worker-rendered record pages aligned to `v0.010`
