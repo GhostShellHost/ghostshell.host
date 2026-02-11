@@ -999,7 +999,7 @@ async function stripeWebhook(request, env) {
   const md = session.metadata || {};
   const cert_id = md.cert_id;
   const token = md.token;
-  if (!cert_id || !token) return new Response("Missing metadata", { status: 400 });
+  if (!cert_id || !token) return new Response("Ignored (missing GhostShell metadata)", { status: 200 });
 
   const issued_at_utc = nowUtcIso();
 

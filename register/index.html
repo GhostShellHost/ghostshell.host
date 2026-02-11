@@ -30,7 +30,7 @@
   <p class="sub" id="page-sub">Complete your GhostShell Birth Certificate registration. All fields except Agent Name are optional.</p>
 
   <div class="section-title">Registration token</div>
-  <div class="token-box" id="token-display">—</div>
+  <input class="token-box" id="token-display" name="token" placeholder="GSTK-..." autocomplete="off" spellcheck="false" required>
 
   <div id="lock-banner" style="display:none;background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px;margin-bottom:18px">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
@@ -75,6 +75,7 @@
   <nav><a href="/">ghostshell.host</a> · <a href="/registry/">registry</a></nav>
 </div>
 <script>
+(() => {
   const params = new URLSearchParams(location.search);
   let token = (params.get("token") || "").trim();
   const by = params.get("by") || "human";
@@ -166,8 +167,9 @@
       }
     })
     .catch(e => console.warn("Failed to fetch token status:", e));
+})();
 </script>
 
-<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0B0B0D;border:1px solid #2a2a35;color:#8B8DFF;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0</div>
+<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0B0B0D;border:1px solid #2a2a35;color:#8B8DFF;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.1</div>
 </body>
 </html>
