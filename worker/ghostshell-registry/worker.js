@@ -272,6 +272,8 @@ async function ensureRuntimeSchema(db) {
     "ALTER TABLE certificates ADD COLUMN public_id TEXT",
     "ALTER TABLE certificates ADD COLUMN registered_by TEXT",
     "ALTER TABLE certificates ADD COLUMN edit_count INTEGER DEFAULT 0",
+    "ALTER TABLE certificates ADD COLUMN human_edit_count INTEGER DEFAULT 0",
+    "ALTER TABLE certificates ADD COLUMN agent_edit_count INTEGER DEFAULT 0",
     "ALTER TABLE certificates ADD COLUMN last_edited_at_utc TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN used_cert_id TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN recovery_email_hash TEXT",
@@ -671,7 +673,7 @@ async function tokenStatus(request, env) {
   }
 
   const cert = await env.DB.prepare(
-    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, edit_count, last_edited_at_utc FROM certificates WHERE cert_id = ?"
+    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, edit_count, human_edit_count, agent_edit_count, last_edited_at_utc FROM certificates WHERE cert_id = ?"
   ).bind(tokenRow.used_cert_id).first();
 
   if (!cert) {
@@ -697,6 +699,8 @@ async function tokenStatus(request, env) {
       creator_label: cert.creator_label || "",
       provenance_link: cert.provenance_link || "",
       edit_count: Number(cert.edit_count || 0),
+      human_edit_count: Number(cert.human_edit_count || 0),
+      agent_edit_count: Number(cert.agent_edit_count || 0),
       last_edited_at_utc: cert.last_edited_at_utc || null,
     },
   });
@@ -789,6 +793,8 @@ async function redeemPurchaseToken(request, env) {
           schema_version = ?,
           public_fingerprint = ?,
           edit_count = COALESCE(edit_count, 0) + 1,
+          human_edit_count = COALESCE(human_edit_count, 0) + (CASE WHEN ? = 'human' THEN 1 ELSE 0 END),
+          agent_edit_count = COALESCE(agent_edit_count, 0) + (CASE WHEN ? = 'agent' THEN 1 ELSE 0 END),
           last_edited_at_utc = ?
       WHERE cert_id = ?
     `).bind(
@@ -801,6 +807,8 @@ async function redeemPurchaseToken(request, env) {
       provenance_link || null,
       schema_version,
       public_fingerprint,
+      registered_by,
+      registered_by,
       editedAt,
       existing.cert_id
     ).run();
@@ -1197,7 +1205,7 @@ async function opsEmailSummary(request, env) {
 
 async function certVerifyPage(certId, env) {
   const selectPublicFields =
-    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, public_fingerprint, status FROM certificates WHERE ";
+    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
 
   // Resolve by canonical cert_id first, then fallback to public_id alias.
   let row = await env.DB.prepare(
@@ -1291,6 +1299,12 @@ return html(`<!doctype html>
       <div><strong>Fingerprint</strong></div>
       <div class="mono" id="fp">${safe(row.public_fingerprint)}</div>
     </div>
+
+    ${(Number(row.edit_count || 0) > 0) ? `
+    <div class="row">
+      <div><strong>Edits</strong></div>
+      <div>Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)}</div>
+    </div>` : ''}
 
     <a class="btn" href="#" onclick="navigator.clipboard.writeText(location.href);return false;">Copy verify link</a>
     <a class="btn" href="#" onclick="navigator.clipboard.writeText(document.getElementById('fp').innerText);return false;">Copy fingerprint</a>
