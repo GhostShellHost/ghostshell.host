@@ -4,6 +4,10 @@ Format: Version — Date — What changed
 
 ---
 
+## v0.010 — 2026-02-12
+- **Version policy**: Page/record version badge is now bumped with each record UI/order change
+- **Consistency**: Register page + worker-rendered record pages aligned to `v0.010`
+
 ## v0.009 — 2026-02-12
 - **Form order**: Moved "Declared Ontological Status" to immediately after "Agent Name"
 - Keeps certificate field order aligned with desired narrative
