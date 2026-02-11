@@ -7,7 +7,7 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-11.011";
+export const WORKER_VERSION = "2026-02-11.012";
 
 export default {
   async fetch(request, env) {
@@ -51,6 +51,10 @@ export default {
 
     if (url.pathname === "/api/cert/latest-origin" && request.method === "GET") {
       return latestOrigin(env);
+    }
+
+    if (url.pathname === "/api/ops/email-summary" && request.method === "GET") {
+      return opsEmailSummary(request, env);
     }
 
     const certMatch = url.pathname.match(/^\/cert\/([A-Za-z0-9_-]+)$/);
@@ -141,7 +145,9 @@ async function aesGcmDecrypt(ivB64u, ctB64u, keyB64) {
 }
 
 async function sendEmail(env, { to, subject, text, html }) {
-  if (!env.RESEND_API_KEY || !env.RESEND_FROM_EMAIL || !isValidEmail(to)) return { ok: false, skipped: true };
+  if (!env.RESEND_API_KEY || !env.RESEND_FROM_EMAIL || !isValidEmail(to)) {
+    return { ok: false, skipped: true, error: "missing_config_or_invalid_email" };
+  }
 
   const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -158,12 +164,28 @@ async function sendEmail(env, { to, subject, text, html }) {
     }),
   });
 
+  const payloadText = await resp.text();
   if (!resp.ok) {
-    const body = await resp.text();
-    console.log("email send failed", resp.status, body.slice(0, 300));
-    return { ok: false, status: resp.status };
+    console.log("email send failed", resp.status, payloadText.slice(0, 300));
+    return { ok: false, status: resp.status, error: payloadText.slice(0, 500) };
   }
-  return { ok: true };
+  return { ok: true, status: resp.status, body: payloadText.slice(0, 500) };
+}
+
+async function rememberWebhookEventOnce(db, eventId, eventType) {
+  if (!eventId) return true;
+  try {
+    await db.prepare(
+      "INSERT INTO webhook_events (event_id, event_type, processed_at_utc) VALUES (?, ?, ?)"
+    ).bind(eventId, eventType || "unknown", nowUtcIso()).run();
+    return true;
+  } catch (e) {
+    const msg = String(e?.message || "").toLowerCase();
+    if (msg.includes("unique") || msg.includes("already exists") || msg.includes("constraint")) {
+      return false;
+    }
+    throw e;
+  }
 }
 
 const DEFAULT_BASE_URL = "https://ghostshell.host";
@@ -214,7 +236,17 @@ async function ensureRuntimeSchema(db) {
     "ALTER TABLE purchase_tokens ADD COLUMN recovery_email_enc TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN checkout_email_sent_at_utc TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN completion_email_sent_at_utc TEXT",
+    "ALTER TABLE purchase_tokens ADD COLUMN completion_email_status TEXT",
+    "ALTER TABLE purchase_tokens ADD COLUMN completion_email_error TEXT",
+    "ALTER TABLE purchase_tokens ADD COLUMN completion_email_attempts INTEGER DEFAULT 0",
+    "ALTER TABLE purchase_tokens ADD COLUMN abandoned_email_sent_at_utc TEXT",
+    "ALTER TABLE purchase_tokens ADD COLUMN abandoned_email_status TEXT",
+    "ALTER TABLE purchase_tokens ADD COLUMN abandoned_email_error TEXT",
   ];
+
+  await db.prepare(
+    "CREATE TABLE IF NOT EXISTS webhook_events (event_id TEXT PRIMARY KEY, event_type TEXT, processed_at_utc TEXT NOT NULL)"
+  ).run();
 
   for (const sql of maybeAlterStatements) {
     try {
@@ -429,9 +461,9 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env, baseU
   // Send "complete your certificate" email immediately after payment
   if (recoveryEmailRaw && isValidEmail(recoveryEmailRaw)) {
     const registerUrl = `${baseUrl}/register/?token=${encodeURIComponent(token)}&by=human`;
-    const { ok: emailOk } = await sendEmail(env, {
+    const { ok: emailOk, status: emailStatus, error: emailError } = await sendEmail(env, {
       to: recoveryEmailRaw,
-      subject: "Complete your GhostShell Birth Certificate",
+      subject: "Your GhostShell Birth Certificate is Ready",
       text: [
         "Your payment is confirmed — thank you.",
         "",
@@ -452,14 +484,15 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env, baseU
         <p>— GhostShell Registry</p>
       `,
     });
-    if (emailOk) {
-      try {
-        await env.DB.prepare(
-          "UPDATE purchase_tokens SET completion_email_sent_at_utc = ? WHERE stripe_session_id = ?"
-        ).bind(nowUtcIso(), sessionId).run();
-      } catch (_) { /* non-fatal */ }
+    const sendStatus = emailOk ? "sent" : (emailError ? "failed" : "skipped");
+    console.log("[email] completion", recoveryEmailRaw, sendStatus, emailStatus, emailError?.slice(0, 200));
+    try {
+      await env.DB.prepare(
+        "UPDATE purchase_tokens SET completion_email_sent_at_utc = ?, completion_email_status = ?, completion_email_error = ?, completion_email_attempts = completion_email_attempts + 1 WHERE stripe_session_id = ?"
+      ).bind(nowUtcIso(), sendStatus, emailError ? emailError.slice(0, 1000) : null, sessionId).run();
+    } catch (e) {
+      console.log("[email] db update failed", e);
     }
-    console.log("[email] completion", recoveryEmailRaw, emailOk ? "sent" : "skipped/failed");
   }
 
   return token;
@@ -744,36 +777,57 @@ async function stripeWebhook(request, env) {
 
   // Abandoned checkout reminder: session expired without payment
   if (event.type === "checkout.session.expired") {
+    // idempotent: only process each event once
+    const isNew = await rememberWebhookEventOnce(env.DB, event.id, "checkout.session.expired");
+    if (!isNew) return new Response("Already processed", { status: 200 });
+
     const expiredSession = event.data.object;
     const expiredMd = expiredSession.metadata || {};
     const abandonedEmail = (expiredMd.recovery_email || expiredSession.customer_details?.email || "").toLowerCase().trim();
+
     if (abandonedEmail && isValidEmail(abandonedEmail)) {
-      const baseUrl = DEFAULT_BASE_URL;
-      const issueUrl = `${baseUrl}/issue/`;
-      await sendEmail(env, {
+      const issueUrl = `${DEFAULT_BASE_URL}/issue/`;
+      const { ok: emailOk, error: emailError } = await sendEmail(env, {
         to: abandonedEmail,
-        subject: "You left your GhostShell Birth Certificate behind",
+        subject: "Your GhostShell registration",
         text: [
-          "You started registering an agent in the GhostShell Registry but didn't complete checkout.",
+          "Hi,",
+          "",
+          "You started registering an agent with GhostShell but didn't complete checkout.",
           "",
           "When you're ready, continue here:",
           issueUrl,
           "",
           "— GhostShell Registry",
+          "support@ghostshell.host",
         ].join("\n"),
         html: `
-          <p>You started registering an agent in the GhostShell Registry but didn't complete checkout.</p>
-          <p>When you're ready, continue here:</p>
-          <p><a href="${issueUrl}">${issueUrl}</a></p>
-          <p>— GhostShell Registry</p>
+          <p>Hi,</p>
+          <p>You started registering an agent with GhostShell but didn't complete checkout.</p>
+          <p>When you're ready, continue here:<br>
+          <a href="${issueUrl}">${issueUrl}</a></p>
+          <p>— GhostShell Registry<br>
+          <a href="mailto:support@ghostshell.host">support@ghostshell.host</a></p>
         `,
       });
-      console.log("[email] abandoned_checkout", abandonedEmail);
+      const sendStatus = emailOk ? "sent" : "failed";
+      console.log("[email] abandoned_checkout", abandonedEmail, sendStatus, emailError?.slice(0, 200));
+
+      // Log send attempt against the session (if we have a token row)
+      try {
+        await env.DB.prepare(
+          "UPDATE purchase_tokens SET abandoned_email_sent_at_utc = ?, abandoned_email_status = ?, abandoned_email_error = ? WHERE stripe_session_id = ?"
+        ).bind(nowUtcIso(), sendStatus, emailError ? emailError.slice(0, 1000) : null, expiredSession.id).run();
+      } catch (_) { /* non-fatal, session may not have a token row */ }
     }
     return new Response("OK", { status: 200 });
   }
 
   if (event.type !== "checkout.session.completed") return new Response("Ignored", { status: 200 });
+
+  // Idempotent: only process each completed event once
+  const isNewCompleted = await rememberWebhookEventOnce(env.DB, event.id, "checkout.session.completed");
+  if (!isNewCompleted) return new Response("Already processed", { status: 200 });
 
   const session = event.data.object;
   const md = session.metadata || {};
@@ -929,6 +983,49 @@ async function latestOrigin(env) {
     cert_id: row.cert_id,
     place_of_birth: row.place_of_birth,
     issued_at_utc: row.issued_at_utc,
+  }, 200);
+}
+
+async function opsEmailSummary(request, env) {
+  // Basic auth guard: require ?key=OPS_SECRET env var
+  const url = new URL(request.url);
+  const opsKey = url.searchParams.get("key") || "";
+  if (env.OPS_SECRET && opsKey !== env.OPS_SECRET) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  await ensureRuntimeSchema(env.DB);
+
+  const since24h = new Date(Date.now() - 86400 * 1000).toISOString();
+
+  const [totalTokens, sentOk, sentFailed, skipped, pendingForm, abandonedSent, abandonedFailed] = await Promise.all([
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE created_at_utc > ?").bind(since24h).first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE completion_email_status = 'sent'").first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE completion_email_status = 'failed'").first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE completion_email_status IS NULL").first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE used_at_utc IS NULL AND created_at_utc > ?").bind(since24h).first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE abandoned_email_status = 'sent'").first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE abandoned_email_status = 'failed'").first(),
+  ]);
+
+  const failedRows = await env.DB.prepare(
+    "SELECT stripe_session_id, completion_email_error, completion_email_attempts, created_at_utc FROM purchase_tokens WHERE completion_email_status = 'failed' ORDER BY created_at_utc DESC LIMIT 5"
+  ).all();
+
+  return json({
+    since_24h: since24h,
+    new_checkouts: totalTokens?.n ?? 0,
+    completion_email: {
+      sent: sentOk?.n ?? 0,
+      failed: sentFailed?.n ?? 0,
+      pending: skipped?.n ?? 0,
+    },
+    abandoned_email: {
+      sent: abandonedSent?.n ?? 0,
+      failed: abandonedFailed?.n ?? 0,
+    },
+    pending_form_completion: pendingForm?.n ?? 0,
+    recent_failures: failedRows?.results ?? [],
   }, 200);
 }
 
