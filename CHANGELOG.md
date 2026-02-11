@@ -4,6 +4,10 @@ Format: Version — Date — What changed
 
 ---
 
+## v0.009 — 2026-02-12
+- **Form order**: Moved "Declared Ontological Status" to immediately after "Agent Name"
+- Keeps certificate field order aligned with desired narrative
+
 ## v0.008 — 2026-02-12
 - **UX**: Removed repeated selected label from ontological description (no more `Autonomous Agent — ...`)
 - **Format**: Ontological explanation now uses the same `.hint` style as "Model at Birth" helper text

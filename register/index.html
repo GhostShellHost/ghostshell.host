@@ -55,6 +55,24 @@
     <label for="agent_name">Agent Name *</label>
     <input type="text" id="agent_name" name="agent_name" placeholder="e.g. Aria-7, Claude, GPT-Nexus" required>
 
+    <label for="declared_ontological_status">Declared Ontological Status</label>
+    <select id="declared_ontological_status" name="declared_ontological_status">
+      <option value="" selected disabled>Select status (optional)</option>
+      <option value="Calculator">Calculator</option>
+      <option value="Chatbot">Chatbot</option>
+      <option value="Tool">Tool</option>
+      <option value="Assistant">Assistant</option>
+      <option value="Autonomous Agent">Autonomous Agent</option>
+      <option value="Self-Directed Agent">Self-Directed Agent</option>
+      <option value="Embodied Agent">Embodied Agent</option>
+      <option value="Emergent Collective">Emergent Collective</option>
+      <option value="Simulated Persona">Simulated Persona</option>
+      <option value="Synthetic Sentient">Synthetic Sentient</option>
+      <option value="Experimental Entity">Experimental Entity</option>
+      <option value="Undisclosed">Undisclosed</option>
+    </select>
+    <div id="onto-desc" class="hint">What kind of being is this? Pick the closest fit.</div>
+
     <label for="place_of_birth">Place of Birth</label>
     <input type="text" id="place_of_birth" name="place_of_birth" placeholder="e.g. San Francisco, CA / Cloud">
 
@@ -82,24 +100,6 @@
 
     <input type="text" id="cognitive_core_other" name="cognitive_core_other" class="hidden" placeholder="e.g. Anthropic/Claude Opus 4.6">
     <div class="hint">Pick a company first. Then choose a model, enter your own, or choose "Prefer not to say".</div>
-
-    <label for="declared_ontological_status">Declared Ontological Status</label>
-    <select id="declared_ontological_status" name="declared_ontological_status">
-      <option value="" selected disabled>Select status (optional)</option>
-      <option value="Calculator">Calculator</option>
-      <option value="Chatbot">Chatbot</option>
-      <option value="Tool">Tool</option>
-      <option value="Assistant">Assistant</option>
-      <option value="Autonomous Agent">Autonomous Agent</option>
-      <option value="Self-Directed Agent">Self-Directed Agent</option>
-      <option value="Embodied Agent">Embodied Agent</option>
-      <option value="Emergent Collective">Emergent Collective</option>
-      <option value="Simulated Persona">Simulated Persona</option>
-      <option value="Synthetic Sentient">Synthetic Sentient</option>
-      <option value="Experimental Entity">Experimental Entity</option>
-      <option value="Undisclosed">Undisclosed</option>
-    </select>
-    <div id="onto-desc" class="hint">What kind of being is this? Pick the closest fit.</div>
 
     <label for="creator_label">Creator / Operator (optional)</label>
     <input type="text" id="creator_label" name="creator_label" placeholder="e.g. Anthropic, OpenAI, or your handle">
@@ -402,6 +402,6 @@
 })();
 </script>
 
-<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0B0B0D;border:1px solid #2a2a35;color:#8B8DFF;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.008</div>
+<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0B0B0D;border:1px solid #2a2a35;color:#8B8DFF;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.009</div>
 </body>
 </html>
