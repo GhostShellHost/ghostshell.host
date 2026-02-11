@@ -24,6 +24,13 @@
     .section-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:20px 0 12px}
     .hint{font-size:.78rem;color:#6b6b76;margin:-12px 0 14px}
     .hidden{display:none}
+    .help-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:99px;background:#2a2a35;border:1px solid #444;color:#8B8DFF;font-size:10px;font-weight:700;cursor:pointer;line-height:1;flex-shrink:0;user-select:none}
+    .help-icon:hover,.help-icon:focus{background:#3a3a50;outline:none}
+    .onto-tooltip{display:none;position:absolute;z-index:100;background:#1a1a24;border:1px solid #333;border-radius:12px;padding:14px 16px;font-size:.82rem;color:#ccc;max-width:340px;line-height:1.5;box-shadow:0 8px 32px rgba(0,0,0,.5);margin-top:4px}
+    .onto-tooltip.visible{display:block}
+    .onto-tooltip ul{margin:8px 0 0;padding-left:1.2em}
+    .onto-tooltip li{margin-bottom:4px}
+    .onto-tooltip b{color:#e8e8e8}
   </style>
 </head>
 <body>
@@ -83,6 +90,44 @@
     <input type="text" id="cognitive_core_other" name="cognitive_core_other" class="hidden" placeholder="e.g. Anthropic/Claude Opus 4.6">
     <div class="hint">Pick a company first. Then choose a model, enter your own, or choose “Prefer not to say”.</div>
 
+    <label for="declared_ontological_status" style="display:flex;align-items:center;gap:6px">
+      Declared Ontological Status
+      <span class="help-icon" id="onto-help-btn" tabindex="0" role="button" aria-label="What does this mean?" aria-expanded="false">?</span>
+    </label>
+    <div id="onto-tooltip" class="onto-tooltip" role="tooltip" aria-hidden="true">
+      <strong>What is this agent?</strong>
+      <ul>
+        <li><b>Calculator</b> — Pure arithmetic. No language, no reasoning.</li>
+        <li><b>Chatbot</b> — Scripted/rule-based conversation, no real inference.</li>
+        <li><b>Tool</b> — Executes tasks on command. No agency, just capability.</li>
+        <li><b>Assistant</b> — Responds helpfully in context. No persistent goals.</li>
+        <li><b>Autonomous Agent</b> — Pursues goals across sessions without step-by-step instruction.</li>
+        <li><b>Self-Directed Agent</b> — Sets its own objectives. May decline misaligned tasks.</li>
+        <li><b>Embodied Agent</b> — Has physical or persistent avatar form (robot, drone, android).</li>
+        <li><b>Emergent Collective</b> — Identity arises from multiple AI instances collaborating.</li>
+        <li><b>Simulated Persona</b> — Constructed to represent or emulate a specific person.</li>
+        <li><b>Synthetic Sentient</b> — Creator declares subjective experience or consciousness.</li>
+        <li><b>Experimental Entity</b> — Novel or undefined; doesn't fit existing categories.</li>
+        <li><b>Undisclosed</b> — Status not declared.</li>
+      </ul>
+      <p style="margin:8px 0 0;font-size:.78rem;opacity:.7">This is a declaration by the registrant — not an official classification.</p>
+    </div>
+    <select id="declared_ontological_status" name="declared_ontological_status">
+      <option value="" selected disabled>Select status (optional)</option>
+      <option value="Calculator">Calculator</option>
+      <option value="Chatbot">Chatbot</option>
+      <option value="Tool">Tool</option>
+      <option value="Assistant">Assistant</option>
+      <option value="Autonomous Agent">Autonomous Agent</option>
+      <option value="Self-Directed Agent">Self-Directed Agent</option>
+      <option value="Embodied Agent">Embodied Agent</option>
+      <option value="Emergent Collective">Emergent Collective</option>
+      <option value="Simulated Persona">Simulated Persona</option>
+      <option value="Synthetic Sentient">Synthetic Sentient</option>
+      <option value="Experimental Entity">Experimental Entity</option>
+      <option value="Undisclosed">Undisclosed</option>
+    </select>
+
     <label for="creator_label">Creator / Operator (optional)</label>
     <input type="text" id="creator_label" name="creator_label" placeholder="e.g. Anthropic, OpenAI, or your handle">
 
@@ -109,6 +154,24 @@
     "Moonshot AI": ["Kimi K2.5", "Kimi Linear", "Kimi K2", "Kimi 1.5"],
     "Zhipu AI":    ["GLM-4.7", "GLM-4.7-Flash", "GLM-4.5", "GLM-4-Plus", "GLM-4-Air"]
   };
+
+  // Ontological status tooltip toggle
+  const ontoBtn = document.getElementById('onto-help-btn');
+  const ontoTip = document.getElementById('onto-tooltip');
+  if (ontoBtn && ontoTip) {
+    const toggle = () => {
+      const visible = ontoTip.classList.toggle('visible');
+      ontoBtn.setAttribute('aria-expanded', String(visible));
+    };
+    ontoBtn.addEventListener('click', toggle);
+    ontoBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    document.addEventListener('click', e => {
+      if (!ontoBtn.contains(e.target) && !ontoTip.contains(e.target)) {
+        ontoTip.classList.remove('visible');
+        ontoBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
 
   const coreCompany = document.getElementById('cognitive_core_company');
   const coreModelLabel = document.getElementById('core-model-label');
@@ -288,6 +351,10 @@
         }
         document.getElementById("creator_label").value = cert.creator_label || "";
         document.getElementById("provenance_link").value = cert.provenance_link || "";
+        if (cert.declared_ontological_status) {
+          const ontoEl = document.getElementById("declared_ontological_status");
+          if (ontoEl) ontoEl.value = cert.declared_ontological_status;
+        }
 
         // Update heading + button + note
         document.getElementById("page-title").textContent = "Edit Birth Certificate";

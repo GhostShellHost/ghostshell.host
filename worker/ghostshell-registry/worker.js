@@ -7,7 +7,7 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-12.017";
+export const WORKER_VERSION = "2026-02-12.018";
 const PAGE_VERSION = "v0";
 
 export default {
@@ -287,6 +287,7 @@ async function ensureRuntimeSchema(db) {
     "ALTER TABLE purchase_tokens ADD COLUMN abandoned_email_sent_at_utc TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN abandoned_email_status TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN abandoned_email_error TEXT",
+    "ALTER TABLE certificates ADD COLUMN declared_ontological_status TEXT",
   ];
 
   await db.prepare(
@@ -673,7 +674,7 @@ async function tokenStatus(request, env) {
   }
 
   const cert = await env.DB.prepare(
-    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, edit_count, human_edit_count, agent_edit_count, last_edited_at_utc FROM certificates WHERE cert_id = ?"
+    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, declared_ontological_status, edit_count, human_edit_count, agent_edit_count, last_edited_at_utc FROM certificates WHERE cert_id = ?"
   ).bind(tokenRow.used_cert_id).first();
 
   if (!cert) {
@@ -698,6 +699,7 @@ async function tokenStatus(request, env) {
       cognitive_core_exact: cert.cognitive_core_exact || "",
       creator_label: cert.creator_label || "",
       provenance_link: cert.provenance_link || "",
+      declared_ontological_status: cert.declared_ontological_status || "",
       edit_count: Number(cert.edit_count || 0),
       human_edit_count: Number(cert.human_edit_count || 0),
       agent_edit_count: Number(cert.agent_edit_count || 0),
@@ -731,6 +733,7 @@ async function redeemPurchaseToken(request, env) {
   const cognitive_core_exact = (fd.get("cognitive_core_exact") || "").toString().trim();
   const creator_label = (fd.get("creator_label") || "").toString().trim();
   const provenance_link = (fd.get("provenance_link") || "").toString().trim();
+  const declared_ontological_status = (fd.get("declared_ontological_status") || "").toString().trim() || null;
 
   const errPage = (msg) => html(`<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -790,6 +793,7 @@ async function redeemPurchaseToken(request, env) {
           cognitive_core_exact = ?,
           creator_label = ?,
           provenance_link = ?,
+          declared_ontological_status = ?,
           schema_version = ?,
           public_fingerprint = ?,
           edit_count = COALESCE(edit_count, 0) + 1,
@@ -805,6 +809,7 @@ async function redeemPurchaseToken(request, env) {
       cognitive_core_exact || null,
       creator_label || null,
       provenance_link || null,
+      declared_ontological_status,
       schema_version,
       public_fingerprint,
       registered_by,
@@ -841,13 +846,14 @@ async function redeemPurchaseToken(request, env) {
         INSERT INTO certificates
         (cert_id, issued_at_utc, card_number, public_id, registered_by,
          agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
-         creator_label, provenance_link,
+         creator_label, provenance_link, declared_ontological_status,
          schema_version, public_fingerprint, download_token_hash, status, edit_count, last_edited_at_utc)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0, NULL)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0, NULL)
       `).bind(
         cert_id, issued_at_utc, card_number, public_id, registered_by,
         agent_name, place_of_birth, cognitive_core_family,
         cognitive_core_exact || null, creator_label || null, provenance_link || null,
+        declared_ontological_status,
         schema_version, public_fingerprint, download_token_hash
       ).run();
 
@@ -1205,7 +1211,7 @@ async function opsEmailSummary(request, env) {
 
 async function certVerifyPage(certId, env) {
   const selectPublicFields =
-    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
+    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
 
   // Resolve by canonical cert_id first, then fallback to public_id alias.
   let row = await env.DB.prepare(
@@ -1349,6 +1355,7 @@ return html(`<!doctype html>
           <div class="k">creator_operator</div><div class="v" title="Redacted in public view"><span class="redact" aria-label="redacted"></span></div>
           <div class="k">edits</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
           ${row.provenance_link ? `<div class="k">provenance_link</div><div class="v clip" title="${safe(row.provenance_link)}">${safe(row.provenance_link)}</div>` : ''}
+          ${row.declared_ontological_status ? `<div class="k">ontological_status</div><div class="v">${safe(row.declared_ontological_status)}</div>` : ''}
         </div>
 
         <div class="actions">
@@ -1373,7 +1380,7 @@ async function certDownloadPrintable(certId, token, env) {
   if (!token) return new Response("Missing token", { status: 401 });
 
   const row = await env.DB.prepare(
-    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, download_token_hash, status FROM certificates WHERE cert_id = ?"
+    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, declared_ontological_status, download_token_hash, status FROM certificates WHERE cert_id = ?"
   ).bind(certId).first();
 
   if (!row) return new Response("Not found", { status: 404 });
@@ -1431,6 +1438,7 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
     <p><strong>Registry Record ID:</strong> <span class="mono">${safe(row.public_id || row.cert_id)}</span></p>
     <p class="small"><strong>Canonical Record ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
     <p><strong>Creator label (pseudonym):</strong> ${safe(row.creator_label || 'Undisclosed')}</p>
+    ${row.declared_ontological_status ? `<p><strong>Declared ontological status:</strong> ${safe(row.declared_ontological_status)}</p>` : ''}
     <p class="small">Verification: ${env.BASE_URL || 'https://ghostshell.host'}/cert/${encodeURIComponent(row.public_id || row.cert_id)}</p>
   </div>
 </div>
