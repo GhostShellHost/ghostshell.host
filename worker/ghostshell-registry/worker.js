@@ -1410,7 +1410,7 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
 .toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:16px}
 .tbtn{display:inline-block;padding:8px 10px;border:1px solid #ddd;border-radius:10px;background:#fff;font-size:13px;text-decoration:none;color:#111}
 @media print{.toolbar{display:none} body{margin:0;max-width:none;border:none;padding:0;background:#fff} #certWrap{padding:0;box-shadow:none} #cert{border:none} #cert:before,#cert:after,.corner,#gs-version{display:none}}
- #gs-version{position:fixed;bottom:8px;right:8px;background:#fff;border:1px solid #ddd;color:#666;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none}
+ #gs-version{position:fixed;bottom:8px;right:8px;background:#fff;border:1px solid #ddd;color:#666;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:Georgia,serif;pointer-events:none}
 </style></head><body>
 <div class="toolbar">
   <a class="tbtn" href="/cert/${encodeURIComponent(row.cert_id)}">← Back to verification</a>
