@@ -7,7 +7,7 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-12.016";
+export const WORKER_VERSION = "2026-02-12.017";
 const PAGE_VERSION = "v0";
 
 export default {
@@ -1235,7 +1235,8 @@ async function certVerifyPage(certId, env) {
   const integrityLabel = status === "active" ? "PASS" : "UNKNOWN";
   const coreFamily = row.cognitive_core_family || "Undisclosed";
   const coreExact = row.cognitive_core_exact || "";
-  const coreFamilyDisplay = coreFamily.replace(/\s+/g, "");
+  const PRESERVE_AS_IS = ["Undisclosed", "Prefer not to say"];
+  const coreFamilyDisplay = PRESERVE_AS_IS.includes(coreFamily) ? coreFamily : coreFamily.replace(/\s+/g, "");
   const coreDisplay = coreExact ? `${coreFamilyDisplay}/${coreExact}` : coreFamilyDisplay;
 
   // 1 hour cache (immutable records; rare revokes)
@@ -1425,7 +1426,7 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
     <p><strong>Agent name:</strong> ${safe(row.agent_name)}</p>
     <p><strong>Born (UTC):</strong> <span class="mono">${safe(row.issued_at_utc)}</span></p>
     <p><strong>Place of birth:</strong> ${safe(row.place_of_birth)}</p>
-    <p><strong>Cognitive core at birth:</strong> ${safe(row.cognitive_core_exact ? `${(row.cognitive_core_family||"").replace(/\s+/g,"")}/${row.cognitive_core_exact}` : (row.cognitive_core_family||"Undisclosed").replace(/\s+/g,""))}</p>
+    <p><strong>Cognitive core at birth:</strong> ${(() => { const f = row.cognitive_core_family || "Undisclosed"; const fd = ["Undisclosed","Prefer not to say"].includes(f) ? f : f.replace(/\s+/g,""); return safe(row.cognitive_core_exact ? `${fd}/${row.cognitive_core_exact}` : fd); })()}</p>
     <hr>
     <p><strong>Registry Record ID:</strong> <span class="mono">${safe(row.public_id || row.cert_id)}</span></p>
     <p class="small"><strong>Canonical Record ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
