@@ -1,6 +1,7 @@
 name = "ghostshell-registry"
 main = "worker.js"
 compatibility_date = "2026-02-10"
+account_id = "9f56502f4c08f85727d5137b25cc9df7"
 
 routes = [
   { pattern = "ghostshell.host/cert/*", zone_name = "ghostshell.host" },

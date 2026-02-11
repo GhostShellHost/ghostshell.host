@@ -76,16 +76,37 @@
 </div>
 <script>
   const params = new URLSearchParams(location.search);
-  const token = params.get("token") || "";
+  let token = (params.get("token") || "").trim();
   const by = params.get("by") || "human";
 
-  document.getElementById("token-display").textContent = token || "No token found — return to handoff page";
+  // Extra recovery paths for clients that strip query params
+  if (!token && location.hash.includes("token=")) {
+    const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+    token = (hashParams.get("token") || "").trim();
+  }
+  if (!token) {
+    const m = location.pathname.match(/\/register\/(GSTK-[A-Za-z0-9_-]+)/i);
+    if (m) token = m[1];
+  }
+  if (!token && document.referrer) {
+    try {
+      const ref = new URL(document.referrer);
+      token = (ref.searchParams.get("token") || "").trim();
+    } catch (_) {}
+  }
+
+  document.getElementById("token-display").textContent = token || "No token found — use your email link";
   document.getElementById("token-field").value = token;
   document.getElementById("by-field").value = by === "agent" ? "agent" : "human";
 
   if (!token) {
-    document.querySelector(".btn").disabled = true;
-    document.querySelector(".btn").textContent = "No token present";
+    const submitBtn = document.querySelector(".btn");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Missing token";
+
+    const noteEl = document.getElementById("note-text");
+    noteEl.innerHTML = "⚠ Missing registration token. Open your email and click the full GhostShell link again, or append <code>?token=GSTK-...</code> to this URL.";
+    noteEl.style.color = "#f87171";
     return;
   }
 

@@ -705,8 +705,19 @@ async function redeemPurchaseToken(request, env) {
   const baseUrl = getBaseUrl(request, env);
   await ensureRuntimeSchema(env.DB);
   const fd = await request.formData();
-  const token = (fd.get("token") || "").toString().trim();
+  let token = (fd.get("token") || "").toString().trim();
   const registered_by_raw = (fd.get("registered_by") || "human").toString().trim().toLowerCase();
+
+  // Fallback: recover token from Referer if hidden field was stripped/missed
+  if (!token) {
+    const ref = request.headers.get("referer") || request.headers.get("referrer") || "";
+    if (ref) {
+      try {
+        const refUrl = new URL(ref);
+        token = (refUrl.searchParams.get("token") || "").trim();
+      } catch (_) { /* ignore malformed referer */ }
+    }
+  }
   const registered_by = registered_by_raw === "agent" ? "agent" : "human";
 
   const agent_name = (fd.get("agent_name") || "").toString().trim();
