@@ -8,7 +8,7 @@
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
 export const WORKER_VERSION = "2026-02-12.018";
-const PAGE_VERSION = "v0.014";
+const PAGE_VERSION = "v0.015";
 
 export default {
   async fetch(request, env) {
@@ -1319,9 +1319,10 @@ return html(`<!doctype html>
     .actions{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
     .btn{display:inline-block;padding:8px 10px;border:1px solid rgba(17,24,39,.24);border-radius:10px;background:rgba(255,255,255,.55);font-size:12px;color:#111;text-decoration:none}
     .muted{margin-top:10px;color:rgba(17,24,39,.72);font-size:12px}
-    .bottom-nav{margin-top:12px;text-align:center;color:#9aa0ad;font-size:12px;font-family:var(--mono)}
-    .bottom-nav a{color:#8B8DFF;text-decoration:none;border-bottom:1px solid rgba(139,141,255,.45)}
-    .bottom-nav a:hover{border-bottom-color:#8B8DFF}
+    .back{margin-top:12px;text-align:center;font-size:.9rem}
+    .back a{color:#8B8DFF;text-decoration:none;border-bottom:1px solid rgba(139,141,255,.45)}
+    .back a:hover{border-bottom-color:#8B8DFF}
+    .vtag{color:rgba(17,24,39,.62);font-size:.9rem;font-family:var(--mono)}
     #gs-version{position:absolute;bottom:10px;right:12px;color:rgba(17,24,39,.72);font-size:10px;opacity:.9;font-family:var(--mono);letter-spacing:.08em;pointer-events:none}
     .redact{display:inline-block;height:1.05em;width:18ch;vertical-align:middle;background:#050608;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0.5px 0 rgba(0,0,0,.35);transform:rotate(-.6deg);position:relative;overflow:hidden}
     .redact::before{content:"";position:absolute;inset:-2px;background:radial-gradient(22px 10px at 20% 30%, rgba(255,255,255,.10), transparent 62%),radial-gradient(20px 10px at 70% 60%, rgba(255,255,255,.08), transparent 64%),repeating-linear-gradient(0deg, rgba(255,255,255,.06) 0 1px, transparent 1px 6px);opacity:.10;mix-blend-mode:overlay}
@@ -1374,7 +1375,7 @@ return html(`<!doctype html>
       <div class="muted">Private credential issued by GhostShell. Verification checks registry presence + fingerprint integrity only.</div>
       <div id="gs-version">${PAGE_VERSION}</div>
     </div>
-    <div class="bottom-nav"><a href="/registry/">Search registry</a> &nbsp; <a href="/issue/">Buy certificate</a></div>
+    <p class="back"><a href="/">Back home</a> &nbsp; <a href="/issue/">Buy certificate</a> &nbsp; <a href="/registry/">Search registry</a> &nbsp; <span class="vtag">v0.015</span></p>
   </div>
 </body>
 </html>`, 200, cacheHeaders);
