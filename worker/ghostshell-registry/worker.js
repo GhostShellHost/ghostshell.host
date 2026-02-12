@@ -8,7 +8,7 @@
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
 export const WORKER_VERSION = "2026-02-12.018";
-const PAGE_VERSION = "v0.016";
+const PAGE_VERSION = "v0.017";
 
 export default {
   async fetch(request, env) {
@@ -1358,7 +1358,13 @@ return html(`<!doctype html>
           <div class="k">cognitive_core_at_birth</div><div class="v clip" title="${safe(coreDisplay)}">${safe(coreDisplay)}</div>
           <div class="k">creator_operator</div><div class="v" title="Redacted in public view"><span class="redact" aria-label="redacted"></span></div>
           <div class="k">edits</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
-          ${row.provenance_link ? `<div class="k">provenance_link</div><div class="v clip" title="${safe(row.provenance_link)}">${safe(row.provenance_link)}</div>` : ''}
+          ${row.provenance_link ? (() => {
+            const p = (row.provenance_link || '').trim();
+            const hrefRaw = /^https?:\/\//i.test(p) ? p : `${(env.BASE_URL || 'https://ghostshell.host')}/cert/${encodeURIComponent(p)}`;
+            const href = hrefRaw.replace(/"/g, '&quot;');
+            const pSafe = safe(p);
+            return `<div class="k">parent_record</div><div class="v clip" title="${pSafe}"><a href="${href}" target="_blank" rel="noopener noreferrer">${pSafe}</a> <span class="k">(claimed)</span></div>`;
+          })() : ''}
         </div>
 
         <!-- Copy actions removed for cleaner public view -->
@@ -1439,6 +1445,7 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
     <p><strong>Registry Record ID:</strong> <span class="mono">${safe(row.public_id || row.cert_id)}</span></p>
     <p class="small"><strong>Canonical Record ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
     <p><strong>Creator label (pseudonym):</strong> ${safe(row.creator_label || 'Undisclosed')}</p>
+    ${row.provenance_link ? `<p><strong>Parent record (claimed):</strong> ${safe(row.provenance_link)}</p>` : ''}
     ${row.declared_ontological_status ? `<p><strong>Declared ontological status:</strong> ${safe(row.declared_ontological_status)}</p>` : ''}
     <p class="small">Verification: ${env.BASE_URL || 'https://ghostshell.host'}/cert/${encodeURIComponent(row.public_id || row.cert_id)}</p>
   </div>
