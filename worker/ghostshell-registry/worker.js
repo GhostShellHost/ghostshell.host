@@ -8,7 +8,7 @@
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
 export const WORKER_VERSION = "2026-02-12.018";
-const PAGE_VERSION = "v0.015";
+const PAGE_VERSION = "v0.016";
 
 export default {
   async fetch(request, env) {
@@ -1316,8 +1316,7 @@ return html(`<!doctype html>
     .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:9.8px;line-height:1.22;color:rgba(17,24,39,.70);letter-spacing:.08em}
     .micr .k{letter-spacing:.04em;color:inherit}
     .micr .hashline{display:block;margin-top:6px;color:rgba(17,24,39,.86);letter-spacing:.10em;white-space:nowrap;overflow:hidden;text-overflow:clip}
-    .actions{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
-    .btn{display:inline-block;padding:8px 10px;border:1px solid rgba(17,24,39,.24);border-radius:10px;background:rgba(255,255,255,.55);font-size:12px;color:#111;text-decoration:none}
+    /* action copy buttons removed for cleaner public record view */
     .muted{margin-top:10px;color:rgba(17,24,39,.72);font-size:12px}
     .back{margin-top:12px;text-align:center;font-size:.9rem}
     .back a{color:#8B8DFF;text-decoration:none;border-bottom:1px solid rgba(139,141,255,.45)}
@@ -1362,10 +1361,7 @@ return html(`<!doctype html>
           ${row.provenance_link ? `<div class="k">provenance_link</div><div class="v clip" title="${safe(row.provenance_link)}">${safe(row.provenance_link)}</div>` : ''}
         </div>
 
-        <div class="actions">
-          <a class="btn" href="#" onclick="navigator.clipboard.writeText(location.href);return false;">Copy verify link</a>
-          <a class="btn" href="#" onclick="navigator.clipboard.writeText(document.getElementById('fp').innerText);return false;">Copy fingerprint</a>
-        </div>
+        <!-- Copy actions removed for cleaner public view -->
 
         <div class="micr" aria-label="Record hash (machine line)">
           <span class="hashline" id="fp"><span class="k">record_hash:</span> <span class="k">sha256</span> ${safe(row.public_fingerprint)}</span>
