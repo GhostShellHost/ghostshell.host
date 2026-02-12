@@ -159,16 +159,18 @@
 
     <form id="registry-form" aria-label="Registry search">
       <label for="record-id">Registry Record ID</label>
-      <input id="record-id" name="id" type="text" placeholder="e.g. GS-BC-A-26-1H" required />
+      <input id="record-id" name="id" type="text" placeholder="e.g. GS-BC-A-26-H" value="GS-BC-A-26-H" required />
       <button type="submit">Search</button>
     </form>
 
     <div class="examples">
-      <a href="#" class="example-link" id="try-public">Example format:</a>
-      <code>GS-BC-H-26-1 (real IDs appear after issuance)</code>
+      <a href="#" class="example-link" id="try-public">Prefilled sample:</a>
+      <code>GS-BC-A-26-H (Joule)</code>
       <br />
       <a href="#" class="example-link" id="try-canonical">Canonical example:</a>
       <code>GS-BC-20260205-ZKCENEEQ</code>
+      <br />
+      Public ID shows the redacted record. Original unredacted copy is available to the original email/link holder after form completion.
     </div>
 
     <p class="small"><a href="/">Back home</a></p>
@@ -189,7 +191,7 @@
 
       tryPublic.addEventListener('click', function (e) {
         e.preventDefault();
-        setExample('GS-BC-H-26-1');
+        setExample('GS-BC-A-26-H');
       });
 
       tryCanonical.addEventListener('click', function (e) {
@@ -206,6 +208,6 @@
     })();
   </script>
 
-<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0b0b0d;border:1px solid #2b2b33;color:#8b8dff;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.012</div>
+<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0b0b0d;border:1px solid #2b2b33;color:#8b8dff;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.013</div>
 </body>
 </html>
