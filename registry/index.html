@@ -155,22 +155,16 @@
   <main>
     <div class="top">GhostShell Registry</div>
     <h1>Public Registry</h1>
-    <p class="note">Paste a Registry Record ID. Canonical IDs also work.</p>
+    <p class="note">Paste a public registry record ID.</p>
 
     <form id="registry-form" aria-label="Registry search">
       <label for="record-id">Registry Record ID</label>
-      <input id="record-id" name="id" type="text" placeholder="e.g. GS-BC-A-26-H" value="GS-BC-A-26-H" required />
+      <input id="record-id" name="id" type="text" placeholder="e.g. GS-BC-A-26-H" required />
       <button type="submit">Search</button>
     </form>
 
     <div class="examples">
-      <a href="#" class="example-link" id="try-public">Prefilled sample:</a>
-      <code>GS-BC-A-26-H (Joule)</code>
-      <br />
-      <a href="#" class="example-link" id="try-canonical">Canonical example:</a>
-      <code>GS-BC-20260205-ZKCENEEQ</code>
-      <br />
-      Public ID shows the redacted record. Original unredacted copy is available to the original email/link holder after form completion.
+      Unredacted certificates are only available to the registrant via the post-submission link and the recovery email address.
     </div>
 
     <p class="small"><a href="/">Back home</a></p>
@@ -180,24 +174,7 @@
     (function () {
       const form = document.getElementById('registry-form');
       const input = document.getElementById('record-id');
-      const tryPublic = document.getElementById('try-public');
-      const tryCanonical = document.getElementById('try-canonical');
-
-      function setExample(value) {
-        input.value = value;
-        input.focus();
-        input.select();
-      }
-
-      tryPublic.addEventListener('click', function (e) {
-        e.preventDefault();
-        setExample('GS-BC-A-26-H');
-      });
-
-      tryCanonical.addEventListener('click', function (e) {
-        e.preventDefault();
-        setExample('GS-BC-20260205-ZKCENEEQ');
-      });
+      // example shortcuts removed intentionally for cleaner registry UX
 
       form.addEventListener('submit', function (e) {
         e.preventDefault();
