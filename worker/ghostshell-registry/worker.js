@@ -7,7 +7,7 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-13.019";
+export const WORKER_VERSION = "2026-02-13.020";
 const PAGE_VERSION = "v0.019";
 
 export default {
@@ -287,6 +287,7 @@ async function ensureRuntimeSchema(db) {
     "ALTER TABLE purchase_tokens ADD COLUMN abandoned_email_sent_at_utc TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN abandoned_email_status TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN abandoned_email_error TEXT",
+    "ALTER TABLE purchase_tokens ADD COLUMN status TEXT DEFAULT 'pending'",
     "ALTER TABLE certificates ADD COLUMN declared_ontological_status TEXT",
     "ALTER TABLE certificates ADD COLUMN parent_record_status TEXT",
   ];
@@ -466,12 +467,12 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env, baseU
     "SELECT token FROM purchase_tokens WHERE stripe_session_id = ?"
   ).bind(sessionId).first();
 
+  // If we created a pending row at checkout start, reuse its token.
+  // We'll still update the row below with payment/email details once paid.
+  const token = row?.token || makePurchaseToken();
   if (row?.token) {
     console.log("[handoff-token] token reused", sessionId);
-    return row.token;
   }
-
-  const token = makePurchaseToken();
   const emailRaw = (session.customer_details?.email || "").toLowerCase().trim();
   const emailHash = emailRaw ? await sha256Hex(emailRaw) : null;
   const paymentIntent = session.payment_intent || null;
@@ -490,18 +491,26 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env, baseU
 
   const now = nowUtcIso();
 
-  try {
-    await env.DB.prepare(
-      "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, recovery_email_iv, recovery_email_enc, created_at_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-    ).bind(token, sessionId, paymentIntent, emailHash, recoveryEmailHash, recoveryEmailIv, recoveryEmailEnc, now).run();
-  } catch (e) {
-    const msg = String(e?.message || "").toLowerCase();
-    if (msg.includes("recovery_email_hash") || msg.includes("recovery_email_iv") || msg.includes("recovery_email_enc")) {
+  // Update pending row if it exists; otherwise insert a new paid row (covers legacy/test paths)
+  const upd = await env.DB.prepare(
+    "UPDATE purchase_tokens SET token = ?, stripe_payment_intent = ?, email_hash = ?, recovery_email_hash = ?, recovery_email_iv = ?, recovery_email_enc = ?, status = 'paid' WHERE stripe_session_id = ?"
+  ).bind(token, paymentIntent, emailHash, recoveryEmailHash, recoveryEmailIv, recoveryEmailEnc, sessionId).run();
+
+  const changed = Number(upd?.meta?.changes || 0);
+  if (changed < 1) {
+    try {
       await env.DB.prepare(
-        "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?)"
-      ).bind(token, sessionId, paymentIntent, emailHash, now).run();
-    } else {
-      throw e;
+        "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, recovery_email_iv, recovery_email_enc, created_at_utc, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'paid')"
+      ).bind(token, sessionId, paymentIntent, emailHash, recoveryEmailHash, recoveryEmailIv, recoveryEmailEnc, now).run();
+    } catch (e) {
+      const msg = String(e?.message || "").toLowerCase();
+      if (msg.includes("recovery_email_hash") || msg.includes("recovery_email_iv") || msg.includes("recovery_email_enc") || msg.includes("no such column")) {
+        await env.DB.prepare(
+          "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?)"
+        ).bind(token, sessionId, paymentIntent, emailHash, now).run();
+      } else {
+        throw e;
+      }
     }
   }
 
@@ -970,6 +979,10 @@ async function purchaseFirstCheckout(request, env) {
   body.set("customer_email", recovery_email);
   body.set("metadata[recovery_email]", recovery_email);
 
+  // Allocate token early so we can track abandoned sessions (and so completed flow reuses it)
+  const token = makePurchaseToken();
+  body.set("metadata[token]", token);
+
   const resp = await fetch("https://api.stripe.com/v1/checkout/sessions", {
     method: "POST",
     headers: {
@@ -981,6 +994,30 @@ async function purchaseFirstCheckout(request, env) {
 
   const data = await resp.json();
   if (!resp.ok) return json({ error: "Stripe error", details: data }, 500);
+
+  // Create pending purchase token record for checkout tracking
+  const sessionId = data.id;
+  const recoveryEmailHash = await sha256Hex(recovery_email.toLowerCase().trim());
+  let recoveryEmailIv = null;
+  let recoveryEmailEnc = null;
+  if (env.EMAIL_ENC_KEY) {
+    const enc = await aesGcmEncrypt(recovery_email.toLowerCase().trim(), env.EMAIL_ENC_KEY);
+    recoveryEmailIv = enc.iv_b64u;
+    recoveryEmailEnc = enc.ct_b64u;
+  }
+  const now = nowUtcIso();
+
+  try {
+    await ensureRuntimeSchema(env.DB);
+    await env.DB.prepare(
+      `INSERT INTO purchase_tokens 
+       (token, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, recovery_email_iv, recovery_email_enc, created_at_utc, status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(token, sessionId, null, null, recoveryEmailHash, recoveryEmailIv, recoveryEmailEnc, now, 'pending').run();
+  } catch (e) {
+    // Non-fatal: continue to redirect even if DB insert fails
+    console.log("[checkout] pending insert failed", e);
+  }
 
   return Response.redirect(data.url, 303);
 }
@@ -1065,7 +1102,7 @@ async function stripeWebhook(request, env) {
       // Log send attempt against the session (if we have a token row)
       try {
         await env.DB.prepare(
-          "UPDATE purchase_tokens SET abandoned_email_sent_at_utc = ?, abandoned_email_status = ?, abandoned_email_error = ? WHERE stripe_session_id = ?"
+          "UPDATE purchase_tokens SET status = 'abandoned', abandoned_email_sent_at_utc = ?, abandoned_email_status = ?, abandoned_email_error = ? WHERE stripe_session_id = ?"
         ).bind(nowUtcIso(), sendStatus, emailError ? emailError.slice(0, 1000) : null, expiredSession.id).run();
       } catch (_) { /* non-fatal, session may not have a token row */ }
     }
