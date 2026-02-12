@@ -3,179 +3,112 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Public Registry</title>
+  <title>GhostShell Registry — Public Registry</title>
   <style>
-    :root {
-      --bg-top: #111114;
-      --bg-bottom: #0b0b0d;
-      --text: #ededed;
-      --secondary: #a1a1a6;
-      --muted: #6e6e73;
-      --line: #232327;
-      --accent: #8b8dff;
+    :root{
+      --bg:#0a0a0d;
+      --text:#f2f2f5;
+      --soft:#b2b2bb;
+      --muted:#7b7b86;
+      --line:#272730;
+      --accent:#9da3ff;
     }
-
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
-      color: var(--text);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-      min-height: 100vh;
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      min-height:100vh;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+      color:var(--text);
+      background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.16), transparent 60%), var(--bg);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
     }
-
-    main {
-      max-width: 740px;
-      margin: 0 auto;
-      padding: 28px 22px 72px;
-      text-align: center;
+    main{width:min(760px,100%);text-align:center}
+    .brand{
+      display:inline-block;
+      font-size:.78rem;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:var(--soft);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 12px;
+      margin-bottom:16px;
+      background:rgba(255,255,255,.01);
     }
+    h1{margin:0;font-size:clamp(34px,6vw,58px);line-height:1.05;letter-spacing:-.02em;font-weight:740}
+    .note{margin:12px auto 0;max-width:56ch;color:var(--soft)}
 
-    .top {
-      font-size: 0.92rem;
-      color: var(--secondary);
-      letter-spacing: 0.01em;
-      margin-bottom: 22px;
+    form{margin:26px auto 0;max-width:560px;display:grid;gap:10px}
+    label{
+      text-align:center;
+      font-size:.82rem;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      color:var(--soft);
     }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(36px, 6.5vw, 54px);
-      line-height: 1.08;
-      letter-spacing: -0.02em;
-      font-weight: 740;
+    input{
+      width:100%;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      padding:12px 13px;
+      font:inherit;
+      text-align:center;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
-
-    .note {
-      margin: 12px auto 0;
-      max-width: 58ch;
-      color: var(--secondary);
+    input::placeholder{color:var(--muted)}
+    button{
+      justify-self:center;
+      margin-top:6px;
+      border-radius:999px;
+      border:1px solid var(--accent);
+      background:var(--accent);
+      color:#0a0a0d;
+      padding:10px 20px;
+      font:inherit;
+      font-weight:620;
+      cursor:pointer;
     }
-
-    form {
-      margin: 30px auto 0;
-      max-width: 520px;
-      display: grid;
-      gap: 10px;
-      text-align: left;
+    .small{
+      margin:20px auto 0;
+      max-width:64ch;
+      color:var(--muted);
+      font-size:.9rem;
+      text-align:center;
+      border-top:1px solid var(--line);
+      padding-top:14px;
     }
-
-    label {
-      font-size: 0.86rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--secondary);
-    }
-
-    input {
-      width: 100%;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.03);
-      color: var(--text);
-      padding: 12px 13px;
-      font: inherit;
-    }
-
-    input::placeholder { color: var(--muted); }
-
-    button {
-      justify-self: center;
-      margin-top: 4px;
-      border-radius: 999px;
-      border: 1px solid var(--accent);
-      background: var(--accent);
-      color: #0b0b0d;
-      padding: 10px 18px;
-      font: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color .15s ease, border-color .15s ease;
-    }
-
-    button:hover {
-      background: #9a9cff;
-      border-color: #9a9cff;
-    }
-
-    .examples {
-      margin-top: 16px;
-      color: var(--muted);
-      font-size: 0.92rem;
-      text-align: left;
-      max-width: 520px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .examples code {
-      color: var(--secondary);
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 2px 6px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    }
-
-    .example-link {
-      color: var(--accent);
-      text-decoration: none;
-      border-bottom: 1px solid #343568;
-      cursor: pointer;
-      margin-right: 8px;
-    }
-
-    .example-link:hover { border-bottom-color: var(--accent); }
-
-    .small {
-      margin-top: 22px;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    a {
-      color: var(--accent);
-      text-decoration: none;
-      border-bottom: 1px solid #343568;
-    }
-
-    a:hover { border-bottom-color: var(--accent); }
-
-    @media (max-width: 640px) {
-      main { padding: 22px 18px 56px; }
-      form { margin-top: 24px; }
-    }
+    a{color:var(--accent);text-decoration:none;border-bottom:1px solid #4a4a7a}
+    a:hover{border-bottom-color:var(--accent)}
+    .back{margin-top:16px}
   </style>
 </head>
 <body>
   <main>
-    <div class="top">GhostShell Registry</div>
+    <div class="brand">GhostShell Registry • Alpha</div>
     <h1>Public Registry</h1>
     <p class="note">Paste a public registry record ID.</p>
 
     <form id="registry-form" aria-label="Registry search">
       <label for="record-id">Registry Record ID</label>
-      <input id="record-id" name="id" type="text" placeholder="e.g. GS-BC-A-26-H" required />
+      <input id="record-id" name="id" type="text" value="GS-BC-A-26-H" placeholder="e.g. GS-BC-A-26-H" required />
       <button type="submit">Search</button>
     </form>
 
-    <div class="examples">
-      Unredacted certificates are only available to the registrant via the post-submission link and the recovery email address.
-    </div>
-
-    <p class="small"><a href="/">Back home</a></p>
+    <p class="small">Unredacted certificates are only available to the registrant via the post-submission link and the recovery email address.</p>
+    <p class="back"><a href="/">Back home</a></p>
   </main>
 
   <script>
     (function () {
       const form = document.getElementById('registry-form');
       const input = document.getElementById('record-id');
-      // example shortcuts removed intentionally for cleaner registry UX
-
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         const id = (input.value || '').trim();
@@ -185,6 +118,6 @@
     })();
   </script>
 
-<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0b0b0d;border:1px solid #2b2b33;color:#8b8dff;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.013</div>
+<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0b0b0d;border:1px solid #2b2b33;color:#8b8dff;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.014</div>
 </body>
 </html>
