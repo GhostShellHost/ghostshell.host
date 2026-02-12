@@ -8,7 +8,7 @@
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
 export const WORKER_VERSION = "2026-02-12.018";
-const PAGE_VERSION = "v0.012";
+const PAGE_VERSION = "v0.013";
 
 export default {
   async fetch(request, env) {
@@ -1361,6 +1361,8 @@ return html(`<!doctype html>
         <div class="actions">
           <a class="btn" href="#" onclick="navigator.clipboard.writeText(location.href);return false;">Copy verify link</a>
           <a class="btn" href="#" onclick="navigator.clipboard.writeText(document.getElementById('fp').innerText);return false;">Copy fingerprint</a>
+          <a class="btn" href="/registry/">Search registry</a>
+          <a class="btn" href="/issue/">Buy certificate</a>
         </div>
 
         <div class="micr" aria-label="Record hash (machine line)">
