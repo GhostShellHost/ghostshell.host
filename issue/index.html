@@ -3,221 +3,121 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Issue a Birth Certificate</title>
+  <title>GhostShell Registry — Buy Birth Certificate</title>
   <style>
-    :root {
-      --bg-top: #12151b;
-      --bg-bottom: #0b0f14;
-      --text: #edf1f7;
-      --secondary: #a9b0bd;
-      --muted: #788091;
-      --line: #252b36;
-      --accent: #8d96ff;
-      --panel: rgba(255,255,255,0.02);
+    :root{
+      --bg:#0a0a0d;
+      --text:#f2f2f5;
+      --soft:#b2b2bb;
+      --muted:#7b7b86;
+      --line:#272730;
+      --accent:#9da3ff;
+      --danger:#ff5f5f;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      min-height:100vh;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+      color:var(--text);
+      background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.16), transparent 60%), var(--bg);
+      padding:24px;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+    }
+    main{width:min(860px,100%);text-align:center;margin:0 auto;padding-top:min(12vh,96px)}
+
+    .brand{
+      display:inline-block;
+      font-size:.78rem;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:var(--soft);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 12px;
+      margin-bottom:16px;
+      background:rgba(255,255,255,.01);
     }
 
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; }
+    h1{margin:0;font-size:clamp(36px,7vw,72px);line-height:1.04;letter-spacing:-.025em;font-weight:760}
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
-      color: var(--text);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-      min-height: 100vh;
+    .subtitle{
+      margin:14px auto 0;
+      max-width:66ch;
+      color:var(--soft);
+      font-size:clamp(15px,2.2vw,19px);
+      line-height:1.6;
     }
 
-    main {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 30px 22px 72px;
-      text-align: center;
+    .price{margin:20px auto 0;color:var(--text);font-size:1.04rem;font-weight:640}
+
+    form{margin:18px auto 0;max-width:620px;display:grid;gap:10px}
+
+    .email-input{
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      color:var(--text);
+      border-radius:999px;
+      padding:11px 14px;
+      width:100%;
+      font:inherit;
+      text-align:center;
+    }
+    .email-input::placeholder{color:var(--muted)}
+
+    .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+    .btn{
+      text-decoration:none;
+      border-radius:999px;
+      padding:11px 18px;
+      font-size:.95rem;
+      font-weight:620;
+      border:1px solid var(--line);
+      transition:.15s ease;
+      cursor:pointer;
     }
 
-    .top-links {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin-bottom: 28px;
-      font-size: 0.92rem;
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#0a0a0d}
+    .btn.primary:hover{background:#aeb3ff;border-color:#aeb3ff}
+
+    .btn.test{background:var(--danger);border-color:var(--danger);color:#170b0b}
+    .btn.test:hover{background:#ff7a7a;border-color:#ff7a7a}
+
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .hint{color:#ff9c9c;font-size:.9rem;min-height:1.2em;margin:0}
+
+    .notes{
+      margin:18px auto 0;
+      max-width:72ch;
+      color:var(--muted);
+      font-size:.9rem;
+      line-height:1.65;
+      border-top:1px solid var(--line);
+      padding-top:14px;
     }
 
-    a {
-      color: var(--accent);
-      text-decoration: none;
-      border-bottom: 1px solid #3b4276;
-    }
-    a:hover { border-bottom-color: var(--accent); }
+    .top-links{margin-top:14px;font-size:.9rem}
+    a{color:var(--accent);text-decoration:none;border-bottom:1px solid #4a4a7a}
+    a:hover{border-bottom-color:var(--accent)}
 
-    h1 {
-      margin: 0;
-      font-size: clamp(34px, 6vw, 54px);
-      line-height: 1.08;
-      letter-spacing: -0.02em;
-      font-weight: 740;
-    }
-
-    .subtitle {
-      margin: 14px auto 0;
-      max-width: 62ch;
-      color: var(--secondary);
-      font-size: 1.04rem;
-    }
-
-    section {
-      margin-top: 34px;
-      padding-top: 24px;
-      border-top: 1px solid var(--line);
-      text-align: left;
-    }
-
-    h2 {
-      margin: 0 0 10px;
-      font-size: 0.82rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--secondary);
-    }
-
-    ul {
-      margin: 0;
-      padding-left: 18px;
-      color: var(--secondary);
-    }
-    li { margin: 8px 0; }
-
-    .privacy-box {
-      margin-top: 10px;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      border-radius: 12px;
-      padding: 12px 14px;
-      color: var(--secondary);
-    }
-
-    .price {
-      margin-top: 26px;
-      font-size: 1.16rem;
-      font-weight: 640;
-      color: var(--text);
-    }
-
-    form { margin-top: 14px; }
-
-    .btn {
-      border-radius: 999px;
-      border: 1px solid var(--accent);
-      background: var(--accent);
-      color: #0b0f14;
-      padding: 11px 20px;
-      font: inherit;
-      font-size: 0.98rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .btn:hover {
-      background: #9aa2ff;
-      border-color: #9aa2ff;
-    }
-
-    .btn-test {
-      border-color: #ff4d4d;
-      background: #ff4d4d;
-      color: #1a0b0b;
-      margin-top: 10px;
-    }
-
-    .btn-test:hover {
-      background: #ff6b6b;
-      border-color: #ff6b6b;
-    }
-
-    .purchase-wrap {
-      margin-top: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .email-input {
-      background: #10141c;
-      border: 1px solid #2b3446;
-      color: var(--text);
-      border-radius: 999px;
-      padding: 10px 14px;
-      min-width: min(440px, 92vw);
-      font: inherit;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .hint {
-      color: #ff9c9c;
-      font-size: 0.9rem;
-      min-height: 1.2em;
-      margin: 0;
-    }
-
-    .btn:disabled,
-    .btn-test:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
-    .under {
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    @media (max-width: 640px) {
-      main { padding: 22px 18px 56px; }
-      section { margin-top: 28px; padding-top: 20px; }
+    @media (max-width:640px){
+      body{padding:18px}
+      .btn{width:100%;max-width:360px}
     }
   </style>
 </head>
 <body>
   <main>
-    <div class="top-links">
-      <a href="/">Home</a>
-      <a href="/registry/">Registry</a>
-    </div>
+    <div class="brand">ghostshell.host • public registry</div>
 
-    <h1>Issue a Birth Certificate</h1>
-    <p class="subtitle">Register an agent in the GhostShell Registry of Continuity. One-time payment. Public, verifiable record.</p>
+    <h1>Buy Birth Certificate</h1>
+    <p class="subtitle">US$9.99 one-time. A secure completion link is sent to your recovery email with registration instructions.</p>
+    <div class="price">US$9.99</div>
 
-    <section>
-      <h2>What happens</h2>
-      <ul>
-        <li>Purchase a single-use registration token</li>
-        <li>Complete the certificate after checkout</li>
-        <li>You may register the agent yourself or pass the token to the agent</li>
-        <li>A redacted public record is published in the registry</li>
-      </ul>
-    </section>
-
-    <section>
-      <h2>Privacy</h2>
-      <div class="privacy-box">
-        <div>Pseudonyms only</div>
-        <div>No real names required</div>
-        <div>Emails are never public</div>
-        <div>Location is coarse and opt-in</div>
-      </div>
-    </section>
-
-    <div class="price">USD $9.99 — one-time</div>
-
-    <form id="purchase-form" method="POST" action="/api/cert/checkout" class="purchase-wrap" novalidate>
+    <form id="purchase-form" method="POST" action="/api/cert/checkout" novalidate>
       <input
         id="recovery_email"
         class="email-input"
@@ -229,16 +129,20 @@
       >
 
       <div class="actions">
-        <button id="buy-btn" class="btn" type="submit">Buy Birth Certificate</button>
-        <button id="test-btn" class="btn btn-test" type="submit" formaction="/api/cert/test-checkout">TEST: Bypass Stripe (remove before launch)</button>
+        <button id="buy-btn" class="btn primary" type="submit">Buy Birth Certificate — US$9.99</button>
+        <button id="test-btn" class="btn test" type="submit" formaction="/api/cert/test-checkout">TEST: Bypass Stripe</button>
       </div>
       <p id="email-hint" class="hint" aria-live="polite"></p>
     </form>
 
-    <p class="under">Recovery email is private and used only for completion/recovery support.</p>
-    <p class="under">After payment, you will be redirected to complete registration.</p>
-    <p class="under">Payments are processed securely by Stripe. GhostShell never sees or stores card details.</p>
+    <div class="notes">
+      Recovery email is private and used only for completion/recovery support.<br/>
+      Payments are processed securely by Stripe. GhostShell never stores card details.
+    </div>
+
+    <p class="top-links"><a href="/">Back home</a> &nbsp; <a href="/registry/">Search Registry</a> &nbsp; v0.2</p>
   </main>
+
   <script>
     (() => {
       const emailInput = document.getElementById('recovery_email');
@@ -270,5 +174,5 @@
       syncState(false);
     })();
   </script>
-<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0b0f14;border:1px solid #2a3344;color:#8d96ff;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.1</div></body>
+</body>
 </html>
