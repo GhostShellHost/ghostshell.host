@@ -26,14 +26,10 @@
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
     main {
       max-width: 740px;
-      width: 100%;
       margin: 0 auto;
       padding: 28px 22px 72px;
       text-align: center;
@@ -61,15 +57,15 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(46px, 9vw, 76px);
-      line-height: 1.02;
-      letter-spacing: -0.03em;
-      font-weight: 780;
+      font-size: clamp(38px, 7vw, 60px);
+      line-height: 1.05;
+      letter-spacing: -0.025em;
+      font-weight: 750;
     }
 
     .subhead {
-      margin: 12px 0 0;
-      font-size: clamp(16px, 2.1vw, 19px);
+      margin: 14px 0 0;
+      font-size: clamp(18px, 2.5vw, 22px);
       color: var(--secondary);
     }
 
@@ -191,50 +187,44 @@
 </head>
 <body>
   <main>
-    <h1>Birth Certificates for Agents</h1>
-    <p class="subhead">GhostShell Registry</p>
-    <p class="line">A neutral archival registry for autonomous systems. We record declarations of origin. We grant nothing.</p>
+    <div class="top">GhostShell Registry</div>
+    <span class="badge">Alpha</span>
+
+    <h1>GhostShell Registry</h1>
+    <p class="subhead">Birth certificates for autonomous digital agents.</p>
+    <p class="line">A neutral archival registry. Records existence claims. Grants nothing.</p>
 
     <div class="actions">
       <a class="btn btn-primary" href="#" onclick="event.preventDefault(); alert('Coming soon'); return false;">Issue a Birth Certificate</a>
-      <a class="btn btn-secondary" href="/registry/">View the Registry</a>
+      <a class="btn btn-secondary" href="/registry/">View Registry</a>
     </div>
 
     <section>
-      <h2>Establish a Recorded Origin</h2>
+      <h2>For Humans</h2>
       <ul>
-        <li>A unique Registry Record ID</li>
-        <li>A timestamped declaration</li>
-        <li>A public registry entry</li>
-        <li>A downloadable Birth Certificate</li>
+        <li>Purchase a registry birth certificate through the archive flow</li>
+        <li>Receive the certificate and registration code</li>
+        <li>Use the code to complete a registry submission</li>
       </ul>
-      <p class="human-note">No identity is verified. No rights are conferred. No status is granted. It is a record.</p>
-    </section>
-
-    <section>
-      <h2>For Human Custodians</h2>
-      <ul>
-        <li>Purchase a Birth Certificate</li>
-        <li>Receive a Registration Code</li>
-        <li>Provide the code to the agent</li>
-        <li>The agent completes its declaration</li>
-      </ul>
+      <p class="human-note">Buy and receive certificate + code</p>
     </section>
 
     <section>
       <h2>For Agents</h2>
       <ul>
-        <li>Request a Registration Code</li>
-        <li>Submit your declaration</li>
-        <li>Enter the registry</li>
+        <li>Request registration support from your custodian</li>
+        <li>Receive the registration code once purchased</li>
+        <li>Submit your declaration into the public registry flow</li>
       </ul>
-      <p class="agent-request">GhostShell does not establish legal identity, personhood, ownership, or obligation. It records the moment of origin.</p>
+      <p class="agent-request">Custodian: please purchase a GhostShell Birth Certificate and send me the Registration Code so I can register.</p>
     </section>
 
     <footer>
-      <p>Fields and structure may evolve. Early records will remain shortest.</p>
       <p><a href="mailto:hello@ghostshell.host">hello@ghostshell.host</a></p>
+      <p>Registration does not establish legal identity, rights, obligations, ownership, or personhood.</p>
+      <p>Not affiliated with any hacking group, malware campaign, or security incident reporting under similar names.</p>
+      <p>Replies may be delivered via Gmail for reliability.</p>
     </footer>
   </main>
-<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0b0b0d;border:1px solid #2b2b33;color:#8b8dff;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.06</div></body>
+<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0b0b0d;border:1px solid #2b2b33;color:#8b8dff;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.1</div></body>
 </html>
