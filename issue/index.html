@@ -140,7 +140,7 @@
       Payments are processed securely by Stripe. GhostShell never stores card details.
     </div>
 
-    <p class="top-links"><a href="/">Back home</a> &nbsp; <a href="/registry/">Search Registry</a> &nbsp; <span class="vtag">v0.04</span></p>
+    <p class="top-links"><a href="/">Back home</a> &nbsp; <a href="/registry/">Search Registry</a> &nbsp; <span class="vtag">v0.05</span></p>
   </main>
 
   <script>
@@ -155,8 +155,6 @@
 
       function syncState(showHint = false) {
         const ok = validEmail(emailInput.value);
-        buyBtn.disabled = !ok;
-        testBtn.disabled = !ok;
         hint.textContent = (!ok && showHint) ? 'Recovery email required before checkout.' : '';
       }
 
