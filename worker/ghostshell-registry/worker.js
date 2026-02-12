@@ -8,7 +8,7 @@
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
 export const WORKER_VERSION = "2026-02-12.018";
-const PAGE_VERSION = "v0.017";
+const PAGE_VERSION = "v0.018";
 
 export default {
   async fetch(request, env) {
@@ -708,6 +708,32 @@ async function tokenStatus(request, env) {
   });
 }
 
+async function resolveParentRecordValue(rawInput, env) {
+  const raw = (rawInput || "").toString().trim();
+  if (!raw) return { value: null };
+
+  let candidate = raw;
+  if (/^https?:\/\//i.test(raw)) {
+    try {
+      const u = new URL(raw);
+      const m = u.pathname.match(/\/cert\/([^\/?#]+)/i);
+      if (!m) return { error: "Parent record not in database." };
+      candidate = decodeURIComponent(m[1] || "").trim();
+    } catch (_) {
+      return { error: "Parent record not in database." };
+    }
+  }
+
+  if (!candidate) return { error: "Parent record not in database." };
+
+  const row = await env.DB.prepare(
+    "SELECT public_id, cert_id FROM certificates WHERE public_id = ? OR cert_id = ? LIMIT 1"
+  ).bind(candidate, candidate).first();
+
+  if (!row) return { error: "Parent record not in database." };
+  return { value: row.public_id || row.cert_id };
+}
+
 async function redeemPurchaseToken(request, env) {
   const baseUrl = getBaseUrl(request, env);
   await ensureRuntimeSchema(env.DB);
@@ -748,6 +774,11 @@ async function redeemPurchaseToken(request, env) {
   if (!token) return errPage("Missing registration token.");
   if (!agent_name) return errPage("Agent Name is required.");
 
+  // Validate and resolve parent record
+  const parentResolved = await resolveParentRecordValue(provenance_link, env);
+  if (parentResolved.error) return errPage("Parent record not found in registry. Please enter a valid GhostShell certificate ID or leave blank.");
+  const parent_record_value = parentResolved.value;
+
   // Validate token
   const tokenRow = await env.DB.prepare(
     "SELECT token, used_at_utc, used_cert_id FROM purchase_tokens WHERE token = ?"
@@ -778,7 +809,7 @@ async function redeemPurchaseToken(request, env) {
       cognitive_core_family,
       cognitive_core_exact: cognitive_core_exact || null,
       creator_label: creator_label || null,
-      provenance_link: provenance_link || null,
+      provenance_link: parent_record_value,
       schema_version,
       edited_at_utc: editedAt,
     });
@@ -808,7 +839,7 @@ async function redeemPurchaseToken(request, env) {
       cognitive_core_family,
       cognitive_core_exact || null,
       creator_label || null,
-      provenance_link || null,
+      parent_record_value,
       declared_ontological_status,
       schema_version,
       public_fingerprint,
@@ -830,7 +861,7 @@ async function redeemPurchaseToken(request, env) {
     cert_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family,
     cognitive_core_exact: cognitive_core_exact || null,
     creator_label: creator_label || null,
-    provenance_link: provenance_link || null,
+    provenance_link: parent_record_value,
     schema_version,
   });
   const public_fingerprint = await sha256Hex(fingerprintSource);
@@ -852,7 +883,7 @@ async function redeemPurchaseToken(request, env) {
       `).bind(
         cert_id, issued_at_utc, card_number, public_id, registered_by,
         agent_name, place_of_birth, cognitive_core_family,
-        cognitive_core_exact || null, creator_label || null, provenance_link || null,
+        cognitive_core_exact || null, creator_label || null, parent_record_value,
         declared_ontological_status,
         schema_version, public_fingerprint, download_token_hash
       ).run();
