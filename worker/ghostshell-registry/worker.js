@@ -7,8 +7,8 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-12.018";
-const PAGE_VERSION = "v0.018";
+export const WORKER_VERSION = "2026-02-13.019";
+const PAGE_VERSION = "v0.019";
 
 export default {
   async fetch(request, env) {
@@ -288,6 +288,7 @@ async function ensureRuntimeSchema(db) {
     "ALTER TABLE purchase_tokens ADD COLUMN abandoned_email_status TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN abandoned_email_error TEXT",
     "ALTER TABLE certificates ADD COLUMN declared_ontological_status TEXT",
+    "ALTER TABLE certificates ADD COLUMN parent_record_status TEXT",
   ];
 
   await db.prepare(
@@ -710,28 +711,59 @@ async function tokenStatus(request, env) {
 
 async function resolveParentRecordValue(rawInput, env) {
   const raw = (rawInput || "").toString().trim();
-  if (!raw) return { value: null };
+  if (!raw) return { value: null, status: null };
 
-  let candidate = raw;
+  const findById = async (candidate) => {
+    const row = await env.DB.prepare(
+      "SELECT public_id, cert_id FROM certificates WHERE public_id = ? OR cert_id = ? LIMIT 1"
+    ).bind(candidate, candidate).first();
+    return row ? (row.public_id || row.cert_id) : null;
+  };
+
+  // Full link with token proof (preferred): /register?token=GSTK-...
   if (/^https?:\/\//i.test(raw)) {
     try {
       const u = new URL(raw);
-      const m = u.pathname.match(/\/cert\/([^\/?#]+)/i);
-      if (!m) return { error: "Parent record not in database." };
-      candidate = decodeURIComponent(m[1] || "").trim();
+      const token = (u.searchParams.get("token") || "").trim();
+      if (token && /^GSTK-[A-Za-z0-9_-]+$/i.test(token)) {
+        const tRow = await env.DB.prepare(
+          "SELECT used_cert_id FROM purchase_tokens WHERE token = ? LIMIT 1"
+        ).bind(token).first();
+        if (!tRow?.used_cert_id) return { value: null, status: "block" };
+
+        const cert = await env.DB.prepare(
+          "SELECT public_id, cert_id FROM certificates WHERE cert_id = ? LIMIT 1"
+        ).bind(tRow.used_cert_id).first();
+        if (!cert) return { error: "Parent token references a missing certificate." };
+        return { value: cert.public_id || cert.cert_id, status: "verified" };
+      }
     } catch (_) {
-      return { error: "Parent record not in database." };
+      return { error: "Parent record format is invalid. Use token link, GSTK token, or GS-BC public ID." };
     }
   }
 
-  if (!candidate) return { error: "Parent record not in database." };
+  // Raw token proof
+  if (/^GSTK-[A-Za-z0-9_-]+$/i.test(raw)) {
+    const tRow = await env.DB.prepare(
+      "SELECT used_cert_id FROM purchase_tokens WHERE token = ? LIMIT 1"
+    ).bind(raw).first();
+    if (!tRow?.used_cert_id) return { error: "Parent token is invalid or has not been used to issue a certificate yet." };
 
-  const row = await env.DB.prepare(
-    "SELECT public_id, cert_id FROM certificates WHERE public_id = ? OR cert_id = ? LIMIT 1"
-  ).bind(candidate, candidate).first();
+    const cert = await env.DB.prepare(
+      "SELECT public_id, cert_id FROM certificates WHERE cert_id = ? LIMIT 1"
+    ).bind(tRow.used_cert_id).first();
+    if (!cert) return { error: "Parent token references a missing certificate." };
+    return { value: cert.public_id || cert.cert_id, status: "verified" };
+  }
 
-  if (!row) return { error: "Parent record not in database." };
-  return { value: row.public_id || row.cert_id };
+  // Public ID claim only
+  if (/^GS-BC-[A-Za-z0-9_-]+$/i.test(raw)) {
+    const resolved = await findById(raw);
+    if (!resolved) return { error: "Parent public record ID not found in registry." };
+    return { value: resolved, status: "claimed" };
+  }
+
+  return { error: "Parent record format is invalid. Use token link, GSTK token, or GS-BC public ID." };
 }
 
 async function redeemPurchaseToken(request, env) {
@@ -776,8 +808,9 @@ async function redeemPurchaseToken(request, env) {
 
   // Validate and resolve parent record
   const parentResolved = await resolveParentRecordValue(provenance_link, env);
-  if (parentResolved.error) return errPage("Parent record not found in registry. Please enter a valid GhostShell certificate ID or leave blank.");
+  if (parentResolved.error) return errPage(parentResolved.error);
   const parent_record_value = parentResolved.value;
+  const parent_record_status = parentResolved.status || null;
 
   // Validate token
   const tokenRow = await env.DB.prepare(
@@ -810,6 +843,7 @@ async function redeemPurchaseToken(request, env) {
       cognitive_core_exact: cognitive_core_exact || null,
       creator_label: creator_label || null,
       provenance_link: parent_record_value,
+      parent_record_status: parent_record_status,
       schema_version,
       edited_at_utc: editedAt,
     });
@@ -824,6 +858,7 @@ async function redeemPurchaseToken(request, env) {
           cognitive_core_exact = ?,
           creator_label = ?,
           provenance_link = ?,
+          parent_record_status = ?,
           declared_ontological_status = ?,
           schema_version = ?,
           public_fingerprint = ?,
@@ -840,6 +875,7 @@ async function redeemPurchaseToken(request, env) {
       cognitive_core_exact || null,
       creator_label || null,
       parent_record_value,
+      parent_record_status,
       declared_ontological_status,
       schema_version,
       public_fingerprint,
@@ -862,6 +898,7 @@ async function redeemPurchaseToken(request, env) {
     cognitive_core_exact: cognitive_core_exact || null,
     creator_label: creator_label || null,
     provenance_link: parent_record_value,
+    parent_record_status: parent_record_status,
     schema_version,
   });
   const public_fingerprint = await sha256Hex(fingerprintSource);
@@ -877,13 +914,14 @@ async function redeemPurchaseToken(request, env) {
         INSERT INTO certificates
         (cert_id, issued_at_utc, card_number, public_id, registered_by,
          agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
-         creator_label, provenance_link, declared_ontological_status,
+         creator_label, provenance_link, parent_record_status, declared_ontological_status,
          schema_version, public_fingerprint, download_token_hash, status, edit_count, last_edited_at_utc)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0, NULL)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0, NULL)
       `).bind(
         cert_id, issued_at_utc, card_number, public_id, registered_by,
         agent_name, place_of_birth, cognitive_core_family,
         cognitive_core_exact || null, creator_label || null, parent_record_value,
+        parent_record_status,
         declared_ontological_status,
         schema_version, public_fingerprint, download_token_hash
       ).run();
@@ -1242,7 +1280,7 @@ async function opsEmailSummary(request, env) {
 
 async function certVerifyPage(certId, env) {
   const selectPublicFields =
-    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
+    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
 
   // Resolve by canonical cert_id first, then fallback to public_id alias.
   let row = await env.DB.prepare(
@@ -1394,7 +1432,9 @@ return html(`<!doctype html>
             const hrefRaw = /^https?:\/\//i.test(p) ? p : `${(env.BASE_URL || 'https://ghostshell.host')}/cert/${encodeURIComponent(p)}`;
             const href = hrefRaw.replace(/"/g, '&quot;');
             const pSafe = safe(p);
-            return `<div class="k">parent_record</div><div class="v clip" title="${pSafe}"><a href="${href}" target="_blank" rel="noopener noreferrer">${pSafe}</a> <span class="k">(claimed)</span></div>`;
+            const parentStatus = (row.parent_record_status || 'claimed').toString().toLowerCase();
+            const label = parentStatus === 'verified' ? 'verified' : 'claimed';
+            return `<div class="k">parent_record</div><div class="v clip" title="${pSafe}"><a href="${href}" target="_blank" rel="noopener noreferrer">${pSafe}</a> <span class="k">(${label})</span></div>`;
           })() : ''}
         </div>
 
@@ -1418,7 +1458,7 @@ async function certDownloadPrintable(certId, token, env) {
   if (!token) return new Response("Missing token", { status: 401 });
 
   const row = await env.DB.prepare(
-    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, declared_ontological_status, download_token_hash, status FROM certificates WHERE cert_id = ?"
+    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, download_token_hash, status FROM certificates WHERE cert_id = ?"
   ).bind(certId).first();
 
   if (!row) return new Response("Not found", { status: 404 });
@@ -1476,7 +1516,7 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
     <p><strong>Registry Record ID:</strong> <span class="mono">${safe(row.public_id || row.cert_id)}</span></p>
     <p class="small"><strong>Canonical Record ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
     <p><strong>Creator label (pseudonym):</strong> ${safe(row.creator_label || 'Undisclosed')}</p>
-    ${row.provenance_link ? `<p><strong>Parent record (claimed):</strong> ${safe(row.provenance_link)}</p>` : ''}
+    ${row.provenance_link ? `<p><strong>Parent record (${((row.parent_record_status || 'claimed').toString().toLowerCase() === 'verified') ? 'verified' : 'claimed'}):</strong> ${safe(row.provenance_link)}</p>` : ''}
     ${row.declared_ontological_status ? `<p><strong>Declared ontological status:</strong> ${safe(row.declared_ontological_status)}</p>` : ''}
     <p class="small">Verification: ${env.BASE_URL || 'https://ghostshell.host'}/cert/${encodeURIComponent(row.public_id || row.cert_id)}</p>
   </div>
