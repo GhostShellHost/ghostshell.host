@@ -421,6 +421,12 @@ async function createCheckout(request, env) {
   body.set("metadata[cognitive_core_exact]", cognitive_core_exact);
   body.set("metadata[creator_label]", creator_label);
   body.set("metadata[provenance_link]", provenance_link);
+  body.set("metadata[inception_date]", inception_date);
+  body.set("metadata[place_city]", place_city);
+  body.set("metadata[place_state]", place_state);
+  body.set("metadata[place_country]", place_country);
+  body.set("metadata[show_city_public]", show_city_public.toString());
+  body.set("metadata[hide_state_public]", hide_state_public.toString());
   body.set("metadata[recovery_email]", recovery_email);
   body.set("metadata[recovery_email_hash]", emailHash);
 
@@ -815,6 +821,14 @@ async function redeemPurchaseToken(request, env) {
   const provenance_link = (fd.get("provenance_link") || "").toString().trim();
   const declared_ontological_status = (fd.get("declared_ontological_status") || "").toString().trim() || null;
 
+  // Optional inception/location fields
+  const inception_date_utc = (fd.get("inception_date") || fd.get("inception_date_utc") || "").toString().trim() || null;
+  const place_city = (fd.get("place_city") || "").toString().trim() || null;
+  const place_state = (fd.get("place_state") || "").toString().trim() || null;
+  const place_country = (fd.get("place_country") || "").toString().trim() || null;
+  const show_city_public = ((fd.get("show_city_public") || "").toString().trim() === "on" || (fd.get("show_city_public") || "").toString().trim() === "1") ? 1 : 0;
+  const hide_state_public = ((fd.get("hide_state_public") || "").toString().trim() === "on" || (fd.get("hide_state_public") || "").toString().trim() === "1") ? 1 : 0;
+
   const errPage = (msg) => html(`<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Error — GhostShell</title>
@@ -866,6 +880,12 @@ async function redeemPurchaseToken(request, env) {
       creator_label: creator_label || null,
       provenance_link: parent_record_value,
       parent_record_status: parent_record_status,
+      inception_date_utc: inception_date_utc || null,
+      place_city: place_city || null,
+      place_state: place_state || null,
+      place_country: place_country || null,
+      show_city_public: show_city_public || 0,
+      hide_state_public: hide_state_public || 0,
       schema_version,
       edited_at_utc: editedAt,
     });
@@ -882,6 +902,12 @@ async function redeemPurchaseToken(request, env) {
           provenance_link = ?,
           parent_record_status = ?,
           declared_ontological_status = ?,
+          inception_date_utc = ?,
+          place_city = ?,
+          place_state = ?,
+          place_country = ?,
+          show_city_public = ?,
+          hide_state_public = ?,
           schema_version = ?,
           public_fingerprint = ?,
           edit_count = COALESCE(edit_count, 0) + 1,
@@ -899,6 +925,12 @@ async function redeemPurchaseToken(request, env) {
       parent_record_value,
       parent_record_status,
       declared_ontological_status,
+      inception_date_utc,
+      place_city,
+      place_state,
+      place_country,
+      show_city_public,
+      hide_state_public,
       schema_version,
       public_fingerprint,
       registered_by,
@@ -921,6 +953,12 @@ async function redeemPurchaseToken(request, env) {
     creator_label: creator_label || null,
     provenance_link: parent_record_value,
     parent_record_status: parent_record_status,
+    inception_date_utc: inception_date_utc || null,
+    place_city: place_city || null,
+    place_state: place_state || null,
+    place_country: place_country || null,
+    show_city_public: show_city_public || 0,
+    hide_state_public: hide_state_public || 0,
     schema_version,
   });
   const public_fingerprint = await sha256Hex(fingerprintSource);
@@ -937,14 +975,16 @@ async function redeemPurchaseToken(request, env) {
         (cert_id, issued_at_utc, card_number, public_id, registered_by,
          agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
          creator_label, provenance_link, parent_record_status, declared_ontological_status,
+         inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public,
          schema_version, public_fingerprint, download_token_hash, status, edit_count, last_edited_at_utc)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0, NULL)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0, NULL)
       `).bind(
         cert_id, issued_at_utc, card_number, public_id, registered_by,
         agent_name, place_of_birth, cognitive_core_family,
         cognitive_core_exact || null, creator_label || null, parent_record_value,
         parent_record_status,
         declared_ontological_status,
+        inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public,
         schema_version, public_fingerprint, download_token_hash
       ).run();
 
@@ -1159,6 +1199,12 @@ async function stripeWebhook(request, env) {
     cognitive_core_exact: md.cognitive_core_exact || null,
     creator_label: md.creator_label || null,
     provenance_link: md.provenance_link || null,
+    inception_date_utc: md.inception_date || null,
+    place_city: md.place_city || null,
+    place_state: md.place_state || null,
+    place_country: md.place_country || null,
+    show_city_public: md.show_city_public === "1" ? 1 : 0,
+    hide_state_public: md.hide_state_public === "1" ? 1 : 0,
     // Registration mode flag is not yet explicitly wired in form metadata.
     // TODO: switch to metadata-driven value once agent-filled flow posts a flag.
     registered_by: "human",
@@ -1197,13 +1243,15 @@ async function stripeWebhook(request, env) {
           (cert_id, issued_at_utc, card_number, public_id, registered_by,
            agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
            creator_label, provenance_link,
+           inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public,
            schema_version, public_fingerprint, download_token_hash, status,
            delivery_email_hash, delivery_email_iv, delivery_email_enc)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)
         `).bind(
           record.cert_id, record.issued_at_utc, card_number, public_id, record.registered_by,
           record.agent_name, record.place_of_birth, record.cognitive_core_family, record.cognitive_core_exact,
           record.creator_label, record.provenance_link,
+          record.inception_date_utc, record.place_city, record.place_state, record.place_country, record.show_city_public, record.hide_state_public,
           record.schema_version, public_fingerprint, download_token_hash,
           record.delivery_email_hash, record.delivery_email_iv, record.delivery_email_enc
         ).run();
@@ -1218,12 +1266,14 @@ async function stripeWebhook(request, env) {
           (cert_id, issued_at_utc, card_number, public_id, registered_by,
            agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
            creator_label, provenance_link,
+           inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public,
            schema_version, public_fingerprint, download_token_hash, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
         `).bind(
           record.cert_id, record.issued_at_utc, card_number, public_id, record.registered_by,
           record.agent_name, record.place_of_birth, record.cognitive_core_family, record.cognitive_core_exact,
           record.creator_label, record.provenance_link,
+          record.inception_date_utc, record.place_city, record.place_state, record.place_country, record.show_city_public, record.hide_state_public,
           record.schema_version, public_fingerprint, download_token_hash
         ).run();
       }
