@@ -4,6 +4,13 @@ Format: Version — Date — What changed
 
 ---
 
+## v0.23 — 2026-02-13
+- **Index page**: Removed "Read Charter" button
+- **Index page**: Restacked buttons vertically (centered)
+- **Index page**: "Search Registry" moved below birth certificate CTA
+
+---
+
 ## v0.012 — 2026-02-12
 - **Record page**: Moved version badge inside the `.paper` certificate card (bottom-right corner), replacing fixed page overlay
 
