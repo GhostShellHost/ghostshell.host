@@ -7,7 +7,7 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-13.020";
+export const WORKER_VERSION = "2026-02-13.021";
 const PAGE_VERSION = "v0.019";
 
 export default {
@@ -1509,7 +1509,7 @@ return html(`<!doctype html>
       <div class="header">
         <div>
           <h1>GhostShell registry record — redacted</h1>
-          <div class="catalog"><span>CATALOG:</span> <b>GS/REG</b> <span>•</span> <span>CARD:</span> <b>${safe(row.public_id || row.cert_id)}</b> <span>•</span> <span>CLASS:</span> <b>${safe(integrityLabel)}</b></div>
+          <div class="catalog">GhostShell.host registry record</div>
         </div>
         <div class="stamp">PUBLIC SAFE VIEW</div>
       </div>
