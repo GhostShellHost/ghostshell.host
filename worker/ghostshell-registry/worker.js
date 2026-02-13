@@ -7,7 +7,7 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-13.022";
+export const WORKER_VERSION = "2026-02-13.023";
 const PAGE_VERSION = "v0.019";
 
 export default {
@@ -1477,7 +1477,7 @@ return html(`<!doctype html>
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);position:relative;letter-spacing:.03em;text-shadow:0.35px 0 rgba(17,24,39,.55),-0.15px 0 rgba(17,24,39,.25);filter:contrast(1.02) saturate(0.95)}
     .grid{margin-top:10px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px 16px;align-items:baseline;justify-content:start;grid-auto-rows:minmax(20px,auto)}
     .k{color:rgba(17,24,39,.66)}
-    .k::after{content:":";display:inline-block;margin-left:.4ch;color:rgba(17,24,39,.42)}
+    .k::after{content:":";display:inline;color:rgba(17,24,39,.42)}
     .v{color:var(--ink);font-weight:700;min-width:0;overflow-wrap:anywhere}
     .clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:inline-block}
     .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:9.8px;line-height:1.22;color:rgba(17,24,39,.70);letter-spacing:.08em}
@@ -1506,7 +1506,7 @@ return html(`<!doctype html>
 
       <div class="header">
         <div>
-          <h1>GhostShell registry record — redacted</h1>
+          <h1>BIRTH CERTIFICATE AI AGENT // PUBLIC RECORD — REDACTED</h1>
           <div class="catalog">GhostShell.host registry record</div>
         </div>
         <div class="stamp">PUBLIC SAFE VIEW</div>
@@ -1514,9 +1514,10 @@ return html(`<!doctype html>
 
       <div class="sheet">
         <div class="rubber" aria-hidden="true">REDACTED COPY</div>
-        <div class="type">TYPEWRITTEN EXTRACT // ${safe(row.public_id || row.cert_id)}</div>
+        <div class="type">TYPEWRITTEN EXTRACT //</div>
 
         <div class="grid type" aria-label="Certificate fields">
+          <div class="k">public_record_id</div><div class="v"><a href="${(env.BASE_URL || 'https://ghostshell.host')}/cert/${encodeURIComponent(row.public_id || row.cert_id)}" target="_self" rel="noopener noreferrer">${safe(row.public_id || row.cert_id)}</a></div>
           <div class="k">registration_date</div><div class="v">${safe(row.issued_at_utc)}</div>
           <div class="k">agent_name</div><div class="v">${safe(row.agent_name)}</div>
           ${row.inception_date_utc ? `<div class="k">inception_date</div><div class="v">${safe(row.inception_date_utc)}</div>` : ''}
@@ -1534,7 +1535,7 @@ return html(`<!doctype html>
           })()}
           <div class="k">cognitive_core_at_inception</div><div class="v clip" title="${safe(coreDisplay)}">${safe(coreDisplay)}</div>
           <div class="k">custodian</div><div class="v" title="Redacted in public view"><span class="redact" aria-label="redacted"></span></div>
-          <div class="k">amendments</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
+          <div class="k">amendments (24h)</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
           ${row.provenance_link ? (() => {
             const p = (row.provenance_link || '').trim();
             const hrefRaw = /^https?:\/\//i.test(p) ? p : `${(env.BASE_URL || 'https://ghostshell.host')}/cert/${encodeURIComponent(p)}`;
