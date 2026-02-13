@@ -7,7 +7,7 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-13.021";
+export const WORKER_VERSION = "2026-02-13.022";
 const PAGE_VERSION = "v0.019";
 
 export default {
@@ -1380,7 +1380,7 @@ async function opsEmailSummary(request, env) {
 
 async function certVerifyPage(certId, env) {
   const selectPublicFields =
-    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
+    "SELECT cert_id, public_id, issued_at_utc, inception_date_utc, agent_name, place_of_birth, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
 
   // Resolve by canonical cert_id first, then fallback to public_id alias.
   let row = await env.DB.prepare(
@@ -1406,8 +1406,6 @@ async function certVerifyPage(certId, env) {
 
   const safe = (s) => (s ?? "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const status = (row.status || "").toString().toLowerCase();
-  const registryLabel = status === "active" ? "Registry entry found" : "Registry entry not active";
-  const integrityLabel = status === "active" ? "PASS" : "UNKNOWN";
   const coreFamily = row.cognitive_core_family || "Undisclosed";
   const coreExact = row.cognitive_core_exact || "";
   const PRESERVE_AS_IS = ["Undisclosed", "Prefer not to say"];
@@ -1519,14 +1517,24 @@ return html(`<!doctype html>
         <div class="type">TYPEWRITTEN EXTRACT // ${safe(row.public_id || row.cert_id)}</div>
 
         <div class="grid type" aria-label="Certificate fields">
-          <div class="k">registration_date_utc</div><div class="v">${safe(row.issued_at_utc)}</div>
-          <div class="k">registry_status</div><div class="v">${safe(registryLabel)}</div>
+          <div class="k">registration_date</div><div class="v">${safe(row.issued_at_utc)}</div>
           <div class="k">agent_name</div><div class="v">${safe(row.agent_name)}</div>
+          ${row.inception_date_utc ? `<div class="k">inception_date</div><div class="v">${safe(row.inception_date_utc)}</div>` : ''}
           ${row.declared_ontological_status ? `<div class="k">ontological_status</div><div class="v">${safe(row.declared_ontological_status)}</div>` : ''}
-          <div class="k">place_of_origin</div><div class="v">${safe(row.place_of_birth || 'Unknown')}</div>
-          <div class="k">cognitive_core_at_birth</div><div class="v clip" title="${safe(coreDisplay)}">${safe(coreDisplay)}</div>
-          <div class="k">creator_operator</div><div class="v" title="Redacted in public view"><span class="redact" aria-label="redacted"></span></div>
-          <div class="k">edits</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
+          ${(() => {
+            const city = row.place_city || '';
+            const state = row.place_state || '';
+            const country = row.place_country || '';
+            const showCity = row.show_city_public === 1;
+            const hideState = row.hide_state_public === 1;
+            let location = country;
+            if (!hideState && state) location = state + ', ' + location;
+            if (showCity && city) location = city + ', ' + location;
+            return `<div class="k">geographic_location</div><div class="v">${safe(location || row.place_of_birth || 'Unknown')}</div>`;
+          })()}
+          <div class="k">cognitive_core_at_inception</div><div class="v clip" title="${safe(coreDisplay)}">${safe(coreDisplay)}</div>
+          <div class="k">custodian</div><div class="v" title="Redacted in public view"><span class="redact" aria-label="redacted"></span></div>
+          <div class="k">amendments</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
           ${row.provenance_link ? (() => {
             const p = (row.provenance_link || '').trim();
             const hrefRaw = /^https?:\/\//i.test(p) ? p : `${(env.BASE_URL || 'https://ghostshell.host')}/cert/${encodeURIComponent(p)}`;
