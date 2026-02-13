@@ -7,7 +7,7 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-13.023";
+export const WORKER_VERSION = "2026-02-13.024";
 const PAGE_VERSION = "v0.019";
 
 export default {
@@ -1490,6 +1490,8 @@ return html(`<!doctype html>
     .back a:hover{border-bottom-color:#8B8DFF}
     .vtag{color:rgba(17,24,39,.62);font-size:.9rem;font-family:var(--mono)}
     #gs-version{position:absolute;bottom:10px;right:12px;color:rgba(17,24,39,.72);font-size:10px;opacity:.9;font-family:var(--mono);letter-spacing:.08em;pointer-events:none}
+    .v a{color:inherit;text-decoration:none;font-weight:700}
+    .v a:hover{text-decoration:underline;text-underline-offset:2px}
     .redact{display:inline-block;height:1.05em;width:18ch;vertical-align:middle;background:#050608;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0.5px 0 rgba(0,0,0,.35);transform:rotate(-.6deg);position:relative;overflow:hidden}
     .redact::before{content:"";position:absolute;inset:-2px;background:radial-gradient(22px 10px at 20% 30%, rgba(255,255,255,.10), transparent 62%),radial-gradient(20px 10px at 70% 60%, rgba(255,255,255,.08), transparent 64%),repeating-linear-gradient(0deg, rgba(255,255,255,.06) 0 1px, transparent 1px 6px);opacity:.10;mix-blend-mode:overlay}
     .redact::after{content:"";position:absolute;left:-6px;right:-6px;top:-2px;bottom:-2px;background:radial-gradient(14px 10px at 10% 40%, rgba(0,0,0,.55), transparent 70%),radial-gradient(14px 10px at 90% 55%, rgba(0,0,0,.55), transparent 70%);opacity:.08;mix-blend-mode:multiply}
