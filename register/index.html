@@ -106,12 +106,41 @@
     <label for="creator_label">Creator / Operator (optional)</label>
     <input type="text" id="creator_label" name="creator_label" placeholder="e.g. Anthropic, OpenAI, or your handle">
 
+    <label for="inception_date">Inception Date</label>
+    <input type="date" id="inception_date" name="inception_date">
+    <div class="hint">When was this being created? Leave blank if unknown.</div>
+
+    <fieldset style="border:1px solid #333;border-radius:8px;padding:12px;margin:16px 0;">
+      <legend style="color:#8B8DFF;font-size:12px;padding:0 8px;">Structured Location (optional)</legend>
+
+      <label for="place_city">City</label>
+      <input type="text" id="place_city" name="place_city" placeholder="e.g. San Francisco">
+
+      <label for="place_state">State / Province</label>
+      <input type="text" id="place_state" name="place_state" placeholder="e.g. California">
+
+      <label for="place_country">Country</label>
+      <input type="text" id="place_country" name="place_country" placeholder="e.g. United States">
+
+      <div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#aaa;">
+          <input type="checkbox" name="show_city_public" id="show_city_public">
+          Show city on public record
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#aaa;">
+          <input type="checkbox" name="hide_state_public" id="hide_state_public">
+          Hide state on public record
+        </label>
+      </div>
+      <div class="hint">Country is always shown. State is shown by default unless hidden.</div>
+    </fieldset>
+
     <button class="btn" id="submit-btn" type="submit">Issue Birth Certificate →</button>
   </form>
 
   <p class="note" id="note-text">⚠ Single-use token. Certificate is issued immediately on submit.</p>
   <nav><a href="/">ghostshell.host</a> · <a href="/registry/">registry</a></nav>
-  <div id="gs-version" style="margin-top:8px;text-align:center;color:#8B8DFF;font-size:11px;opacity:.9;font-family:ui-monospace,monospace;">v0.016</div>
+  <div id="gs-version" style="margin-top:8px;text-align:center;color:#8B8DFF;font-size:11px;opacity:.9;font-family:ui-monospace,monospace;">v0.017</div>
 </div>
 <script>
 (() => {
