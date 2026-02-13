@@ -289,7 +289,12 @@ async function ensureRuntimeSchema(db) {
     "ALTER TABLE purchase_tokens ADD COLUMN abandoned_email_error TEXT",
     "ALTER TABLE purchase_tokens ADD COLUMN status TEXT DEFAULT 'pending'",
     "ALTER TABLE certificates ADD COLUMN declared_ontological_status TEXT",
-    "ALTER TABLE certificates ADD COLUMN parent_record_status TEXT",
+    "ALTER TABLE certificates ADD COLUMN inception_date_utc TEXT",
+    "ALTER TABLE certificates ADD COLUMN place_city TEXT",
+    "ALTER TABLE certificates ADD COLUMN place_state TEXT",
+    "ALTER TABLE certificates ADD COLUMN place_country TEXT",
+    "ALTER TABLE certificates ADD COLUMN show_city_public INTEGER DEFAULT 0",
+    "ALTER TABLE certificates ADD COLUMN hide_state_public INTEGER DEFAULT 0",
   ];
 
   await db.prepare(
@@ -367,6 +372,14 @@ async function createCheckout(request, env) {
   const cognitive_core_exact = (fd.get("cognitive_core_exact") || "").toString().trim();
   const creator_label = (fd.get("creator_label") || "").toString().trim();
   const provenance_link = (fd.get("provenance_link") || "").toString().trim();
+  
+  // New fields
+  const inception_date = (fd.get("inception_date") || "").toString().trim();
+  const place_city = (fd.get("place_city") || "").toString().trim();
+  const place_state = (fd.get("place_state") || "").toString().trim();
+  const place_country = (fd.get("place_country") || "").toString().trim();
+  const show_city_public = (fd.get("show_city_public") || "").toString().trim() === "on" ? 1 : 0;
+  const hide_state_public = (fd.get("hide_state_public") || "").toString().trim() === "on" ? 1 : 0;
 
   // Recovery email: required for completion tracking and support
   const recovery_email = (fd.get("recovery_email") || "").toString().trim();

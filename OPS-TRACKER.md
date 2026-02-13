@@ -14,6 +14,15 @@ Single place to track:
 
 ## Recent changes (latest first)
 
+### 2026-02-13
+- **Option A: pre-checkout DB tracking** (v2026-02-13.020)
+  - Token now allocated at checkout start, included in Stripe metadata
+  - Pending row inserted into `purchase_tokens` immediately on Stripe session creation (status=`pending`)
+  - On payment confirmed: UPDATE row → status=`paid` (no more re-INSERT race)
+  - On session expired: UPDATE row → status=`abandoned` (tracking now works — was silently no-op before)
+  - Adds `status` column via `ensureRuntimeSchema` (`pending` / `paid` / `abandoned`)
+  - Fixes gap where abandoned checkouts had no DB record and email tracking was lost
+
 ### 2026-02-12
 - Register flow refactor deployed: replaced dual cognitive-core fields with single dropdown + "Other" custom path.
 - Added client-side submit mapping to preserve backend compatibility (`cognitive_core_family` / `cognitive_core_exact`).

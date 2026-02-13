@@ -106,14 +106,6 @@
     <label for="creator_label">Creator / Operator (optional)</label>
     <input type="text" id="creator_label" name="creator_label" placeholder="e.g. Anthropic, OpenAI, or your handle">
 
-    <label for="provenance_link">Parent Record (optional)</label>
-    <div style="position:relative;display:flex;align-items:center">
-      <input type="text" id="provenance_link" name="provenance_link" placeholder="Paste parent token link / GSTK token / GS-BC public ID" style="flex:1;padding-right:32px">
-      <span id="parent-status-icon" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:20px;height:20px;background-size:contain;background-repeat:no-repeat;pointer-events:none;opacity:0.7"></span>
-    </div>
-    <div class="hint" id="parent-hint">Accepted: full register token link, raw GSTK token, or GS-BC public record ID.</div>
-    <div class="err" id="parent-err"></div>
-
     <button class="btn" id="submit-btn" type="submit">Issue Birth Certificate →</button>
   </form>
 
@@ -408,92 +400,6 @@
     });
   }
 
-  // Parent record validation
-  const parentInput = document.getElementById('provenance_link');
-  const parentHint = document.getElementById('parent-hint');
-  const parentErr = document.getElementById('parent-err');
-
-  function validateParentInput(value) {
-    const trimmed = (value || '').trim();
-    const icon = document.getElementById('parent-status-icon');
-    if (icon) {
-      icon.classList.remove('parent-valid', 'parent-invalid');
-    }
-
-    if (!trimmed) {
-      parentErr.textContent = '';
-      parentErr.style.display = 'none';
-      parentHint.textContent = 'Accepted: full register token link, raw GSTK token, or GS-BC public record ID.';
-      return { valid: true, type: 'none', normalized: '' };
-    }
-
-    // Token link (contains token=)
-    if (/token=/i.test(trimmed)) {
-      try {
-        const url = new URL(trimmed);
-        const token = url.searchParams.get('token') || '';
-        if (token && /^GSTK-[A-Za-z0-9_-]+$/i.test(token)) {
-          parentErr.textContent = '';
-          parentErr.style.display = 'none';
-          parentHint.textContent = '✓ Token link detected. This will be verified as proof of parentage.';
-          if (icon) icon.classList.add('parent-valid');
-          return { valid: true, type: 'token_link', normalized: token };
-        }
-      } catch (_) {}
-    }
-
-    // Raw token
-    if (/^GSTK-[A-Za-z0-9_-]+$/i.test(trimmed)) {
-      parentErr.textContent = '';
-      parentErr.style.display = 'none';
-      parentHint.textContent = '✓ Raw token detected. This will be verified as proof of parentage.';
-      if (icon) icon.classList.add('parent-valid');
-      return { valid: true, type: 'token_raw', normalized: trimmed };
-    }
-
-    // Public record ID (GS-BC-...)
-    if (/^GS-BC-[A-Za-z0-9_-]+$/i.test(trimmed)) {
-      parentErr.textContent = '';
-      parentErr.style.display = 'none';
-      parentHint.textContent = '✓ Public record ID detected. This will be marked as "claimed" (anyone can look up a public ID).';
-      if (icon) icon.classList.add('parent-valid');
-      return { valid: true, type: 'public_id', normalized: trimmed };
-    }
-
-    // Invalid
-    parentErr.textContent = 'Invalid parent record. Must be a GhostShell registration link (with token), a GSTK token, or a GS-BC public ID. Leave blank if none.';
-    parentErr.style.display = 'block';
-    parentHint.textContent = 'Accepted: full register token link, raw GSTK token, or GS-BC public record ID.';
-    if (icon) icon.classList.add('parent-invalid');
-    return { valid: false, type: 'invalid', normalized: '' };
-  }
-
-  if (parentInput && parentErr) {
-    parentInput.addEventListener('input', () => {
-      validateParentInput(parentInput.value);
-    });
-    parentInput.addEventListener('blur', () => {
-      validateParentInput(parentInput.value);
-    });
-
-    // Override form submission to enforce validation
-    const originalSubmit = form.onsubmit;
-    form.onsubmit = function(e) {
-      const validation = validateParentInput(parentInput.value);
-      if (!validation.valid) {
-        e.preventDefault();
-        parentErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return false;
-      }
-      // Inject normalized value as hidden field for backend
-      const hidden = document.createElement('input');
-      hidden.type = 'hidden';
-      hidden.name = '_parent_normalized';
-      hidden.value = validation.normalized;
-      form.appendChild(hidden);
-      return true;
-    };
-  }
 })();
 </script>
 
