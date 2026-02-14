@@ -1053,6 +1053,9 @@ async function redeemPurchaseToken(request, env) {
         const tok = token;
         const dlUrl = `${baseUrl}/cert/${encodeURIComponent(cert_id)}/download?t=${encodeURIComponent(tok)}`;
         const publicUrl = `${baseUrl}/cert/${encodeURIComponent(public_id)}`;
+        const editUrl = `${baseUrl}/register/?token=${encodeURIComponent(tok)}&by=human`;
+        const agentUrl = `${baseUrl}/register/?token=${encodeURIComponent(tok)}&by=agent`;
+        const handoffUrl = `${baseUrl}/handoff/?token=${encodeURIComponent(tok)}`;
 
         const pt = await env.DB.prepare(
           "SELECT recovery_email_iv, recovery_email_enc FROM purchase_tokens WHERE token = ?"
@@ -1070,6 +1073,16 @@ async function redeemPurchaseToken(request, env) {
             text: [
               "Your certificate is now issued.",
               "",
+              `Edits: you can update your certificate for ${CORRECTION_WINDOW_HOURS} hours after your first submission.`,
+              "",
+              "Edit / correct your certificate:",
+              editUrl,
+              "",
+              "Give to your AI agent (optional):",
+              handoffUrl,
+              "Agent direct link:",
+              agentUrl,
+              "",
               "Private download link (full certificate):",
               dlUrl,
               "",
@@ -1082,6 +1095,10 @@ async function redeemPurchaseToken(request, env) {
             ].join("\n"),
             html: `
               <p><strong>Your certificate is now issued.</strong></p>
+              <p><strong>Edits:</strong> you can update your certificate for <strong>${CORRECTION_WINDOW_HOURS} hours</strong> after your first submission.</p>
+              <p><strong>Edit / correct your certificate:</strong><br><a href="${editUrl}">${editUrl}</a></p>
+              <p><strong>Give to your AI agent (optional):</strong><br><a href="${handoffUrl}">${handoffUrl}</a><br>
+              <span style="color:#6b7280;font-size:12px">Agent direct link:</span> <a href="${agentUrl}">${agentUrl}</a></p>
               <p><strong>Private download link (full certificate):</strong><br><a href="${dlUrl}">${dlUrl}</a></p>
               <p><strong>Public registry view (redacted):</strong><br><a href="${publicUrl}">${publicUrl}</a></p>
               <p style="color:#6b7280;font-size:12px">Keep the private link safe. Anyone with the link can download your certificate.</p>
