@@ -1801,11 +1801,14 @@ async function certDownloadPrintable(certId, token, env) {
     .v a{color:inherit;text-decoration:none;font-weight:700}
     .v a:hover{text-decoration:underline;text-underline-offset:2px}
     @media (max-width:720px){.grid{grid-template-columns:1fr;gap:6px 0}.k{margin-top:8px}}
-    @page { size: landscape; margin: 0.4in; }
+    @page { size: landscape; margin: 0.35in; }
     @media print{
       body{padding:0;background:#fff}
       .toolbar{display:none}
-      .paper{box-shadow:none;transform:none;border:none}
+      .wrap{max-width:920px;margin:0 auto}
+      #certWrap{display:flex;justify-content:center}
+      .paper{box-shadow:none;transform:none;border:1px solid rgba(0,0,0,.08)}
+      .grid{grid-template-columns:220px minmax(0,1fr) !important;gap:8px 16px !important;}
     }
   </style>
 </head>
@@ -1813,6 +1816,7 @@ async function certDownloadPrintable(certId, token, env) {
   <div class="toolbar" aria-label="Download controls">
     <a class="tbtn" href="${publicUrl}">← Back to public record</a>
     <span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+      <span style="font-size:12px;color:rgba(233,237,241,.72)">For clean print: disable Headers & Footers; enable Background graphics.</span>
       <a class="tbtn" href="#" id="doPrint" aria-label="Print certificate">🖨️ Print</a>
       <a class="tbtn" href="#" id="dlPng">Download PNG</a>
     </span>
