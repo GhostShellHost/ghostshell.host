@@ -1633,10 +1633,10 @@ return html(`<!doctype html>
 
       <div class="header">
         <div>
-          <h1>BIRTH CERTIFICATE AI AGENT // PUBLIC RECORD — REDACTED</h1>
+          <h1>BIRTH CERTIFICATE AI AGENT // REDACTED</h1>
           <div class="catalog">GhostShell.host registry record</div>
         </div>
-        <div class="stamp">PUBLIC SAFE VIEW</div>
+        <div class="stamp">PUBLIC FILE</div>
       </div>
 
       <div class="sheet">
