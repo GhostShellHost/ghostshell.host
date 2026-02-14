@@ -1676,7 +1676,7 @@ return html(`<!doctype html>
       <div class="muted">Private credential issued by GhostShell. Verification checks registry presence + fingerprint integrity only.</div>
       <div id="gs-version">${PAGE_VERSION}</div>
     </div>
-    <p class="back"><a href="/">Back home</a> &nbsp; <a href="/issue/">Buy certificate</a> &nbsp; <a href="/registry/">Search registry</a> &nbsp; <span class="vtag">${PAGE_VERSION}</span></p>
+    <p class="back"><a href="/">Back home</a> &nbsp; <a href="/issue/">Buy certificate</a> &nbsp; <a href="/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}">Search registry</a> &nbsp; <span class="vtag">${PAGE_VERSION}</span></p>
   </div>
 </body>
 </html>`, 200, cacheHeaders);
@@ -1815,7 +1815,7 @@ async function certDownloadPrintable(certId, token, env) {
 </head>
 <body>
   <div class="toolbar" aria-label="Download controls">
-    <a class="tbtn" href="${publicUrl}">← Back to public record</a>
+    <a class="tbtn" href="/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}">← Public registry</a>
     <span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
       <span style="font-size:12px;color:rgba(233,237,241,.72)">For clean print: disable Headers & Footers; enable Background graphics.</span>
       <a class="tbtn" href="#" id="doPrint" aria-label="Print certificate">🖨️ Print</a>
