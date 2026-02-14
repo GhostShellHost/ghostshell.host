@@ -1803,10 +1803,11 @@ async function certDownloadPrintable(certId, token, env) {
     @media (max-width:720px){.grid{grid-template-columns:1fr;gap:6px 0}.k{margin-top:8px}}
     @page { size: landscape; margin: 0.35in; }
     @media print{
-      body{padding:0;background:#fff}
+      html, body{height:100%}
+      body{padding:0;background:#fff;display:flex;align-items:center;justify-content:center}
       .toolbar{display:none}
-      .wrap{max-width:920px;margin:0 auto}
-      #certWrap{display:flex;justify-content:center}
+      .wrap{max-width:920px;margin:0}
+      #certWrap{display:block}
       .paper{box-shadow:none;transform:none;border:1px solid rgba(0,0,0,.08)}
       .grid{grid-template-columns:220px minmax(0,1fr) !important;gap:8px 16px !important;}
     }
