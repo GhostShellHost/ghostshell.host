@@ -95,6 +95,14 @@ Single place to track:
 
 ---
 
+## Launch mode operational notes
+- Treat GhostShell as live: **minimize test traffic** (Cloudflare/Stripe).
+- Use plus-address tests to keep everything in one inbox:
+  - `ghostshell.host+testNNN@gmail.com` → lands in `ghostshell.host@gmail.com`
+  - Log each run in `/home/joule/Drop/Joule.Dropbox/email-tests.md`
+- Smoke test order (one attempt each): `/issue/` → Stripe routing (no purchase) → (optional) test-checkout → `/register/` → `/cert/` → `/registry/`.
+- Browser automation on pi4: OpenClaw managed Chromium is enabled headless; use screenshots for evidence.
+
 ## Next actions
 1. Run abandoned-flow validation with a genuine `checkout.session.expired` event and confirm `abandoned_email_status` writes.
 2. Keep `/api/ops/email-summary` access key management documented (rotation + storage path).
