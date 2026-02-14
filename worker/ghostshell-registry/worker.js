@@ -75,9 +75,9 @@ export default {
       if (embed === "1" || embed === "true" || embed === "yes" || embed === "on") {
         return certVerifyPage(certMatch[1], env, request);
       }
-      const publicId = await resolvePublicIdForCertOrPublicId(certMatch[1], env);
-      const idForHub = publicId || certMatch[1];
-      return Response.redirect(`/registry/?id=${encodeURIComponent(idForHub)}`, 302);
+      // Avoid DB work here; treat the provided id as the registry hub id.
+      // (Public ids are the canonical share format; old cert_id links will still land on the hub.)
+      return Response.redirect(`/registry/?id=${encodeURIComponent(certMatch[1])}`, 302);
     }
 
     const dlMatch = url.pathname.match(/^\/cert\/([A-Za-z0-9_-]+)\/download$/);
