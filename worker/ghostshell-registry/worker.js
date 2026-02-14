@@ -68,7 +68,16 @@ export default {
 
     const certMatch = url.pathname.match(/^\/cert\/([A-Za-z0-9_-]+)$/);
     if (certMatch && request.method === "GET") {
-      return certVerifyPage(certMatch[1], env, request);
+      // Retired public /cert/<id> share view.
+      // Keep embed mode for registry iframe, and keep /download route for full certificate.
+      const u = new URL(request.url);
+      const embed = (u.searchParams.get("embed") || "").toLowerCase().trim();
+      if (embed === "1" || embed === "true" || embed === "yes" || embed === "on") {
+        return certVerifyPage(certMatch[1], env, request);
+      }
+      const publicId = await resolvePublicIdForCertOrPublicId(certMatch[1], env);
+      const idForHub = publicId || certMatch[1];
+      return Response.redirect(`/registry/?id=${encodeURIComponent(idForHub)}`, 302);
     }
 
     const dlMatch = url.pathname.match(/^\/cert\/([A-Za-z0-9_-]+)\/download$/);
@@ -1504,6 +1513,13 @@ async function opsEmailSummary(request, env) {
   }, 200);
 }
 
+async function resolvePublicIdForCertOrPublicId(id, env) {
+  const row = await env.DB.prepare(
+    "SELECT public_id FROM certificates WHERE cert_id = ? OR public_id = ?"
+  ).bind(id, id).first();
+  return row?.public_id || null;
+}
+
 async function certVerifyPage(certId, env, request) {
   const selectPublicFields =
     "SELECT cert_id, public_id, issued_at_utc, inception_date_utc, agent_name, place_of_birth, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
@@ -1678,7 +1694,7 @@ return html(`<!doctype html>
 
         <div class="micr" aria-label="Record hash (machine line)">
           <span class="hashline" id="fp"><span class="k">record_hash:</span> <span class="k">sha256</span> ${safe(row.public_fingerprint)}</span>
-          <span class="hashline"><span class="k">public_record:</span> ${(env.BASE_URL || 'https://ghostshell.host')}/cert/${encodeURIComponent(row.public_id || row.cert_id)}</span>
+          <span class="hashline"><span class="k">public_record:</span> ${(env.BASE_URL || 'https://ghostshell.host')}/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}</span>
         </div>
       </div>
       <div class="muted">Private credential issued by GhostShell. Verification checks registry presence + fingerprint integrity only.</div>
