@@ -1750,9 +1750,8 @@ async function certDownloadPrintable(certId, token, env) {
     .wrap{max-width:920px;margin:0 auto}
 
     .toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin:0 auto 14px;max-width:920px}
-    .tbtn{display:inline-block;padding:9px 12px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(255,255,255,.06);font-size:13px;text-decoration:none;color:#e9edf1}
+    .tbtn{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(255,255,255,.06);font-size:13px;text-decoration:none;color:#e9edf1}
     .tbtn:hover{background:rgba(255,255,255,.10)}
-    .tip{font-size:12px;color:rgba(233,237,241,.72)}
 
     #certWrap{display:block}
     .paper{
@@ -1802,6 +1801,7 @@ async function certDownloadPrintable(certId, token, env) {
     .v a{color:inherit;text-decoration:none;font-weight:700}
     .v a:hover{text-decoration:underline;text-underline-offset:2px}
     @media (max-width:720px){.grid{grid-template-columns:1fr;gap:6px 0}.k{margin-top:8px}}
+    @page { size: landscape; margin: 0.4in; }
     @media print{
       body{padding:0;background:#fff}
       .toolbar{display:none}
@@ -1813,7 +1813,7 @@ async function certDownloadPrintable(certId, token, env) {
   <div class="toolbar" aria-label="Download controls">
     <a class="tbtn" href="${publicUrl}">← Back to public record</a>
     <span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-      <span class="tip">Tip: Print → Save as PDF</span>
+      <a class="tbtn" href="#" id="doPrint" aria-label="Print certificate">🖨️ Print</a>
       <a class="tbtn" href="#" id="dlPng">Download PNG</a>
     </span>
   </div>
@@ -1873,7 +1873,14 @@ async function certDownloadPrintable(certId, token, env) {
 <script>
   (function(){
     const btn = document.getElementById('dlPng');
+    const printBtn = document.getElementById('doPrint');
     const cert = document.getElementById('certWrap');
+    if (printBtn) {
+      printBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.print();
+      });
+    }
     if (!btn || !cert) return;
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
