@@ -118,7 +118,7 @@
       const initial = (params.get('id') || DEFAULT_ID).trim();
       input.value = initial;
       shownId.textContent = initial;
-      frame.src = '/cert/' + encodeURIComponent(initial);
+      frame.src = '/cert/' + encodeURIComponent(initial) + '?embed=1';
 
       form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -128,7 +128,7 @@
         const nextUrl = '/registry/?id=' + encodeURIComponent(id);
         window.history.replaceState({}, '', nextUrl);
         shownId.textContent = id;
-        frame.src = '/cert/' + encodeURIComponent(id);
+        frame.src = '/cert/' + encodeURIComponent(id) + '?embed=1';
       });
     })();
   </script>

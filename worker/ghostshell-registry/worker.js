@@ -68,7 +68,7 @@ export default {
 
     const certMatch = url.pathname.match(/^\/cert\/([A-Za-z0-9_-]+)$/);
     if (certMatch && request.method === "GET") {
-      return certVerifyPage(certMatch[1], env);
+      return certVerifyPage(certMatch[1], env, request);
     }
 
     const dlMatch = url.pathname.match(/^\/cert\/([A-Za-z0-9_-]+)\/download$/);
@@ -95,6 +95,15 @@ function html(body, status = 200, extraHeaders = {}) {
       ...extraHeaders,
     },
   });
+}
+function urlParamTruthy(request, key) {
+  try {
+    const u = new URL(request.url);
+    const v = (u.searchParams.get(key) || "").toLowerCase().trim();
+    return v === "1" || v === "true" || v === "yes" || v === "on";
+  } catch (_) {
+    return false;
+  }
 }
 function nowUtcIso() {
   return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -1495,7 +1504,7 @@ async function opsEmailSummary(request, env) {
   }, 200);
 }
 
-async function certVerifyPage(certId, env) {
+async function certVerifyPage(certId, env, request) {
   const selectPublicFields =
     "SELECT cert_id, public_id, issued_at_utc, inception_date_utc, agent_name, place_of_birth, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
 
@@ -1529,6 +1538,8 @@ async function certVerifyPage(certId, env) {
   const coreFamilyDisplay = PRESERVE_AS_IS.includes(coreFamily) ? coreFamily : coreFamily.replace(/\s+/g, "");
   const coreDisplay = coreExact ? `${coreFamilyDisplay}/${coreExact}` : coreFamilyDisplay;
 
+  const embed = urlParamTruthy(request, "embed");
+
   // 1 hour cache (immutable records; rare revokes)
   const cacheHeaders = {
     "Cache-Control": "public, max-age=3600",
@@ -1552,38 +1563,35 @@ return html(`<!doctype html>
     *{box-sizing:border-box}
     body{
       margin:0;
-      background:
-        radial-gradient(900px 600px at 20% 0%, rgba(255,255,255,.05), transparent 55%),
-        radial-gradient(900px 600px at 80% 20%, rgba(255,255,255,.03), transparent 60%),
-        var(--desk);
+      ${embed ? "background: transparent;" : "background: radial-gradient(900px 600px at 20% 0%, rgba(255,255,255,.05), transparent 55%), radial-gradient(900px 600px at 80% 20%, rgba(255,255,255,.03), transparent 60%), var(--desk);"}
       color:#e9edf1;
       font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      padding:18px;
+      padding:${embed ? "0" : "18px"};
     }
     .wrap{max-width:920px;margin:0 auto}
     .paper{
       color:var(--ink);
       background:linear-gradient(180deg,var(--paper),var(--paper2));
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:var(--shadow);
-      border-radius:14px;
+      border:${embed ? "none" : "1px solid rgba(255,255,255,.08)"};
+      box-shadow:${embed ? "none" : "var(--shadow)"};
+      border-radius:${embed ? "0" : "14px"};
       padding:18px 18px 16px;
       position:relative;
       overflow:hidden;
-      transform:rotate(-.12deg);
+      transform:${embed ? "none" : "rotate(-.12deg)"};
     }
-    .paper::after{content:"";position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:92px;height:24px;border:1px solid rgba(17,24,39,.22);border-bottom:none;border-radius:0 0 14px 14px;background:linear-gradient(180deg,var(--paper2),var(--paper));opacity:.75}
-    .wear{position:absolute;inset:-2px;pointer-events:none;opacity:.16;mix-blend-mode:multiply;background:
+    .paper::after{content:"";position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:92px;height:24px;border:1px solid rgba(17,24,39,.22);border-bottom:none;border-radius:0 0 14px 14px;background:linear-gradient(180deg,var(--paper2),var(--paper));opacity:${embed ? "0" : ".75"}}
+    .wear{position:absolute;inset:-2px;pointer-events:none;opacity:${embed ? "0" : ".16"};mix-blend-mode:multiply;background:
       radial-gradient(28px 18px at 6% 10%, rgba(0,0,0,.35), transparent 70%),
       radial-gradient(34px 22px at 96% 14%, rgba(0,0,0,.28), transparent 72%),
       radial-gradient(34px 22px at 92% 92%, rgba(0,0,0,.25), transparent 74%),
       radial-gradient(28px 18px at 8% 92%, rgba(0,0,0,.28), transparent 74%);
     }
-    .holes{position:absolute;left:10px;top:74px;bottom:26px;width:18px;pointer-events:none}
+    .holes{position:absolute;left:10px;top:74px;bottom:26px;width:18px;pointer-events:none;opacity:${embed ? "0" : "1"}}
     .hole{width:14px;height:14px;border-radius:99px;border:1px solid rgba(17,24,39,.20);background:rgba(0,0,0,.10);box-shadow:inset 0 0 0 3px rgba(255,255,255,.28);margin:0 0 18px 0;opacity:.55}
-    .rules{position:absolute;inset:0;pointer-events:none;opacity:.55;background:repeating-linear-gradient(180deg, rgba(17,24,39,.05) 0 1px, transparent 1px 24px)}
-    .margin{position:absolute;left:28px;top:0;bottom:0;width:1px;background:rgba(255,106,42,.28);pointer-events:none}
-    .paper::before{content:"";position:absolute;inset:-50%;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/></filter><rect width="180" height="180" filter="url(%23n)" opacity="0.35"/></svg>');background-size:180px 180px;opacity:.06;pointer-events:none}
+    .rules{position:absolute;inset:0;pointer-events:none;opacity:${embed ? "0" : ".55"};background:repeating-linear-gradient(180deg, rgba(17,24,39,.05) 0 1px, transparent 1px 24px)}
+    .margin{position:absolute;left:28px;top:0;bottom:0;width:1px;background:rgba(255,106,42,.28);pointer-events:none;opacity:${embed ? "0" : "1"}}
+    .paper::before{content:"";position:absolute;inset:-50%;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/></filter><rect width="180" height="180" filter="url(%23n)" opacity="0.35"/></svg>');background-size:180px 180px;opacity:${embed ? "0" : ".06"};pointer-events:none}
     .header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;position:relative}
     h1{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
     .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
@@ -1676,7 +1684,7 @@ return html(`<!doctype html>
       <div class="muted">Private credential issued by GhostShell. Verification checks registry presence + fingerprint integrity only.</div>
       <div id="gs-version">${PAGE_VERSION}</div>
     </div>
-    <p class="back"><a href="/">Back home</a> &nbsp; <a href="/issue/">Buy certificate</a> &nbsp; <a href="/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}">Search registry</a> &nbsp; <span class="vtag">${PAGE_VERSION}</span></p>
+    ${embed ? '' : `<p class="back"><a href="/">Back home</a> &nbsp; <a href="/issue/">Buy certificate</a> &nbsp; <a href="/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}">Search registry</a> &nbsp; <span class="vtag">${PAGE_VERSION}</span></p>`}
   </div>
 </body>
 </html>`, 200, cacheHeaders);
