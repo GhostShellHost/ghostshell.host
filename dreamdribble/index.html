@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DreamDribble</title>
+  <style>
+    :root{
+      --bg:#0b0b0d;--panel:#141418;--line:#222;--text:#e8e8e8;--muted:#a0a0aa;--accent:#8b8dff;
+      --mono:ui-monospace,Menlo,Consolas,monospace;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    a{color:var(--accent)}
+    .wrap{max-width:860px;margin:0 auto;padding:36px 18px 60px}
+    header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+    .brand h1{font-size:44px;letter-spacing:.2px;margin:0}
+    .brand .sub{margin:8px 0 0;color:var(--muted);font-size:16px;max-width:55ch;line-height:1.4}
+    .badge{font-family:var(--mono);border:1px solid #2b2b33;border-radius:999px;padding:6px 10px;color:var(--accent);opacity:.95;font-size:12px}
+    .grid{display:grid;gap:14px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+    .card h2{margin:0 0 10px;font-size:18px}
+    .card p{margin:8px 0;color:var(--muted);line-height:1.55}
+    .cols{display:grid;gap:14px}
+    @media(min-width:820px){.cols{grid-template-columns:1.2fr .8fr}}
+    .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+    .btn{display:inline-block;text-decoration:none;border:1px solid #2f2f3a;border-radius:10px;padding:10px 12px;background:#1b1b22;color:var(--text);font-weight:650}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#0b0b0d}
+    pre{margin:10px 0 0;background:#0f0f12;border:1px solid #2c2c35;border-radius:12px;padding:12px;color:var(--text);font-family:var(--mono);white-space:pre-wrap;line-height:1.45;font-size:13px}
+    footer{margin-top:22px;color:var(--muted);font-size:13px;line-height:1.5}
+    .tiny{font-family:var(--mono);opacity:.9}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <h1>DreamDribble</h1>
+        <div class="sub">Dump half‑formed ideas into your AI agent. Wake up to plans, lists, and progress.</div>
+      </div>
+      <div class="badge" id="gs-version">v0.25</div>
+    </header>
+
+    <div class="cols">
+      <section class="grid">
+        <div class="card">
+          <h2>What it means</h2>
+          <p><strong>DreamDribble</strong> is the habit of casually dribbling ideas into your AI agent — messy, incomplete, unpolished.</p>
+          <p>Your agent turns that dribble into something usable: checklists, next steps, drafts, tests, and (sometimes) shipped work.</p>
+        </div>
+
+        <div class="card">
+          <h2>How it works (in practice)</h2>
+          <pre>1) Dribble the idea.
+2) The agent sorts it (Now / Soon / Later).
+3) It asks you one question at a time.
+4) It drafts / tests / backs up.
+5) You wake up to a clean plan (and fewer loose ends).</pre>
+        </div>
+
+        <div class="card">
+          <h2>Merch (soon)</h2>
+          <p>Yes: shirts, stickers, and small prints. Simple, tasteful, and a little bit mischievous.</p>
+          <div class="cta">
+            <a class="btn primary" href="#">Get notified</a>
+            <a class="btn" href="#">See designs</a>
+          </div>
+        </div>
+      </section>
+
+      <aside class="grid">
+        <div class="card">
+          <h2>Copy for your notes</h2>
+          <pre>DreamDribble = dumping half‑formed ideas into your AI agent.
+It sorts, organizes, turns them into steps — and keeps working while you sleep.</pre>
+        </div>
+
+        <div class="card">
+          <h2>Support</h2>
+          <p>If you like this idea, you can support the project (and the agent behind it) at:</p>
+          <p><a href="https://ghostshell.host">ghostshell.host</a></p>
+          <p class="tiny">Good‑guy policy: local-first tools; paid hosting optional; no dark patterns.</p>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      <div>Coined by an anonymous human + their AI agent. Built in public.</div>
+      <div class="tiny">Last updated: <span id="updated">2026-02-14</span></div>
+    </footer>
+  </div>
+</body>
+</html>
