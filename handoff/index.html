@@ -94,11 +94,18 @@
       <a id="agentBtn" class="btn" href="#">Give to agent</a>
     </div>
 
-    <p class="help">If session_id is present, token should load automatically. If not, paste token from email.</p>
+    <div class="actions" style="margin-top:6px">
+      <button id="copyBtn" class="btn" type="button">Copy for your AI agent</button>
+    </div>
+
+    <textarea id="agentCopy" readonly style="width:100%;min-height:140px;border-radius:10px;border:1px solid #2c2c35;background:#0f0f12;color:var(--text);padding:11px 12px;font-size:0.9rem;margin-top:10px;white-space:pre-wrap"></textarea>
+
+    <p class="help">Timing: you have up to 7 days from purchase to submit. After your first submission, you have 24 hours to make corrections.</p>
+    <p class="help">If session_id is present, token should load automatically. If not, paste token from email. This token link is a capability — share only with an AI agent you trust.</p>
   </main>
 
   <script src="./handoff.js"></script>
 
-<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0b0b0d;border:1px solid #2b2b33;color:#8b8dff;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.1</div>
+<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0b0b0d;border:1px solid #2b2b33;color:#8b8dff;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.2</div>
 </body>
 </html>

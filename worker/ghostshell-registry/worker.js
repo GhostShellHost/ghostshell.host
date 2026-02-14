@@ -7,8 +7,12 @@
 // VERSION: 2026-02-10.009 (manual paste deploy)
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
-export const WORKER_VERSION = "2026-02-13.024";
-const PAGE_VERSION = "v0.019";
+export const WORKER_VERSION = "2026-02-14.001";
+const PAGE_VERSION = "v0.020";
+
+// Purchase token rules
+const CLAIM_WINDOW_DAYS = 7; // time allowed to submit the form after purchase
+const CORRECTION_WINDOW_HOURS = 24; // edits allowed for 24h after first submission/issuance
 
 export default {
   async fetch(request, env) {
@@ -141,7 +145,7 @@ function getEditWindowState(issuedAtUtc) {
   if (!Number.isFinite(issuedMs)) {
     return { locked: true, remainingMs: 0, lockReason: "Invalid issue timestamp" };
   }
-  const lockAtMs = issuedMs + 24 * 60 * 60 * 1000;
+  const lockAtMs = issuedMs + CORRECTION_WINDOW_HOURS * 60 * 60 * 1000;
   const nowMs = Date.now();
   const remainingMs = Math.max(0, lockAtMs - nowMs);
   return {
@@ -152,6 +156,13 @@ function getEditWindowState(issuedAtUtc) {
       ? "This certificate is locked because the 24-hour correction window has ended."
       : "",
   };
+}
+
+function isClaimWindowOpen(createdAtUtc) {
+  const createdMs = Date.parse(createdAtUtc || "");
+  if (!Number.isFinite(createdMs)) return false;
+  const expiryMs = createdMs + CLAIM_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  return Date.now() <= expiryMs;
 }
 
 function isValidEmail(v) {
@@ -535,25 +546,61 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env, baseU
 
   // Send "complete your certificate" email immediately after payment
   if (recoveryEmailRaw && isValidEmail(recoveryEmailRaw)) {
-    const registerUrl = `${baseUrl}/register/?token=${encodeURIComponent(token)}&by=human`;
+    const tokenEnc = encodeURIComponent(token);
+    const registerUrl = `${baseUrl}/register/?token=${tokenEnc}&by=human`;
+    const agentUrl = `${baseUrl}/register/?token=${tokenEnc}&by=agent`;
+    const handoffUrl = `${baseUrl}/handoff/?token=${tokenEnc}`;
+
     const { ok: emailOk, status: emailStatus, error: emailError } = await sendEmail(env, {
       to: recoveryEmailRaw,
       subject: "Complete your GhostShell Birth Certificate",
       text: [
         "Your payment is confirmed — thank you.",
         "",
+        `You have up to ${CLAIM_WINDOW_DAYS} days from purchase to complete the form.`,
+        `After your first submission, you have ${CORRECTION_WINDOW_HOURS} hours to make corrections.`,
+        "",
         "Complete your agent's birth certificate here:",
         registerUrl,
         "",
-        "This link is unique to your purchase. Keep it safe.",
+        "Give to your AI agent (recommended):",
+        handoffUrl,
+        "",
+        "COPY/PASTE FOR YOUR AI AGENT:",
+        "---",
+        "You are helping me complete a GhostShell Birth Certificate form.",
+        "1) Open the handoff link above and click 'Give to agent' (or open the agent link below).",
+        "2) Fill the form fields from my instructions.",
+        "3) Set the field 'Filled by' = AI / agent.",
+        "4) If anything is missing/unclear, ask me questions one at a time.",
+        "5) Submit the form and confirm success.",
+        "Agent direct link:",
+        agentUrl,
+        "---",
+        "",
+        "This link is a capability token. Share only with your AI agent you trust.",
         "",
         EMAIL_FOOTER_TEXT,
       ].join("\n"),
       html: `
         <p>Your payment is confirmed — thank you.</p>
-        <p>Complete your agent's birth certificate here:</p>
-        <p><a href="${registerUrl}">${registerUrl}</a></p>
-        <p>This link is unique to your purchase. Keep it safe.</p>
+        <p><strong>Timing:</strong> You have up to <strong>${CLAIM_WINDOW_DAYS} days</strong> from purchase to complete the form. After your first submission, you have <strong>${CORRECTION_WINDOW_HOURS} hours</strong> to make corrections.</p>
+        <p><strong>Complete the form:</strong><br><a href="${registerUrl}">${registerUrl}</a></p>
+        <p><strong>Give to your AI agent:</strong><br><a href="${handoffUrl}">${handoffUrl}</a></p>
+        <hr style="margin:16px 0;border:none;border-top:1px solid #e5e7eb" />
+        <p style="margin:0 0 8px"><strong>Copy/paste for your AI agent</strong></p>
+        <pre style="white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;background:#0b0b0d;color:#e8e8e8;padding:12px;border-radius:10px;border:1px solid #222;line-height:1.4">
+You are helping me complete a GhostShell Birth Certificate form.
+1) Open the handoff link and click 'Give to agent' (or use the agent link below).
+2) Fill the form fields from my instructions.
+3) Set the field 'Filled by' = AI / agent.
+4) If anything is missing/unclear, ask me questions one at a time.
+5) Submit the form and confirm success.
+
+Agent direct link:
+${agentUrl}
+        </pre>
+        <p style="color:#6b7280;font-size:12px">This link is a capability token. Share only with your AI agent you trust.</p>
         ${EMAIL_FOOTER_HTML}
       `,
     });
@@ -694,11 +741,14 @@ async function tokenStatus(request, env) {
   }
 
   if (!tokenRow.used_cert_id) {
+    if (!isClaimWindowOpen(tokenRow.created_at_utc)) {
+      return json({ ok: false, error: "expired_token" }, 410);
+    }
     return json({
       ok: true,
       mode: "new",
       locked: false,
-      message: "Token is valid. First submission will issue the certificate.",
+      message: `Token is valid. You have up to ${CLAIM_WINDOW_DAYS} days from purchase to submit. First submission will issue the certificate.`,
     });
   }
 
@@ -850,10 +900,15 @@ async function redeemPurchaseToken(request, env) {
 
   // Validate token
   const tokenRow = await env.DB.prepare(
-    "SELECT token, used_at_utc, used_cert_id FROM purchase_tokens WHERE token = ?"
+    "SELECT token, created_at_utc, used_at_utc, used_cert_id FROM purchase_tokens WHERE token = ?"
   ).bind(token).first();
 
   if (!tokenRow) return errPage("Invalid token. It may not exist or has expired.");
+
+  // If not yet used, enforce purchase-time claim window
+  if (!tokenRow.used_cert_id && !isClaimWindowOpen(tokenRow.created_at_utc)) {
+    return errPage(`This link has expired. Please start a new purchase. (You have ${CLAIM_WINDOW_DAYS} days from purchase to submit.)`);
+  }
 
   // Existing certificate path: allow edits within 24 hours only
   if (tokenRow.used_cert_id) {

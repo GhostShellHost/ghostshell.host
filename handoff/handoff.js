@@ -3,6 +3,8 @@
   const tokenInput = document.getElementById("token");
   const humanBtn = document.getElementById("humanBtn");
   const agentBtn = document.getElementById("agentBtn");
+  const copyBtn = document.getElementById("copyBtn");
+  const agentCopy = document.getElementById("agentCopy");
   const STORAGE_KEY = "ghostshell_purchase_token";
 
   const setStatus = (text) => {
@@ -14,11 +16,35 @@
     if (!t) {
       humanBtn.href = "#";
       agentBtn.href = "#";
+      if (agentCopy) agentCopy.value = "";
       return;
     }
     const enc = encodeURIComponent(t);
+    const humanUrl = `${window.location.origin}/register/?token=${enc}&by=human`;
+    const agentUrl = `${window.location.origin}/register/?token=${enc}&by=agent`;
+    const handoffUrl = `${window.location.origin}/handoff/?token=${enc}`;
     humanBtn.href = `/register/?token=${enc}&by=human`;
     agentBtn.href = `/register/?token=${enc}&by=agent`;
+
+    if (agentCopy) {
+      agentCopy.value = [
+        "I just purchased a GhostShell Birth Certificate.",
+        "Please fill in the form for me:",
+        handoffUrl,
+        "",
+        "Instructions:",
+        "- Open the link and click 'Give to agent' (or use the direct agent link below).",
+        "- Fill the fields from my instructions.",
+        "- Set 'Filled by' = AI / agent.",
+        "- Ask me any missing info one question at a time.",
+        "- Submit and confirm success.",
+        "",
+        "Direct agent link:",
+        agentUrl,
+        "",
+        "(This link contains a private token — handle carefully.)",
+      ].join("\n");
+    }
   };
 
   const params = new URLSearchParams(window.location.search);
@@ -90,6 +116,23 @@
     setLinksFromToken("");
     setStatus("Paste your token to continue");
   };
+
+  if (copyBtn && agentCopy) {
+    copyBtn.addEventListener("click", async () => {
+      const text = agentCopy.value || "";
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        setStatus("Copied for agent");
+        setTimeout(() => setStatus("Token ready"), 1200);
+      } catch (_) {
+        // Fallback: select text for manual copy
+        agentCopy.focus();
+        agentCopy.select();
+        setStatus("Select + copy (Ctrl/Cmd+C)");
+      }
+    });
+  }
 
   if (sessionId) {
     loadFromSession();
