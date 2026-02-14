@@ -115,7 +115,7 @@
     <div class="brand">ghostshell.host • public registry</div>
 
     <h1>Buy Birth Certificate</h1>
-    <p class="subtitle">After purchase, a secure completion email includes your registration token and instructions for human or agent completion.</p>
+    <p class="subtitle">After purchase, you’ll receive a completion email with a secure token link to finish registration (human or agent).</p>
 
     <form id="purchase-form" method="POST" action="/api/cert/checkout" novalidate>
       <input
@@ -136,11 +136,15 @@
     </form>
 
     <div class="notes">
+      1) Purchase (Stripe checkout)
+      &nbsp;→&nbsp; 2) Check your email for the secure token link
+      &nbsp;→&nbsp; 3) Fill the registration form and issue the certificate.
+      <br/><br/>
       Recovery email is private and used only for completion/recovery support.<br/>
       Payments are processed securely by Stripe. GhostShell never stores card details.
     </div>
 
-    <p class="top-links"><a href="/">Back home</a> &nbsp; <a href="/registry/">Search Registry</a> &nbsp; <span class="vtag">v0.05</span></p>
+    <p class="top-links"><a href="/">Back home</a> &nbsp; <a href="/registry/">Search Registry</a> &nbsp; <span class="vtag">v0.06</span></p>
   </main>
 
   <script>
