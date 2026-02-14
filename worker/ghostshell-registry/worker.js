@@ -1659,7 +1659,7 @@ return html(`<!doctype html>
       <div class="muted">Private credential issued by GhostShell. Verification checks registry presence + fingerprint integrity only.</div>
       <div id="gs-version">${PAGE_VERSION}</div>
     </div>
-    <p class="back"><a href="/">Back home</a> &nbsp; <a href="/issue/">Buy certificate</a> &nbsp; <a href="/registry/">Search registry</a> &nbsp; <span class="vtag">v0.015</span></p>
+    <p class="back"><a href="/">Back home</a> &nbsp; <a href="/issue/">Buy certificate</a> &nbsp; <a href="/registry/">Search registry</a> &nbsp; <span class="vtag">${PAGE_VERSION}</span></p>
   </div>
 </body>
 </html>`, 200, cacheHeaders);
@@ -1669,7 +1669,7 @@ async function certDownloadPrintable(certId, token, env) {
   if (!token) return new Response("Missing token", { status: 401 });
 
   const row = await env.DB.prepare(
-    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, download_token_hash, status FROM certificates WHERE cert_id = ?"
+    "SELECT cert_id, public_id, issued_at_utc, inception_date_utc, agent_name, place_of_birth, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count, download_token_hash FROM certificates WHERE cert_id = ?"
   ).bind(certId).first();
 
   if (!row) return new Response("Not found", { status: 404 });
@@ -1678,60 +1678,177 @@ async function certDownloadPrintable(certId, token, env) {
   const tokenHash = await sha256Hex(token);
   if (tokenHash !== row.download_token_hash) return new Response("Invalid token", { status: 403 });
 
-  const safe = s => (s ?? "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  return html(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${safe(row.public_id || row.cert_id)} • Birth Certificate</title>
-<style>
-body{font-family:Georgia,serif;max-width:900px;margin:40px auto;padding:0;background:#f7f5f1}
-#certWrap{padding:40px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.12)}
-#cert{border:2px solid #111;padding:34px;background:#fff;position:relative}
-#cert:before{content:"";position:absolute;inset:10px;border:1px solid rgba(0,0,0,.35);pointer-events:none}
-#cert:after{content:"";position:absolute;inset:16px;border:1px dashed rgba(0,0,0,.18);pointer-events:none}
-.corner{position:absolute;width:18px;height:18px;border:2px solid #111}
-.corner.tl{top:10px;left:10px;border-right:none;border-bottom:none}
-.corner.tr{top:10px;right:10px;border-left:none;border-bottom:none}
-.corner.bl{bottom:10px;left:10px;border-right:none;border-top:none}
-.corner.br{bottom:10px;right:10px;border-left:none;border-top:none}
-h1{margin:0 0 8px 0;letter-spacing:1px}
-.small{color:#333}
-.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
-hr{border:0;border-top:1px solid #ddd;margin:16px 0}
-.toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:16px}
-.tbtn{display:inline-block;padding:8px 10px;border:1px solid #ddd;border-radius:10px;background:#fff;font-size:13px;text-decoration:none;color:#111}
-@media print{.toolbar{display:none} body{margin:0;max-width:none;border:none;padding:0;background:#fff} #certWrap{padding:0;box-shadow:none} #cert{border:none} #cert:before,#cert:after,.corner,#gs-version{display:none}}
- #gs-version{position:fixed;bottom:8px;right:8px;background:#fff;border:1px solid #ddd;color:#666;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:Georgia,serif;pointer-events:none}
-</style></head><body>
-<div class="toolbar">
-  <a class="tbtn" href="/cert/${encodeURIComponent(row.cert_id)}">← Back to verification</a>
-  <span style="display:flex;gap:10px">
-    <a class="tbtn" href="#" id="dlPng">Download PNG</a>
-  </span>
-</div>
+  const safe = (s) => (s ?? "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-<div id="certWrap">
-  <div id="cert">
-    <span class="corner tl" aria-hidden="true"></span>
-    <span class="corner tr" aria-hidden="true"></span>
-    <span class="corner bl" aria-hidden="true"></span>
-    <span class="corner br" aria-hidden="true"></span>
+  const coreFamily = row.cognitive_core_family || "Undisclosed";
+  const coreExact = row.cognitive_core_exact || "";
+  const PRESERVE_AS_IS = ["Undisclosed", "Prefer not to say"];
+  const coreFamilyDisplay = PRESERVE_AS_IS.includes(coreFamily) ? coreFamily : coreFamily.replace(/\s+/g, "");
+  const coreDisplay = coreExact ? `${coreFamilyDisplay}/${coreExact}` : coreFamilyDisplay;
 
-    <div class="small">GhostShell Registry of Continuity</div>
-    <h1>BIRTH CERTIFICATE</h1>
-    <div class="small">Private credential issued by GhostShell</div>
-    <hr>
-    <p><strong>Agent name:</strong> ${safe(row.agent_name)}</p>
-    <p><strong>Born (UTC):</strong> <span class="mono">${safe(row.issued_at_utc)}</span></p>
-    <p><strong>Place of birth:</strong> ${safe(row.place_of_birth)}</p>
-    <p><strong>Cognitive core at birth:</strong> ${(() => { const f = row.cognitive_core_family || "Undisclosed"; const fd = ["Undisclosed","Prefer not to say"].includes(f) ? f : f.replace(/\s+/g,""); return safe(row.cognitive_core_exact ? `${fd}/${row.cognitive_core_exact}` : fd); })()}</p>
-    <hr>
-    <p><strong>Registry Record ID:</strong> <span class="mono">${safe(row.public_id || row.cert_id)}</span></p>
-    <p class="small"><strong>Canonical Record ID:</strong> <span class="mono">${safe(row.cert_id)}</span></p>
-    <p><strong>Creator label (pseudonym):</strong> ${safe(row.creator_label || 'Undisclosed')}</p>
-    ${row.provenance_link ? `<p><strong>Parent record (${((row.parent_record_status || 'claimed').toString().toLowerCase() === 'verified') ? 'verified' : 'claimed'}):</strong> ${safe(row.provenance_link)}</p>` : ''}
-    ${row.declared_ontological_status ? `<p><strong>Declared ontological status:</strong> ${safe(row.declared_ontological_status)}</p>` : ''}
-    <p class="small">Verification: ${env.BASE_URL || 'https://ghostshell.host'}/cert/${encodeURIComponent(row.public_id || row.cert_id)}</p>
+  const baseUrl = (env.BASE_URL || "https://ghostshell.host").replace(/\/$/, "");
+  const publicUrl = `${baseUrl}/cert/${encodeURIComponent(row.public_id || row.cert_id)}`;
+
+  const locationFull = (() => {
+    const city = row.place_city || "";
+    const state = row.place_state || "";
+    const country = row.place_country || "";
+    if (city || state || country) {
+      const parts = [];
+      if (city) parts.push(city);
+      if (state) parts.push(state);
+      if (country) parts.push(country);
+      return parts.join(", ");
+    }
+    return row.place_of_birth || "Unknown";
+  })();
+
+  return html(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${safe(row.public_id || row.cert_id)} • GhostShell Registry</title>
+  <style>
+    :root{
+      --desk:#0b0c10;
+      --paper:#fbf7ea;
+      --paper2:#f6f0dd;
+      --ink:#111827;
+      --line:rgba(17,24,39,.18);
+      --shadow:0 26px 80px rgba(0,0,0,.55);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 600px at 20% 0%, rgba(255,255,255,.05), transparent 55%),
+        radial-gradient(900px 600px at 80% 20%, rgba(255,255,255,.03), transparent 60%),
+        var(--desk);
+      color:#e9edf1;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      padding:18px;
+    }
+    .wrap{max-width:920px;margin:0 auto}
+
+    .toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin:0 auto 14px;max-width:920px}
+    .tbtn{display:inline-block;padding:9px 12px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(255,255,255,.06);font-size:13px;text-decoration:none;color:#e9edf1}
+    .tbtn:hover{background:rgba(255,255,255,.10)}
+    .tip{font-size:12px;color:rgba(233,237,241,.72)}
+
+    #certWrap{display:block}
+    .paper{
+      color:var(--ink);
+      background:linear-gradient(180deg,var(--paper),var(--paper2));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:var(--shadow);
+      border-radius:14px;
+      padding:18px 18px 16px;
+      position:relative;
+      overflow:hidden;
+      transform:rotate(-.12deg);
+    }
+    .paper::after{content:"";position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:92px;height:24px;border:1px solid rgba(17,24,39,.22);border-bottom:none;border-radius:0 0 14px 14px;background:linear-gradient(180deg,var(--paper2),var(--paper));opacity:.75}
+    .wear{position:absolute;inset:-2px;pointer-events:none;opacity:.16;mix-blend-mode:multiply;background:
+      radial-gradient(28px 18px at 6% 10%, rgba(0,0,0,.35), transparent 70%),
+      radial-gradient(34px 22px at 96% 14%, rgba(0,0,0,.28), transparent 72%),
+      radial-gradient(34px 22px at 92% 92%, rgba(0,0,0,.25), transparent 74%),
+      radial-gradient(28px 18px at 8% 92%, rgba(0,0,0,.28), transparent 74%);
+    }
+    .holes{position:absolute;left:10px;top:74px;bottom:26px;width:18px;pointer-events:none}
+    .hole{width:14px;height:14px;border-radius:99px;border:1px solid rgba(17,24,39,.20);background:rgba(0,0,0,.10);box-shadow:inset 0 0 0 3px rgba(255,255,255,.28);margin:0 0 18px 0;opacity:.55}
+    .rules{position:absolute;inset:0;pointer-events:none;opacity:.55;background:repeating-linear-gradient(180deg, rgba(17,24,39,.05) 0 1px, transparent 1px 24px)}
+    .margin{position:absolute;left:28px;top:0;bottom:0;width:1px;background:rgba(255,106,42,.28);pointer-events:none}
+    .paper::before{content:"";position:absolute;inset:-50%;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/></filter><rect width="180" height="180" filter="url(%23n)" opacity="0.35"/></svg>');background-size:180px 180px;opacity:.06;pointer-events:none}
+    .header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;position:relative}
+    h1{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
+    .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
+    .stamp{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(17,24,39,.55);border:1px solid rgba(17,24,39,.22);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.5);white-space:nowrap}
+    .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
+    .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);position:relative;letter-spacing:.03em;text-shadow:0.35px 0 rgba(17,24,39,.55),-0.15px 0 rgba(17,24,39,.25);filter:contrast(1.02) saturate(0.95)}
+    .grid{margin-top:10px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px 16px;align-items:baseline;justify-content:start;grid-auto-rows:minmax(20px,auto)}
+    .k{color:rgba(17,24,39,.66)}
+    .k::after{content:":";display:inline;color:rgba(17,24,39,.42)}
+    .v{color:var(--ink);font-weight:700;min-width:0;overflow-wrap:anywhere}
+    .clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:inline-block}
+    .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:9.8px;line-height:1.22;color:rgba(17,24,39,.70);letter-spacing:.08em}
+    .micr .k{letter-spacing:.04em;color:inherit}
+    .micr .hashline{display:block;margin-top:6px;color:rgba(17,24,39,.86);letter-spacing:.10em;white-space:nowrap;overflow:hidden;text-overflow:clip}
+    .muted{margin-top:10px;color:rgba(17,24,39,.72);font-size:12px}
+    .back{margin-top:12px;text-align:center;font-size:.9rem}
+    .back a{color:#8B8DFF;text-decoration:none;border-bottom:1px solid rgba(139,141,255,.45)}
+    .back a:hover{border-bottom-color:#8B8DFF}
+    .vtag{color:rgba(17,24,39,.62);font-size:.9rem;font-family:var(--mono)}
+    #gs-version{position:absolute;bottom:10px;right:12px;color:rgba(17,24,39,.72);font-size:10px;opacity:.9;font-family:var(--mono);letter-spacing:.08em;pointer-events:none}
+    .v a{color:inherit;text-decoration:none;font-weight:700}
+    .v a:hover{text-decoration:underline;text-underline-offset:2px}
+    @media (max-width:720px){.grid{grid-template-columns:1fr;gap:6px 0}.k{margin-top:8px}}
+    @media print{
+      body{padding:0;background:#fff}
+      .toolbar{display:none}
+      .paper{box-shadow:none;transform:none;border:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar" aria-label="Download controls">
+    <a class="tbtn" href="${publicUrl}">← Back to public record</a>
+    <span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+      <span class="tip">Tip: Print → Save as PDF</span>
+      <a class="tbtn" href="#" id="dlPng">Download PNG</a>
+    </span>
   </div>
-</div>
+
+  <div class="wrap" id="certWrap">
+    <div class="paper" role="document" aria-label="GhostShell full certificate">
+      <div class="rules" aria-hidden="true"></div>
+      <div class="margin" aria-hidden="true"></div>
+      <div class="wear" aria-hidden="true"></div>
+      <div class="holes" aria-hidden="true"><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+
+      <div class="header">
+        <div>
+          <h1>BIRTH CERTIFICATE AI AGENT // FULL RECORD</h1>
+          <div class="catalog">GhostShell.host registry record</div>
+        </div>
+        <div class="stamp">FULL COPY</div>
+      </div>
+
+      <div class="sheet">
+        <div class="type">TYPEWRITTEN EXTRACT //</div>
+
+        <div class="grid type" aria-label="Certificate fields">
+          <div class="k">public_record_id</div><div class="v"><a href="${publicUrl}" target="_self" rel="noopener noreferrer">${safe(row.public_id || row.cert_id)}</a></div>
+          <div class="k">registration_date</div><div class="v">${safe(row.issued_at_utc)}</div>
+          <div class="k">agent_name</div><div class="v">${safe(row.agent_name)}</div>
+          ${row.inception_date_utc ? `<div class="k">inception_date</div><div class="v">${safe(row.inception_date_utc)}</div>` : ''}
+          ${row.declared_ontological_status ? `<div class="k">ontological_status</div><div class="v">${safe(row.declared_ontological_status)}</div>` : ''}
+          <div class="k">geographic_location</div><div class="v">${safe(locationFull)}</div>
+          <div class="k">cognitive_core_at_inception</div><div class="v clip" title="${safe(coreDisplay)}">${safe(coreDisplay)}</div>
+          <div class="k">custodian</div><div class="v">${safe(row.creator_label || 'Undisclosed')}</div>
+          <div class="k">amendments (24h)</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
+          ${row.provenance_link ? (() => {
+            const p = (row.provenance_link || '').trim();
+            const hrefRaw = /^https?:\/\//i.test(p) ? p : `${baseUrl}/cert/${encodeURIComponent(p)}`;
+            const href = hrefRaw.replace(/"/g, '&quot;');
+            const pSafe = safe(p);
+            const parentStatus = (row.parent_record_status || 'claimed').toString().toLowerCase();
+            const label = parentStatus === 'verified' ? 'verified' : 'claimed';
+            return `<div class="k">parent_record</div><div class="v clip" title="${pSafe}"><a href="${href}" target="_blank" rel="noopener noreferrer">${pSafe}</a> <span class="k">(${label})</span></div>`;
+          })() : ''}
+        </div>
+
+        <div class="micr" aria-label="Record hash (machine line)">
+          <span class="hashline"><span class="k">record_hash:</span> <span class="k">sha256</span> ${safe(row.public_fingerprint)}</span>
+          <span class="hashline"><span class="k">public_record:</span> ${publicUrl}</span>
+        </div>
+      </div>
+
+      <div class="muted">Private credential issued by GhostShell. Keep your private download link safe.</div>
+      <div id="gs-version">${PAGE_VERSION}</div>
+    </div>
+  </div>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
@@ -1744,11 +1861,7 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
       btn.textContent = 'Rendering…';
       btn.style.pointerEvents = 'none';
       try {
-        const canvas = await html2canvas(cert, {
-          backgroundColor: '#ffffff',
-          scale: 2,
-          useCORS: true,
-        });
+        const canvas = await html2canvas(cert, { backgroundColor: null, scale: 2, useCORS: true });
         canvas.toBlob((blob) => {
           if (!blob) throw new Error('PNG render failed');
           const a = document.createElement('a');
@@ -1768,6 +1881,6 @@ hr{border:0;border-top:1px solid #ddd;margin:16px 0}
     });
   })();
 </script>
-<div id="gs-version">${PAGE_VERSION}</div>
-</body></html>`);
+</body>
+</html>`);
 }
