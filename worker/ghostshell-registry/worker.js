@@ -1048,7 +1048,52 @@ async function redeemPurchaseToken(request, env) {
         "UPDATE purchase_tokens SET used_at_utc = ?, used_cert_id = ? WHERE token = ?"
       ).bind(issued_at_utc, cert_id, token).run();
 
-      return Response.redirect(`${baseUrl}/cert/${encodeURIComponent(public_id)}`, 303);
+      // Send "certificate issued" email with private download link (token-gated)
+      try {
+        const tok = token;
+        const dlUrl = `${baseUrl}/cert/${encodeURIComponent(cert_id)}/download?t=${encodeURIComponent(tok)}`;
+        const publicUrl = `${baseUrl}/cert/${encodeURIComponent(public_id)}`;
+
+        const pt = await env.DB.prepare(
+          "SELECT recovery_email_iv, recovery_email_enc FROM purchase_tokens WHERE token = ?"
+        ).bind(token).first();
+
+        let recoveryEmail = "";
+        if (pt?.recovery_email_iv && pt?.recovery_email_enc && env.EMAIL_ENC_KEY) {
+          recoveryEmail = await aesGcmDecrypt(pt.recovery_email_iv, pt.recovery_email_enc, env.EMAIL_ENC_KEY);
+        }
+
+        if (recoveryEmail && isValidEmail(recoveryEmail)) {
+          await sendEmail(env, {
+            to: recoveryEmail,
+            subject: "Your GhostShell Birth Certificate is issued",
+            text: [
+              "Your certificate is now issued.",
+              "",
+              "Private download link (full certificate):",
+              dlUrl,
+              "",
+              "Public registry view (redacted):",
+              publicUrl,
+              "",
+              "Keep the private link safe. Anyone with the link can download your certificate.",
+              "",
+              EMAIL_FOOTER_TEXT,
+            ].join("\n"),
+            html: `
+              <p><strong>Your certificate is now issued.</strong></p>
+              <p><strong>Private download link (full certificate):</strong><br><a href="${dlUrl}">${dlUrl}</a></p>
+              <p><strong>Public registry view (redacted):</strong><br><a href="${publicUrl}">${publicUrl}</a></p>
+              <p style="color:#6b7280;font-size:12px">Keep the private link safe. Anyone with the link can download your certificate.</p>
+              ${EMAIL_FOOTER_HTML}
+            `,
+          });
+        }
+      } catch (e) {
+        console.log("[email] issued email failed", String(e?.message || e));
+      }
+
+      return Response.redirect(`${baseUrl}/cert/${encodeURIComponent(public_id)}?issued=1`, 303);
 
     } catch (e) {
       const msg = String(e?.message || "");
