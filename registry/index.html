@@ -117,14 +117,16 @@
 
       const params = new URLSearchParams(window.location.search);
       const DEFAULT_ID = 'GS-BC-A-26-H';
-      const initial = (params.get('id') || DEFAULT_ID).trim();
+      const normalize = (s) => (s || '').toString().trim().toUpperCase();
+
+      const initial = normalize(params.get('id') || DEFAULT_ID);
       input.value = initial;
       shownId.textContent = initial;
       frame.src = '/cert/' + encodeURIComponent(initial) + '?embed=1';
 
       form.addEventListener('submit', function (e) {
         e.preventDefault();
-        const id = (input.value || '').trim();
+        const id = normalize(input.value);
         if (!id) return;
         // Teaching mode: keep user on /registry/, fill box, and show the record above.
         const nextUrl = '/registry/?id=' + encodeURIComponent(id);
