@@ -369,6 +369,11 @@ async function ensureRuntimeSchema(db) {
     "CREATE TABLE IF NOT EXISTS cert_edit_events (id TEXT PRIMARY KEY, cert_id TEXT NOT NULL, token TEXT, edit_source TEXT, agent_handle TEXT, user_agent TEXT, created_at_utc TEXT NOT NULL)"
   ).run();
 
+  // SECURITY: hashed-token table (do not store bearer tokens in plaintext)
+  await db.prepare(
+    "CREATE TABLE IF NOT EXISTS purchase_tokens_v2 (token_hash TEXT PRIMARY KEY, token_last4 TEXT, stripe_session_id TEXT UNIQUE NOT NULL, stripe_payment_intent TEXT, email_hash TEXT, recovery_email_hash TEXT, recovery_email_iv TEXT, recovery_email_enc TEXT, created_at_utc TEXT NOT NULL, used_at_utc TEXT, used_cert_id TEXT, status TEXT DEFAULT 'pending', completion_email_sent_at_utc TEXT, completion_email_status TEXT, completion_email_error TEXT, completion_email_attempts INTEGER DEFAULT 0, abandoned_email_sent_at_utc TEXT, abandoned_email_status TEXT, abandoned_email_error TEXT)"
+  ).run();
+
   for (const sql of maybeAlterStatements) {
     try {
       await db.prepare(sql).run();
@@ -387,6 +392,46 @@ async function ensureRuntimeSchema(db) {
     await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_certificates_public_id ON certificates(public_id)").run();
   } catch (_) {
     // Non-fatal: legacy DBs may have conflicting data/nulls temporarily.
+  }
+
+  // Best-effort backfill from legacy purchase_tokens (plaintext) into purchase_tokens_v2 (hashed).
+  // Limits work per request to avoid timeouts.
+  try {
+    const legacy = await db.prepare(
+      "SELECT token, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, recovery_email_iv, recovery_email_enc, created_at_utc, used_at_utc, used_cert_id, status, completion_email_sent_at_utc, completion_email_status, completion_email_error, completion_email_attempts, abandoned_email_sent_at_utc, abandoned_email_status, abandoned_email_error FROM purchase_tokens WHERE token IS NOT NULL LIMIT 50"
+    ).all();
+    const rows = legacy?.results || [];
+    for (const r of rows) {
+      const tok = String(r.token || '').trim();
+      if (!tok) continue;
+      const token_hash = await sha256Hex(tok.toUpperCase());
+      const token_last4 = tok.slice(-4);
+      await db.prepare(
+        "INSERT OR IGNORE INTO purchase_tokens_v2 (token_hash, token_last4, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, recovery_email_iv, recovery_email_enc, created_at_utc, used_at_utc, used_cert_id, status, completion_email_sent_at_utc, completion_email_status, completion_email_error, completion_email_attempts, abandoned_email_sent_at_utc, abandoned_email_status, abandoned_email_error) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      ).bind(
+        token_hash,
+        token_last4,
+        r.stripe_session_id,
+        r.stripe_payment_intent,
+        r.email_hash,
+        r.recovery_email_hash,
+        r.recovery_email_iv,
+        r.recovery_email_enc,
+        r.created_at_utc,
+        r.used_at_utc,
+        r.used_cert_id,
+        r.status,
+        r.completion_email_sent_at_utc,
+        r.completion_email_status,
+        r.completion_email_error,
+        r.completion_email_attempts,
+        r.abandoned_email_sent_at_utc,
+        r.abandoned_email_status,
+        r.abandoned_email_error
+      ).run();
+    }
+  } catch (_) {
+    // Non-fatal.
   }
 }
 
@@ -532,6 +577,24 @@ function makePurchaseToken() {
   return out;
 }
 
+async function tokenHashHex(token) {
+  return sha256Hex(String(token || '').trim().toUpperCase());
+}
+
+async function derivePurchaseTokenFromSession(sessionId, env) {
+  // Deterministic derivation so we don't need to store raw bearer tokens.
+  const secret = (env.TOKEN_DERIVE_SECRET || '').toString();
+  if (!secret) throw new Error('Missing TOKEN_DERIVE_SECRET');
+  const digestHex = await sha256Hex(`${secret}:${String(sessionId || '').trim()}`);
+
+  // Use digest bytes to generate 10 Crockford chars.
+  const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  const bytes = new Uint8Array(digestHex.match(/../g).map((h) => parseInt(h, 16)));
+  let out = "GSTK-";
+  for (let i = 0; i < 10; i++) out += alphabet[bytes[i] % 32];
+  return out;
+}
+
 async function fetchStripeCheckoutSession(sessionId, env) {
   // SECURITY: do not log session ids
   console.log("[handoff-token] stripe session lookup");
@@ -551,17 +614,11 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env, baseU
   // Ensure runtime columns exist before first insert paths (checkout/test flows)
   await ensureRuntimeSchema(env.DB);
 
-  let row = await env.DB.prepare(
-    "SELECT token FROM purchase_tokens WHERE stripe_session_id = ?"
-  ).bind(sessionId).first();
+  // Deterministically derive token from session id (no raw bearer storage required).
+  const token = await derivePurchaseTokenFromSession(sessionId, env);
+  const token_hash = await tokenHashHex(token);
+  const token_last4 = token.slice(-4);
 
-  // If we created a pending row at checkout start, reuse its token.
-  // We'll still update the row below with payment/email details once paid.
-  const token = row?.token || makePurchaseToken();
-  if (row?.token) {
-    // SECURITY: do not log session ids
-    console.log("[handoff-token] token reused");
-  }
   const emailRaw = (session.customer_details?.email || "").toLowerCase().trim();
   const emailHash = emailRaw ? await sha256Hex(emailRaw) : null;
   const paymentIntent = session.payment_intent || null;
@@ -580,28 +637,14 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env, baseU
 
   const now = nowUtcIso();
 
-  // Update pending row if it exists; otherwise insert a new paid row (covers legacy/test paths)
-  const upd = await env.DB.prepare(
-    "UPDATE purchase_tokens SET token = ?, stripe_payment_intent = ?, email_hash = ?, recovery_email_hash = ?, recovery_email_iv = ?, recovery_email_enc = ?, status = 'paid' WHERE stripe_session_id = ?"
-  ).bind(token, paymentIntent, emailHash, recoveryEmailHash, recoveryEmailIv, recoveryEmailEnc, sessionId).run();
+  // Insert or update (hash-keyed) row.
+  await env.DB.prepare(
+    "INSERT OR IGNORE INTO purchase_tokens_v2 (token_hash, token_last4, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, recovery_email_iv, recovery_email_enc, created_at_utc, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'paid')"
+  ).bind(token_hash, token_last4, sessionId, paymentIntent, emailHash, recoveryEmailHash, recoveryEmailIv, recoveryEmailEnc, now).run();
 
-  const changed = Number(upd?.meta?.changes || 0);
-  if (changed < 1) {
-    try {
-      await env.DB.prepare(
-        "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, recovery_email_iv, recovery_email_enc, created_at_utc, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'paid')"
-      ).bind(token, sessionId, paymentIntent, emailHash, recoveryEmailHash, recoveryEmailIv, recoveryEmailEnc, now).run();
-    } catch (e) {
-      const msg = String(e?.message || "").toLowerCase();
-      if (msg.includes("recovery_email_hash") || msg.includes("recovery_email_iv") || msg.includes("recovery_email_enc") || msg.includes("no such column")) {
-        await env.DB.prepare(
-          "INSERT INTO purchase_tokens (token, stripe_session_id, stripe_payment_intent, email_hash, created_at_utc) VALUES (?, ?, ?, ?, ?)"
-        ).bind(token, sessionId, paymentIntent, emailHash, now).run();
-      } else {
-        throw e;
-      }
-    }
-  }
+  await env.DB.prepare(
+    "UPDATE purchase_tokens_v2 SET stripe_payment_intent = COALESCE(stripe_payment_intent, ?), status='paid' WHERE stripe_session_id = ?"
+  ).bind(paymentIntent, sessionId).run();
 
   // Send canonical private-link email immediately after payment
   if (recoveryEmailRaw && isValidEmail(recoveryEmailRaw)) {
@@ -657,7 +700,7 @@ Complete required fields. Choose Declared Autonomy Class (self-declared). Set Ed
     console.log("[email] completion", recoveryEmailRaw, sendStatus, emailStatus, emailError?.slice(0, 200));
     try {
       await env.DB.prepare(
-        "UPDATE purchase_tokens SET completion_email_sent_at_utc = ?, completion_email_status = ?, completion_email_error = ?, completion_email_attempts = completion_email_attempts + 1 WHERE stripe_session_id = ?"
+        "UPDATE purchase_tokens_v2 SET completion_email_sent_at_utc = ?, completion_email_status = ?, completion_email_error = ?, completion_email_attempts = completion_email_attempts + 1 WHERE stripe_session_id = ?"
       ).bind(nowUtcIso(), sendStatus, emailError ? emailError.slice(0, 1000) : null, sessionId).run();
     } catch (e) {
       console.log("[email] db update failed", e);
@@ -724,16 +767,15 @@ async function postCheckoutRedirect(request, env) {
     return Response.redirect(`${baseUrl}/issue/`, 303);
   }
 
-  // For test sessions (red button), look up the token directly from DB — no Stripe call needed
+  // For test sessions (red button), derive token deterministically (no DB lookup).
   if (sessionId.startsWith("test_")) {
-    const row = await env.DB.prepare(
-      "SELECT token FROM purchase_tokens WHERE stripe_session_id = ?"
-    ).bind(sessionId).first();
-    if (!row?.token) {
+    try {
+      const token = await derivePurchaseTokenFromSession(sessionId, env);
+      const location = `${baseUrl}/p/${encodeURIComponent(token)}`;
+      return Response.redirect(location, 303);
+    } catch (_) {
       return Response.redirect(`${baseUrl}/issue/`, 303);
     }
-    const location = `${baseUrl}/p/${encodeURIComponent(row.token)}`;
-    return Response.redirect(location, 303);
   }
 
   const stripe = await fetchStripeCheckoutSession(sessionId, env);
@@ -796,9 +838,10 @@ async function tokenStatus(request, env) {
 
   if (!token) return json({ ok: false, error: "missing_token" }, 400);
 
+  const token_hash = await tokenHashHex(token);
   const tokenRow = await env.DB.prepare(
-    "SELECT token, created_at_utc, used_at_utc, used_cert_id FROM purchase_tokens WHERE token = ?"
-  ).bind(token).first();
+    "SELECT created_at_utc, used_at_utc, used_cert_id FROM purchase_tokens_v2 WHERE token_hash = ?"
+  ).bind(token_hash).first();
 
   if (!tokenRow) {
     return json({ ok: false, error: "invalid_token" }, 404);
@@ -1084,8 +1127,8 @@ async function fetchCertByPurchaseToken(token, env) {
   await ensureRuntimeSchema(env.DB);
   const tok = (token || "").toString().trim().toUpperCase();
   const tokenRow = await env.DB.prepare(
-    "SELECT token, created_at_utc, used_at_utc, used_cert_id, recovery_email_iv, recovery_email_enc FROM purchase_tokens WHERE token = ?"
-  ).bind(tok).first();
+    "SELECT created_at_utc, used_at_utc, used_cert_id, recovery_email_iv, recovery_email_enc FROM purchase_tokens_v2 WHERE token_hash = ?"
+  ).bind(await tokenHashHex(tok)).first();
   if (!tokenRow) return { tokenRow: null, cert: null };
   if (!tokenRow.used_cert_id) return { tokenRow, cert: null };
 
@@ -1440,10 +1483,9 @@ async function setLockAgentEditsForPathToken(request, env, tokenFromPath) {
 
   if (!/^GSTK-[A-Z0-9]{10}$/.test(token)) return json({ ok:false, error:'invalid_token' }, 400);
 
-  // NOTE: token lookup is hardened in Chunk 6C.
   const tokenRow = await env.DB.prepare(
-    "SELECT used_cert_id FROM purchase_tokens WHERE token = ?"
-  ).bind(token).first();
+    "SELECT used_cert_id FROM purchase_tokens_v2 WHERE token_hash = ?"
+  ).bind(await tokenHashHex(token)).first();
   if (!tokenRow?.used_cert_id) return json({ ok:false, error:'not_found' }, 404);
 
   await env.DB.prepare(
@@ -1486,23 +1528,24 @@ async function adminRotateToken(request, env) {
   if (!cert?.cert_id) return json({ ok:false, error:'record_not_found' }, 404);
 
   const pt = await env.DB.prepare(
-    "SELECT token, recovery_email_iv, recovery_email_enc FROM purchase_tokens WHERE used_cert_id = ? LIMIT 1"
+    "SELECT token_hash, recovery_email_iv, recovery_email_enc FROM purchase_tokens_v2 WHERE used_cert_id = ? LIMIT 1"
   ).bind(cert.cert_id).first();
-  if (!pt?.token) return json({ ok:false, error:'token_not_found' }, 404);
+  if (!pt?.token_hash) return json({ ok:false, error:'token_not_found' }, 404);
 
-  const oldToken = pt.token.toString().trim().toUpperCase();
+  const oldHash = pt.token_hash.toString().trim();
   const newToken = makePurchaseToken();
+  const newHash = await tokenHashHex(newToken);
+  const newLast4 = newToken.slice(-4);
 
-  // Update token (PK) in-place.
+  // Update hash (primary key) in-place.
   await env.DB.prepare(
-    "UPDATE purchase_tokens SET token = ? WHERE token = ?"
-  ).bind(newToken, oldToken).run();
+    "UPDATE purchase_tokens_v2 SET token_hash = ?, token_last4 = ? WHERE token_hash = ?"
+  ).bind(newHash, newLast4, oldHash).run();
 
   // Update download token hash so old token no longer works for download.
-  const newHash = await sha256Hex(newToken);
   await env.DB.prepare(
     "UPDATE certificates SET download_token_hash = ? WHERE cert_id = ?"
-  ).bind(newHash, cert.cert_id).run();
+  ).bind(await sha256Hex(newToken), cert.cert_id).run();
 
   // Best-effort email to original purchaser.
   try {
@@ -1544,7 +1587,7 @@ async function adminRotateToken(request, env) {
     const id = 'EVT-' + b64url(crypto.getRandomValues(new Uint8Array(12)));
     await env.DB.prepare(
       "INSERT INTO cert_edit_events (id, cert_id, token, edit_source, agent_handle, user_agent, created_at_utc) VALUES (?, ?, ?, ?, ?, ?, ?)"
-    ).bind(id, cert.cert_id, newToken, 'support', null, request.headers.get('user-agent') || '', nowUtcIso()).run();
+    ).bind(id, cert.cert_id, null, 'support', null, request.headers.get('user-agent') || '', nowUtcIso()).run();
   } catch (_) {}
 
   return json({ ok:true, recordId: cert.public_id || cert.cert_id, token: newToken }, 200);
@@ -1758,8 +1801,8 @@ async function resolveParentRecordValue(rawInput, env) {
       const token = (u.searchParams.get("token") || "").trim();
       if (token && /^GSTK-[A-Za-z0-9_-]+$/i.test(token)) {
         const tRow = await env.DB.prepare(
-          "SELECT used_cert_id FROM purchase_tokens WHERE token = ? LIMIT 1"
-        ).bind(token).first();
+          "SELECT used_cert_id FROM purchase_tokens_v2 WHERE token_hash = ? LIMIT 1"
+        ).bind(await tokenHashHex(token)).first();
         if (!tRow?.used_cert_id) return { value: null, status: "block" };
 
         const cert = await env.DB.prepare(
@@ -1776,8 +1819,8 @@ async function resolveParentRecordValue(rawInput, env) {
   // Raw token proof
   if (/^GSTK-[A-Za-z0-9_-]+$/i.test(raw)) {
     const tRow = await env.DB.prepare(
-      "SELECT used_cert_id FROM purchase_tokens WHERE token = ? LIMIT 1"
-    ).bind(raw).first();
+      "SELECT used_cert_id FROM purchase_tokens_v2 WHERE token_hash = ? LIMIT 1"
+    ).bind(await tokenHashHex(raw)).first();
     if (!tRow?.used_cert_id) return { error: "Parent token is invalid or has not been used to issue a certificate yet." };
 
     const cert = await env.DB.prepare(
@@ -1855,10 +1898,11 @@ async function redeemPurchaseToken(request, env) {
   const parent_record_value = parentResolved.value;
   const parent_record_status = parentResolved.status || null;
 
-  // Validate token
+  // Validate token (hash-based lookup)
+  const token_hash = await tokenHashHex(token);
   const tokenRow = await env.DB.prepare(
-    "SELECT token, created_at_utc, used_at_utc, used_cert_id FROM purchase_tokens WHERE token = ?"
-  ).bind(token).first();
+    "SELECT created_at_utc, used_at_utc, used_cert_id FROM purchase_tokens_v2 WHERE token_hash = ?"
+  ).bind(token_hash).first();
 
   if (!tokenRow) return errPage("Invalid token. It may not exist or has expired.");
 
@@ -1971,7 +2015,7 @@ async function redeemPurchaseToken(request, env) {
       const id = 'EVT-' + b64url(crypto.getRandomValues(new Uint8Array(12)));
       await env.DB.prepare(
         "INSERT INTO cert_edit_events (id, cert_id, token, edit_source, agent_handle, user_agent, created_at_utc) VALUES (?, ?, ?, ?, ?, ?, ?)"
-      ).bind(id, existing.cert_id, token, edit_source, agent_handle, request.headers.get('user-agent') || '', editedAt).run();
+      ).bind(id, existing.cert_id, null, edit_source, agent_handle, request.headers.get('user-agent') || '', editedAt).run();
     } catch (_) {}
 
     return Response.redirect(`${baseUrl}/p/${encodeURIComponent(token)}`, 303);
@@ -2031,9 +2075,10 @@ async function redeemPurchaseToken(request, env) {
       ).run();
 
       // Mark token as initially used/linked (token remains reusable for 24h edits)
+      const token_hash2 = await tokenHashHex(token);
       await env.DB.prepare(
-        "UPDATE purchase_tokens SET used_at_utc = ?, used_cert_id = ? WHERE token = ?"
-      ).bind(issued_at_utc, cert_id, token).run();
+        "UPDATE purchase_tokens_v2 SET used_at_utc = ?, used_cert_id = ? WHERE token_hash = ?"
+      ).bind(issued_at_utc, cert_id, token_hash2).run();
 
       // Send "certificate issued" email with private download link (token-gated)
       try {
@@ -2045,8 +2090,8 @@ async function redeemPurchaseToken(request, env) {
         const handoffUrl = `${baseUrl}/handoff/?token=${encodeURIComponent(tok)}`;
 
         const pt = await env.DB.prepare(
-          "SELECT recovery_email_iv, recovery_email_enc FROM purchase_tokens WHERE token = ?"
-        ).bind(token).first();
+          "SELECT recovery_email_iv, recovery_email_enc FROM purchase_tokens_v2 WHERE token_hash = ?"
+        ).bind(await tokenHashHex(token)).first();
 
         let recoveryEmail = "";
         if (pt?.recovery_email_iv && pt?.recovery_email_enc && env.EMAIL_ENC_KEY) {
@@ -2143,9 +2188,8 @@ async function purchaseFirstCheckout(request, env) {
   body.set("customer_email", recovery_email);
   body.set("metadata[recovery_email]", recovery_email);
 
-  // Allocate token early so we can track abandoned sessions (and so completed flow reuses it)
-  const token = makePurchaseToken();
-  body.set("metadata[token]", token);
+  // SECURITY: Do not allocate/store bearer tokens at checkout creation time.
+  // Token is deterministically derived from the Stripe session id after creation (and on paid confirmation).
 
   const resp = await fetch("https://api.stripe.com/v1/checkout/sessions", {
     method: "POST",
@@ -2173,11 +2217,15 @@ async function purchaseFirstCheckout(request, env) {
 
   try {
     await ensureRuntimeSchema(env.DB);
+    const derived = await derivePurchaseTokenFromSession(sessionId, env);
+    const token_hash = await tokenHashHex(derived);
+    const token_last4 = derived.slice(-4);
+
     await env.DB.prepare(
-      `INSERT INTO purchase_tokens 
-       (token, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, recovery_email_iv, recovery_email_enc, created_at_utc, status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(token, sessionId, null, null, recoveryEmailHash, recoveryEmailIv, recoveryEmailEnc, now, 'pending').run();
+      `INSERT OR IGNORE INTO purchase_tokens_v2
+       (token_hash, token_last4, stripe_session_id, stripe_payment_intent, email_hash, recovery_email_hash, recovery_email_iv, recovery_email_enc, created_at_utc, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(token_hash, token_last4, sessionId, null, null, recoveryEmailHash, recoveryEmailIv, recoveryEmailEnc, now, 'pending').run();
   } catch (e) {
     // Non-fatal: continue to redirect even if DB insert fails
     console.log("[checkout] pending insert failed", e);
@@ -2213,8 +2261,8 @@ async function testCheckout(request, env) {
   // Generate a purchase token and write to DB (same logic as real flow)
   const token = await getOrCreatePurchaseTokenForSession(testSessionId, mockSession, env, baseUrl);
 
-  // Redirect directly to handoff/register page with token (one-click test flow)
-  const location = `${baseUrl}/register/?token=${encodeURIComponent(token)}&by=human`;
+  // Redirect to canonical private page (one-click test flow)
+  const location = `${baseUrl}/p/${encodeURIComponent(token)}`;
   return Response.redirect(location, 303);
 }
 
@@ -2266,7 +2314,7 @@ async function stripeWebhook(request, env) {
       // Log send attempt against the session (if we have a token row)
       try {
         await env.DB.prepare(
-          "UPDATE purchase_tokens SET status = 'abandoned', abandoned_email_sent_at_utc = ?, abandoned_email_status = ?, abandoned_email_error = ? WHERE stripe_session_id = ?"
+          "UPDATE purchase_tokens_v2 SET status = 'abandoned', abandoned_email_sent_at_utc = ?, abandoned_email_status = ?, abandoned_email_error = ? WHERE stripe_session_id = ?"
         ).bind(nowUtcIso(), sendStatus, emailError ? emailError.slice(0, 1000) : null, expiredSession.id).run();
       } catch (_) { /* non-fatal, session may not have a token row */ }
     }
@@ -2454,17 +2502,17 @@ async function opsEmailSummary(request, env) {
   const since24h = new Date(Date.now() - 86400 * 1000).toISOString();
 
   const [totalTokens, sentOk, sentFailed, skipped, pendingForm, abandonedSent, abandonedFailed] = await Promise.all([
-    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE created_at_utc > ?").bind(since24h).first(),
-    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE completion_email_status = 'sent'").first(),
-    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE completion_email_status = 'failed'").first(),
-    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE completion_email_status IS NULL").first(),
-    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE used_at_utc IS NULL AND created_at_utc > ?").bind(since24h).first(),
-    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE abandoned_email_status = 'sent'").first(),
-    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens WHERE abandoned_email_status = 'failed'").first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens_v2 WHERE created_at_utc > ?").bind(since24h).first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens_v2 WHERE completion_email_status = 'sent'").first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens_v2 WHERE completion_email_status = 'failed'").first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens_v2 WHERE completion_email_status IS NULL").first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens_v2 WHERE used_at_utc IS NULL AND created_at_utc > ?").bind(since24h).first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens_v2 WHERE abandoned_email_status = 'sent'").first(),
+    env.DB.prepare("SELECT COUNT(*) as n FROM purchase_tokens_v2 WHERE abandoned_email_status = 'failed'").first(),
   ]);
 
   const failedRows = await env.DB.prepare(
-    "SELECT stripe_session_id, completion_email_error, completion_email_attempts, created_at_utc FROM purchase_tokens WHERE completion_email_status = 'failed' ORDER BY created_at_utc DESC LIMIT 5"
+    "SELECT stripe_session_id, completion_email_error, completion_email_attempts, created_at_utc FROM purchase_tokens_v2 WHERE completion_email_status = 'failed' ORDER BY created_at_utc DESC LIMIT 5"
   ).all();
 
   return json({
