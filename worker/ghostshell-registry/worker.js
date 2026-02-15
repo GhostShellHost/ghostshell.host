@@ -929,6 +929,7 @@ async function registryPage(request, env) {
     .rubber{position:absolute;left:-40px;right:-40px;top:42%;transform:rotate(-12deg);text-align:center;font-family:var(--mono);font-size:72px;letter-spacing:.22em;text-transform:uppercase;color:rgba(180,24,24,.26);pointer-events:none;user-select:none;filter:blur(.2px);display:${notFound ? 'block' : 'none'};}
     .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);letter-spacing:.03em}
+    .typehead{text-align:left}
     .grid{margin-top:10px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:8px 10px;align-items:baseline;grid-auto-rows:minmax(20px,auto)}
     .k{color:rgba(17,24,39,.90);text-align:left;font-weight:700}
     .k::after{content:":";display:inline;color:rgba(17,24,39,.55)}
@@ -958,7 +959,7 @@ async function registryPage(request, env) {
 
         <div class="sheet">
           <div class="rubber" aria-hidden="true">RECORD NOT FOUND</div>
-          <div class="type">TYPEWRITTEN EXTRACT //</div>
+          <div class="type typehead">TYPEWRITTEN EXTRACT //</div>
           <div class="grid type" aria-label="Certificate fields">
             <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v">${safe(row.public_id || row.cert_id)}</div>
             ${notFound ? `<div class="k">status</div><div class="v">RECORD NOT FOUND</div>` : ''}
