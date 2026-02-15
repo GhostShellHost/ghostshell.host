@@ -1070,7 +1070,7 @@ async function redeemPurchaseToken(request, env) {
       try {
         const tok = token;
         const dlUrl = `${baseUrl}/cert/${encodeURIComponent(cert_id)}/download?t=${encodeURIComponent(tok)}`;
-        const publicUrl = `${baseUrl}/cert/${encodeURIComponent(public_id)}`;
+        const publicUrl = `${baseUrl}/registry/?id=${encodeURIComponent(public_id)}`;
         const editUrl = `${baseUrl}/register/?token=${encodeURIComponent(tok)}&by=human`;
         const agentUrl = `${baseUrl}/register/?token=${encodeURIComponent(tok)}&by=agent`;
         const handoffUrl = `${baseUrl}/handoff/?token=${encodeURIComponent(tok)}`;
@@ -1728,7 +1728,7 @@ async function certDownloadPrintable(certId, token, env) {
   const coreDisplay = coreExact ? `${coreFamilyDisplay}/${coreExact}` : coreFamilyDisplay;
 
   const baseUrl = (env.BASE_URL || "https://ghostshell.host").replace(/\/$/, "");
-  const publicUrl = `${baseUrl}/cert/${encodeURIComponent(row.public_id || row.cert_id)}`;
+  const publicUrl = `${baseUrl}/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}`;
 
   const locationFull = (() => {
     const city = row.place_city || "";
