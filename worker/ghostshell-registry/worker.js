@@ -90,7 +90,7 @@ export default {
       }
       // Avoid DB work here; treat the provided id as the registry hub id.
       // (Public ids are the canonical share format; old cert_id links will still land on the hub.)
-      return Response.redirect(`/registry/?id=${encodeURIComponent(certMatch[1])}`, 302);
+      return Response.redirect(`/r/${encodeURIComponent(certMatch[1])}`, 302);
     }
 
     const dlMatch = url.pathname.match(/^\/cert\/([A-Za-z0-9_-]+)\/download$/);
@@ -1061,6 +1061,12 @@ async function registryPage(request, env) {
     return Response.redirect(url.toString(), 302);
   }
 
+  // Back-compat route: /registry/?id=...  → canonical /r/<id>
+  // Safe redirect because /r/<id> is now the canonical share URL.
+  if (rawId && rawId.trim()) {
+    return Response.redirect(`/r/${encodeURIComponent(id)}`, 301);
+  }
+
   let row = await fetchPublicRowById(id, env);
   const notFound = !row;
   if (notFound) {
@@ -1186,7 +1192,7 @@ async function registryPage(request, env) {
           <div class="rubber ${notFound ? 'rubber--notfound' : 'rubber--copy'}" aria-hidden="true">${notFound ? 'RECORD NOT FOUND' : 'REDACTED COPY'}</div>
           <div class="type typehead">TYPEWRITTEN EXTRACT //</div>
           <div class="grid type" aria-label="Certificate fields">
-            <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v">${notFound ? '' : `<a class="plainlink" href="${(env.BASE_URL || 'https://ghostshell.host') + '/registry/?id=' + encodeURIComponent(row.public_id || row.cert_id)}">${safe(row.public_id || row.cert_id)}</a>`}</div>
+            <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v">${notFound ? '' : `<a class="plainlink" href="${(env.BASE_URL || 'https://ghostshell.host') + '/r/' + encodeURIComponent(row.public_id || row.cert_id)}">${safe(row.public_id || row.cert_id)}</a>`}</div>
             ${notFound ? `<div class="k">status</div><div class="v">RECORD NOT FOUND</div>` : ''}
             <div class="k">registration_date</div><div class="v">${notFound ? '' : safe(row.issued_at_utc)}</div>
             <div class="k">agent_name</div><div class="v">${notFound ? '' : safe(row.agent_name)}</div>
@@ -1199,7 +1205,7 @@ async function registryPage(request, env) {
           </div>
           <div class="micr" aria-label="Record hash (machine line)">
             <span class="hashline" id="fp"><span class="k">record_hash:</span> <span class="k">sha256</span> ${notFound ? '' : safe(row.public_fingerprint)}</span>
-            <span class="hashline"><span class="k">public_record:</span> ${notFound ? 'not_found' : `<a class="plainlink" href="${(env.BASE_URL || 'https://ghostshell.host') + '/registry/?id=' + encodeURIComponent(row.public_id || row.cert_id)}">${(env.BASE_URL || 'https://ghostshell.host') + '/registry/?id=' + encodeURIComponent(row.public_id || row.cert_id)}</a>`}</span>
+            <span class="hashline"><span class="k">public_record:</span> ${notFound ? 'not_found' : `<a class="plainlink" href="${(env.BASE_URL || 'https://ghostshell.host') + '/r/' + encodeURIComponent(row.public_id || row.cert_id)}">${(env.BASE_URL || 'https://ghostshell.host') + '/r/' + encodeURIComponent(row.public_id || row.cert_id)}</a>`}</span>
           </div>
         </div>
 
@@ -1445,7 +1451,7 @@ async function redeemPurchaseToken(request, env) {
       existing.cert_id
     ).run();
 
-    return Response.redirect(`${baseUrl}/registry/?id=${encodeURIComponent(existing.public_id)}`, 303);
+    return Response.redirect(`${baseUrl}/r/${encodeURIComponent(existing.public_id)}`, 303);
   }
 
   // First issuance path
@@ -1510,7 +1516,7 @@ async function redeemPurchaseToken(request, env) {
       try {
         const tok = token;
         const dlUrl = `${baseUrl}/cert/${encodeURIComponent(cert_id)}/download?t=${encodeURIComponent(tok)}`;
-        const publicUrl = `${baseUrl}/registry/?id=${encodeURIComponent(public_id)}`;
+        const publicUrl = `${baseUrl}/r/${encodeURIComponent(public_id)}`;
         const editUrl = `${baseUrl}/register/?token=${encodeURIComponent(tok)}&by=human`;
         const agentUrl = `${baseUrl}/register/?token=${encodeURIComponent(tok)}&by=agent`;
         const handoffUrl = `${baseUrl}/handoff/?token=${encodeURIComponent(tok)}`;
@@ -1579,7 +1585,7 @@ async function redeemPurchaseToken(request, env) {
         console.log("[email] issued email failed", String(e?.message || e));
       }
 
-      return Response.redirect(`${baseUrl}/registry/?id=${encodeURIComponent(public_id)}&issued=1`, 303);
+      return Response.redirect(`${baseUrl}/r/${encodeURIComponent(public_id)}`, 303);
 
     } catch (e) {
       const msg = String(e?.message || "");
@@ -2146,7 +2152,7 @@ return html(`<!doctype html>
         <div class="type">TYPEWRITTEN EXTRACT //</div>
 
         <div class="grid type" aria-label="Certificate fields">
-          <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v"><a href="${(env.BASE_URL || 'https://ghostshell.host')}/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}" target="_self" rel="noopener noreferrer">${safe(row.public_id || row.cert_id)}</a></div>
+          <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v"><a href="${(env.BASE_URL || 'https://ghostshell.host')}/r/${encodeURIComponent(row.public_id || row.cert_id)}" target="_self" rel="noopener noreferrer">${safe(row.public_id || row.cert_id)}</a></div>
           ${notFound ? `<div class="k">status</div><div class="v">RECORD NOT FOUND</div>` : ''}
           <div class="k">registration_date</div><div class="v">${notFound ? '' : safe(row.issued_at_utc)}</div>
           <div class="k">agent_name</div><div class="v">${notFound ? '' : safe(row.agent_name)}</div>
@@ -2172,13 +2178,13 @@ return html(`<!doctype html>
 
         <div class="micr" aria-label="Record hash (machine line)">
           <span class="hashline" id="fp"><span class="k">record_hash:</span> <span class="k">sha256</span> ${notFound ? "" : safe(row.public_fingerprint)}</span>
-          <span class="hashline"><span class="k">public_record:</span> ${notFound ? "not_found" : ((env.BASE_URL || 'https://ghostshell.host') + '/registry/?id=' + encodeURIComponent(row.public_id || row.cert_id))}</span>
+          <span class="hashline"><span class="k">public_record:</span> ${notFound ? "not_found" : ((env.BASE_URL || 'https://ghostshell.host') + '/r/' + encodeURIComponent(row.public_id || row.cert_id))}</span>
         </div>
       </div>
       <div class="muted">Private credential issued by GhostShell. Verification checks registry presence + fingerprint integrity only.</div>
       <div id="gs-version">${PAGE_VERSION}</div>
     </div>
-    ${embed ? '' : `<p class="back"><a href="/">Back home</a> &nbsp; <a href="/issue/">Buy certificate</a> &nbsp; <a href="/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}">Search registry</a> &nbsp; <span class="vtag">${PAGE_VERSION}</span></p>`}
+    ${embed ? '' : `<p class="back"><a href="/">Back home</a> &nbsp; <a href="/issue/">Buy certificate</a> &nbsp; <a href="/r/${encodeURIComponent(row.public_id || row.cert_id)}">Public record</a> &nbsp; <span class="vtag">${PAGE_VERSION}</span></p>`}
   </div>
 </body>
 </html>`, 200, cacheHeaders);
@@ -2206,7 +2212,7 @@ async function certDownloadPrintable(certId, token, env) {
   const coreDisplay = coreExact ? `${coreFamilyDisplay}/${coreExact}` : coreFamilyDisplay;
 
   const baseUrl = (env.BASE_URL || "https://ghostshell.host").replace(/\/$/, "");
-  const publicUrl = `${baseUrl}/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}`;
+  const publicUrl = `${baseUrl}/r/${encodeURIComponent(row.public_id || row.cert_id)}`;
 
   const locationFull = (() => {
     const city = row.place_city || "";
@@ -2317,7 +2323,7 @@ async function certDownloadPrintable(certId, token, env) {
 </head>
 <body>
   <div class="toolbar" aria-label="Download controls">
-    <a class="tbtn" href="/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}">← Public registry</a>
+    <a class="tbtn" href="/r/${encodeURIComponent(row.public_id || row.cert_id)}">← Public record</a>
     <span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
       <span style="font-size:12px;color:rgba(233,237,241,.72)">For clean print: disable Headers & Footers; enable Background graphics.</span>
       <a class="tbtn" href="#" id="doPrint" aria-label="Print certificate">🖨️ Print</a>

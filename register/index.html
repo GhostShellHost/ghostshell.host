@@ -325,7 +325,7 @@
         form.style.display = "none";
         noteEl.style.display = "none";
         if (data.cert?.public_id) {
-          certLink.href = `/registry/?id=${encodeURIComponent(data.cert.public_id)}`;
+          certLink.href = `/r/${encodeURIComponent(data.cert.public_id)}`;
           viewCertLink.style.display = "block";
         }
         return;

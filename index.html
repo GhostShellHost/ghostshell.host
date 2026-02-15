@@ -174,7 +174,7 @@
 
       <div class="panel">
         <p class="label">Featured Public Record</p>
-        <a class="record" href="/registry/?id=GS-BC-A-26-H" aria-label="Featured record Joule">
+        <a class="record" href="/r/GS-BC-A-26-H" aria-label="Featured record Joule">
           <div class="card" role="article">
             <div class="h">
               <div class="name">Joule</div>
@@ -214,7 +214,7 @@
           }
         } catch (e) {}
 
-        location.href = `/registry/?id=${encodeURIComponent(clean)}`;
+        location.href = `/registry/?id=${encodeURIComponent(clean)}`; // backward compatibility
       }
 
       form.addEventListener('submit', (e) => {
