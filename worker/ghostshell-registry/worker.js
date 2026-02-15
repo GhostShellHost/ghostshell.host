@@ -1567,59 +1567,33 @@ async function certVerifyPage(certId, env, request) {
     }
   }
 
-  if (!row) {
-    const safeId = (certId || '').toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const embed = urlParamTruthy(request, "embed");
-    const cacheHeaders = embed ? { "Cache-Control": "no-store" } : { "Cache-Control": "public, max-age=60" };
-    return html(`<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RECORD NOT FOUND • GhostShell Registry</title>
-  <style>
-    :root{--desk:#0b0c10;--paper:#fbf7ea;--paper2:#f6f0dd;--ink:#111827;--line:rgba(17,24,39,.18);--shadow:0 26px 80px rgba(0,0,0,.55);--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-    *{box-sizing:border-box}
-    body{margin:0;${'${embed ? "background: transparent;" : "background: radial-gradient(900px 600px at 20% 0%, rgba(255,255,255,.05), transparent 55%), radial-gradient(900px 600px at 80% 20%, rgba(255,255,255,.03), transparent 60%), var(--desk);"}'}color:#e9edf1;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:${'${embed ? "0" : "18px"}'};}
-    .wrap{max-width:920px;margin:0 auto}
-    .paper{color:var(--ink);background:linear-gradient(180deg,var(--paper),var(--paper2));border:${'${embed ? "none" : "1px solid rgba(255,255,255,.08)"}'};box-shadow:${'${embed ? "none" : "var(--shadow)"}'};border-radius:14px;padding:18px 18px 16px;position:relative;overflow:hidden;transform:${'${embed ? "none" : "rotate(-.12deg)"}'};}
-    .type{font-family:var(--mono);font-size:12px;letter-spacing:.08em;opacity:.82}
-    .header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
-    h1{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
-    .catalog{margin:6px 0 0;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em}
-    .stamp{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:999px;border:1px solid rgba(17,24,39,.22);font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;background:rgba(255,255,255,.35)}
-    .sheet{margin-top:12px;border-radius:12px;border:1px solid rgba(17,24,39,.14);padding:14px;background:rgba(255,255,255,.42)}
-    .rubber{position:absolute;right:-8px;bottom:6px;font-family:var(--mono);letter-spacing:.18em;font-size:44px;color:rgba(239,68,68,.22);transform:rotate(-12deg);font-weight:900;pointer-events:none}
-    .grid{display:grid;grid-template-columns: 220px 1fr;gap:10px 14px;align-items:baseline;margin-top:10px}
-    .k{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(17,24,39,.62)}
-    .v{font-family:var(--mono);font-size:13px;color:rgba(17,24,39,.90)}
-    @media (max-width:720px){.grid{grid-template-columns:1fr;gap:6px 0}.k{margin-top:8px}}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="paper" role="document" aria-label="GhostShell registry record">
-      <div class="header">
-        <div>
-          <h1>BIRTH CERTIFICATE AI AGENT // REDACTED</h1>
-          <div class="catalog">GhostShell.host registry record</div>
-        </div>
-        <div class="stamp">PUBLIC FILE</div>
-      </div>
-      <div class="sheet">
-        <div class="rubber" aria-hidden="true">RECORD NOT FOUND</div>
-        <div class="type">TYPEWRITTEN EXTRACT //</div>
-        <div class="grid type" aria-label="Certificate fields">
-          <div class="k">registry_record_id</div><div class="v">${safeId}</div>
-          <div class="k">status</div><div class="v">RECORD NOT FOUND</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</body>
-</html>`, 404, cacheHeaders);
-  }
 
+  const notFound = !row;
+  if (notFound) {
+    // Render a "RECORD NOT FOUND" certificate-shaped panel (same layout as redacted cert).
+    row = {
+      cert_id: certId,
+      public_id: certId,
+      issued_at_utc: "",
+      inception_date_utc: "",
+      agent_name: "",
+      place_city: "",
+      place_state: "",
+      place_country: "",
+      show_city_public: 0,
+      hide_state_public: 0,
+      cognitive_core_family: "",
+      cognitive_core_exact: "",
+      creator_label: "",
+      declared_ontological_status: "",
+      public_fingerprint: "",
+      status: "not_found",
+      edit_count: 0,
+      human_edit_count: 0,
+      agent_edit_count: 0,
+    };
+  }
   const safe = (s) => (s ?? "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const status = (row.status || "").toString().toLowerCase();
   const coreFamily = row.cognitive_core_family || "Undisclosed";
@@ -1627,8 +1601,6 @@ async function certVerifyPage(certId, env, request) {
   const PRESERVE_AS_IS = ["Undisclosed", "Prefer not to say"];
   const coreFamilyDisplay = PRESERVE_AS_IS.includes(coreFamily) ? coreFamily : coreFamily.replace(/\s+/g, "");
   const coreDisplay = coreExact ? `${coreFamilyDisplay}/${coreExact}` : coreFamilyDisplay;
-
-  const embed = urlParamTruthy(request, "embed");
 
   // Cache policy:
   // - embed mode is used inside /registry; edits can happen within 24h, so avoid caching there.
@@ -1732,15 +1704,16 @@ return html(`<!doctype html>
       </div>
 
       <div class="sheet">
-        <div class="rubber" aria-hidden="true">REDACTED COPY</div>
+        <div class="rubber" aria-hidden="true">${notFound ? 'RECORD NOT FOUND' : 'REDACTED COPY'}</div>
         <div class="type">TYPEWRITTEN EXTRACT //</div>
 
         <div class="grid type" aria-label="Certificate fields">
-          <div class="k">public_record_id</div><div class="v"><a href="${(env.BASE_URL || 'https://ghostshell.host')}/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}" target="_self" rel="noopener noreferrer">${safe(row.public_id || row.cert_id)}</a></div>
+          <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v"><a href="${(env.BASE_URL || 'https://ghostshell.host')}/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}" target="_self" rel="noopener noreferrer">${safe(row.public_id || row.cert_id)}</a></div>
+          ${notFound ? `<div class="k">status</div><div class="v">RECORD NOT FOUND</div>` : ''}
           <div class="k">registration_date</div><div class="v">${safe(row.issued_at_utc)}</div>
           <div class="k">agent_name</div><div class="v">${safe(row.agent_name)}</div>
-          ${row.inception_date_utc ? `<div class="k">inception_date</div><div class="v">${safe(row.inception_date_utc)}</div>` : ''}
-          ${row.declared_ontological_status ? `<div class="k">ontological_status</div><div class="v">${safe(row.declared_ontological_status)}</div>` : ''}
+          ${(notFound || row.inception_date_utc) ? `<div class="k">inception_date</div><div class="v">${notFound ? '<span class="redact" aria-label="redacted"></span>' : safe(row.inception_date_utc)}</div>` : ''}
+          ${(notFound || row.declared_ontological_status) ? `<div class="k">ontological_status</div><div class="v">${notFound ? '<span class="redact" aria-label="redacted"></span>' : safe(row.declared_ontological_status)}</div>` : ''}
           ${(() => {
             const city = row.place_city || '';
             const state = row.place_state || '';
