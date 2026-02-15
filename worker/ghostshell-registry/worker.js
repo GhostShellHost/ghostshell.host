@@ -1619,7 +1619,7 @@ return html(`<!doctype html>
       background:linear-gradient(180deg,var(--paper),var(--paper2));
       border:${embed ? "none" : "1px solid rgba(255,255,255,.08)"};
       box-shadow:${embed ? "none" : "var(--shadow)"};
-      border-radius:${embed ? "0" : "14px"};
+      border-radius:14px;
       padding:18px 18px 16px;
       position:relative;
       overflow:hidden;
