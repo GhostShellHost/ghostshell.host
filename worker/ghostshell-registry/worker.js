@@ -929,10 +929,10 @@ async function registryPage(request, env) {
     .rubber{position:absolute;left:-40px;right:-40px;top:42%;transform:rotate(-12deg);text-align:center;font-family:var(--mono);font-size:72px;letter-spacing:.22em;text-transform:uppercase;color:rgba(180,24,24,.26);pointer-events:none;user-select:none;filter:blur(.2px);display:${notFound ? 'block' : 'none'};}
     .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);letter-spacing:.03em}
-    .grid{margin-top:10px;display:grid;grid-template-columns:320px minmax(0,1fr);gap:8px 16px;align-items:baseline;grid-auto-rows:minmax(20px,auto)}
-    .k{color:rgba(17,24,39,.66);text-align:left}
-    .k::after{content:":";display:inline;color:rgba(17,24,39,.42)}
-    .v{color:var(--ink);font-weight:700;min-width:0;overflow-wrap:anywhere;min-height:1em;text-align:left;justify-self:start}
+    .grid{margin-top:10px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:8px 10px;align-items:baseline;grid-auto-rows:minmax(20px,auto)}
+    .k{color:rgba(17,24,39,.90);text-align:left;font-weight:700}
+    .k::after{content:":";display:inline;color:rgba(17,24,39,.55)}
+    .v{color:var(--ink);font-weight:800;min-width:0;overflow-wrap:anywhere;min-height:1em;text-align:left;justify-self:start}
     .clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:inline-block;text-align:left;justify-self:start}
     .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:9.8px;line-height:1.22;color:rgba(17,24,39,.70);letter-spacing:.08em}
     .micr .hashline{display:block;margin-top:6px;color:rgba(17,24,39,.86);letter-spacing:.10em;white-space:nowrap;overflow:hidden;text-overflow:clip}
