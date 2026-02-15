@@ -759,33 +759,41 @@ async function handoffToken(request, env) {
 }
 
 async function postCheckoutRedirect(request, env) {
-  const baseUrl = getBaseUrl(request, env);
-  const url = new URL(request.url);
-  const sessionId = (url.searchParams.get("session_id") || "").trim();
+  const traceId = request.headers.get("cf-ray") || request.headers.get("x-request-id") || (crypto?.randomUUID ? crypto.randomUUID() : `trace_${Date.now()}`);
 
-  if (!sessionId) {
-    return Response.redirect(`${baseUrl}/issue/`, 303);
-  }
+  try {
+    const baseUrl = getBaseUrl(request, env);
+    const url = new URL(request.url);
+    const sessionId = (url.searchParams.get("session_id") || "").trim();
 
-  // For test sessions (red button), derive token deterministically (no DB lookup).
-  if (sessionId.startsWith("test_")) {
-    try {
-      const token = await derivePurchaseTokenFromSession(sessionId, env);
-      const location = `${baseUrl}/p/${encodeURIComponent(token)}`;
-      return Response.redirect(location, 303);
-    } catch (_) {
+    if (!sessionId) {
       return Response.redirect(`${baseUrl}/issue/`, 303);
     }
-  }
 
-  const stripe = await fetchStripeCheckoutSession(sessionId, env);
-  if (!stripe.ok || !isCheckoutCompleteForIssuance(stripe.session)) {
-    return Response.redirect(`${baseUrl}/issue/`, 303);
-  }
+    // For test sessions (red button), derive token deterministically (no DB lookup).
+    if (sessionId.startsWith("test_")) {
+      try {
+        const token = await derivePurchaseTokenFromSession(sessionId, env);
+        const location = `${baseUrl}/p/${encodeURIComponent(token)}`;
+        return Response.redirect(location, 303);
+      } catch (_) {
+        return Response.redirect(`${baseUrl}/issue/`, 303);
+      }
+    }
 
-  const token = await getOrCreatePurchaseTokenForSession(sessionId, stripe.session, env, baseUrl);
-  const location = `${baseUrl}/p/${encodeURIComponent(token)}`;
-  return Response.redirect(location, 303);
+    const stripe = await fetchStripeCheckoutSession(sessionId, env);
+    if (!stripe.ok || !isCheckoutCompleteForIssuance(stripe.session)) {
+      return Response.redirect(`${baseUrl}/issue/`, 303);
+    }
+
+    const token = await getOrCreatePurchaseTokenForSession(sessionId, stripe.session, env, baseUrl);
+    const location = `${baseUrl}/p/${encodeURIComponent(token)}`;
+    return Response.redirect(location, 303);
+  } catch (e) {
+    // SECURITY: do not include session_id in output.
+    console.log("[post-checkout] error", traceId, String(e?.stack || e?.message || e));
+    return json({ ok: false, err: "post_checkout_failed", trace_id: traceId }, 500);
+  }
 }
 
 async function getHandoff(request, env) {
