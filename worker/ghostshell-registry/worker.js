@@ -926,7 +926,11 @@ async function registryPage(request, env) {
     .paper h2{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
     .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
     .stamp{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(17,24,39,.55);border:1px solid rgba(17,24,39,.22);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.5);white-space:nowrap}
-    .rubber{position:absolute;left:-40px;right:-40px;top:42%;transform:rotate(-12deg);text-align:center;font-family:var(--mono);font-size:72px;letter-spacing:.22em;text-transform:uppercase;color:rgba(180,24,24,.26);pointer-events:none;user-select:none;filter:blur(.2px);display:block;}
+    .rubber{position:absolute;pointer-events:none;user-select:none;font-family:var(--mono);text-transform:uppercase;letter-spacing:.22em;filter:blur(.2px)}
+    /* Legacy-style corner stamp (matches ORIGINAL COPY geometry, but red) */
+    .rubber--copy{right:18px;bottom:18px;left:auto;top:auto;transform:rotate(-12deg);text-align:center;font-size:42px;letter-spacing:.18em;color:rgba(180,24,24,.22);border:3px solid rgba(180,24,24,.18);border-radius:12px;padding:10px 18px;background:transparent}
+    /* Big mid-page stamp for not-found */
+    .rubber--notfound{left:-40px;right:-40px;top:42%;transform:rotate(-12deg);text-align:center;font-size:72px;color:rgba(180,24,24,.26);border:none;padding:0;background:transparent}
     .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);letter-spacing:.03em}
     .typehead{text-align:left}
@@ -960,7 +964,7 @@ async function registryPage(request, env) {
         </div>
 
         <div class="sheet">
-          <div class="rubber" aria-hidden="true">${notFound ? 'RECORD NOT FOUND' : 'REDACTED COPY'}</div>
+          <div class="rubber ${notFound ? 'rubber--notfound' : 'rubber--copy'}" aria-hidden="true">${notFound ? 'RECORD NOT FOUND' : 'REDACTED COPY'}</div>
           <div class="type typehead">TYPEWRITTEN EXTRACT //</div>
           <div class="grid type" aria-label="Certificate fields">
             <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v">${safe(row.public_id || row.cert_id)}</div>
