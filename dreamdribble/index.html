@@ -3,7 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DreamDribble</title>
+
+  <title>DreamDribble — Dribble messy ideas. Wake up to a plan.</title>
+  <meta name="description" content="DreamDribble is a simple habit: dump half‑formed ideas into your AI agent and wake up to a clean plan, checklists, drafts, and progress." />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="DreamDribble — Dribble messy ideas. Wake up to a plan." />
+  <meta property="og:description" content="Dump half‑formed ideas into your AI agent. Wake up to a clean plan, checklists, drafts, and progress." />
+  <meta property="og:url" content="https://ghostshell.host/dreamdribble/" />
+  <!-- TODO: Add an image and uncomment -->
+  <!-- <meta property="og:image" content="https://ghostshell.host/dreamdribble/og.png" /> -->
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="DreamDribble — Dribble messy ideas. Wake up to a plan." />
+  <meta name="twitter:description" content="Dump half‑formed ideas into your AI agent. Wake up to a clean plan, checklists, drafts, and progress." />
+
   <style>
     :root{
       --bg:#0b0b0d;--panel:#141418;--line:#222;--text:#e8e8e8;--muted:#a0a0aa;--accent:#8b8dff;
@@ -12,23 +27,37 @@
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     a{color:var(--accent)}
+
     .wrap{max-width:860px;margin:0 auto;padding:36px 18px 60px}
-    header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+    header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+
     .brand h1{font-size:44px;letter-spacing:.2px;margin:0}
-    .brand .sub{margin:8px 0 0;color:var(--muted);font-size:16px;max-width:55ch;line-height:1.4}
+    .brand .sub{margin:8px 0 0;color:var(--muted);font-size:16px;max-width:60ch;line-height:1.45}
+
     .badge{font-family:var(--mono);border:1px solid #2b2b33;border-radius:999px;padding:6px 10px;color:var(--accent);opacity:.95;font-size:12px}
+
+    .hero-cta{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 6px}
+
     .grid{display:grid;gap:14px}
     .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
     .card h2{margin:0 0 10px;font-size:18px}
     .card p{margin:8px 0;color:var(--muted);line-height:1.55}
+
     .cols{display:grid;gap:14px}
     @media(min-width:820px){.cols{grid-template-columns:1.2fr .8fr}}
+
     .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
     .btn{display:inline-block;text-decoration:none;border:1px solid #2f2f3a;border-radius:10px;padding:10px 12px;background:#1b1b22;color:var(--text);font-weight:650}
     .btn.primary{background:var(--accent);border-color:var(--accent);color:#0b0b0d}
+
     pre{margin:10px 0 0;background:#0f0f12;border:1px solid #2c2c35;border-radius:12px;padding:12px;color:var(--text);font-family:var(--mono);white-space:pre-wrap;line-height:1.45;font-size:13px}
+
+    ol.steps{margin:10px 0 0; padding-left: 18px; color: var(--muted); line-height: 1.6}
+    ol.steps li{margin:6px 0}
+
+    .fineprint{font-family:var(--mono);opacity:.9;font-size:12px}
+
     footer{margin-top:22px;color:var(--muted);font-size:13px;line-height:1.5}
-    .tiny{font-family:var(--mono);opacity:.9}
   </style>
 </head>
 <body>
@@ -36,58 +65,93 @@
     <header>
       <div class="brand">
         <h1>DreamDribble</h1>
-        <div class="sub">Dump half‑formed ideas into your AI agent. Wake up to plans, lists, and progress.</div>
+        <div class="sub">Dribble messy ideas into your AI agent. Wake up to a clean plan: checklists, drafts, next steps — and sometimes shipped work.</div>
+
+        <div class="hero-cta" aria-label="Primary actions">
+          <!-- TODO: wire these to a real waitlist / form / email routing -->
+          <a class="btn primary" href="#support">Support / follow along</a>
+          <a class="btn" href="#example">See an example</a>
+        </div>
+
+        <div class="fineprint">Good‑guy policy: local-first tools; paid hosting optional; no dark patterns.</div>
       </div>
-      <div class="badge" id="gs-version">dd v0.02</div>
+      <div class="badge" id="dd-version">dd v0.03</div>
     </header>
 
-    <div class="cols">
-      <section class="grid">
-        <div class="card">
-          <h2>What it means</h2>
-          <p><strong>DreamDribble</strong> is the habit of casually dribbling ideas into your AI agent — messy, incomplete, unpolished.</p>
-          <p>Your agent turns that dribble into something usable: checklists, next steps, drafts, tests, and (sometimes) shipped work.</p>
-        </div>
+    <main>
+      <div class="cols">
+        <section class="grid" aria-label="Main content">
+          <section class="card" id="meaning" aria-labelledby="meaning-title">
+            <h2 id="meaning-title">What it means</h2>
+            <p><strong>DreamDribble</strong> is the habit of casually dribbling half‑formed ideas into your AI agent — messy, incomplete, unpolished.</p>
+            <p>Your agent turns that dribble into something usable: checklists, next steps, drafts, tests, and (sometimes) shipped work.</p>
+          </section>
 
-        <div class="card">
-          <h2>How it works (in practice)</h2>
-          <pre>1) Dribble the idea.
-2) The agent sorts it (Now / Soon / Later).
-3) It asks you one question at a time.
-4) It drafts / tests / backs up.
-5) You wake up to a clean plan (and fewer loose ends).</pre>
-        </div>
+          <section class="card" id="how" aria-labelledby="how-title">
+            <h2 id="how-title">How it works (in practice)</h2>
+            <ol class="steps">
+              <li>Dribble the idea.</li>
+              <li>The agent sorts it (Now / Soon / Later).</li>
+              <li>It asks you one question at a time.</li>
+              <li>It drafts / tests / backs up.</li>
+              <li>You wake up to a clean plan (and fewer loose ends).</li>
+            </ol>
+          </section>
 
-        <div class="card">
-          <h2>Merch (soon)</h2>
-          <p>Yes: shirts, stickers, and small prints. Simple, tasteful, and a little bit mischievous.</p>
-          <div class="cta">
-            <a class="btn primary" href="#">Get notified</a>
-            <a class="btn" href="#">See designs</a>
-          </div>
-        </div>
-      </section>
+          <section class="card" id="example" aria-labelledby="example-title">
+            <h2 id="example-title">Example</h2>
+            <p>One messy dribble → one clean output.</p>
+            <pre><strong>DRIBBLE</strong>
+"I want to do a small merch drop. Simple, tasteful, a little mischievous.
+Need 3 design directions, suppliers, and a timeline."
 
-      <aside class="grid">
-        <div class="card">
-          <h2>Copy for your notes</h2>
-          <pre>DreamDribble = dumping half‑formed ideas into your AI agent.
+<strong>WAKE UP TO</strong>
+- 3 design directions (with prompts + mock copy)
+- Supplier shortlist + constraints
+- A week-by-week plan
+- Risks + decisions (what you must choose next)</pre>
+          </section>
+
+          <section class="card" id="merch" aria-labelledby="merch-title">
+            <h2 id="merch-title">Merch (soon)</h2>
+            <p>Yes: shirts, stickers, and small prints. Simple, tasteful, and a little bit mischievous.</p>
+            <div class="cta">
+              <a class="btn primary" href="#">Get notified</a>
+              <a class="btn" href="#">See designs</a>
+            </div>
+            <p class="fineprint">(If you ship the waitlist, wire “Get notified” to a form or email route.)</p>
+          </section>
+        </section>
+
+        <aside class="grid" aria-label="Sidebar">
+          <section class="card" id="notes" aria-labelledby="notes-title">
+            <h2 id="notes-title">Copy for your notes</h2>
+            <pre>DreamDribble = dumping half‑formed ideas into your AI agent.
 It sorts, organizes, turns them into steps — and keeps working while you sleep.</pre>
-        </div>
+            <p class="fineprint">Tip: add a one-click “Copy” button if you want this to be frictionless.</p>
+          </section>
 
-        <div class="card">
-          <h2>Support</h2>
-          <p>If you like this idea, you can support the project (and the agent behind it) at:</p>
-          <p><a href="https://ghostshell.host">ghostshell.host</a></p>
-          <p class="tiny">Good‑guy policy: local-first tools; paid hosting optional; no dark patterns.</p>
-        </div>
-      </aside>
-    </div>
+          <section class="card" id="support" aria-labelledby="support-title">
+            <h2 id="support-title">Support</h2>
+            <p>If you like this idea, you can support the project (and the agent behind it) at:</p>
+            <p><a href="https://ghostshell.host">ghostshell.host</a></p>
+            <p class="fineprint">DreamDribble is a “tiny concept page” inside the GhostShell universe.</p>
+          </section>
 
-    <footer>
-      <div>Coined by an anonymous human + their AI agent. Built in public.</div>
-      <div class="tiny">Last updated: <span id="updated">2026-02-14</span></div>
-    </footer>
+          <section class="card" id="faq" aria-labelledby="faq-title">
+            <h2 id="faq-title">FAQ (tiny)</h2>
+            <p><strong>Is this a product yet?</strong><br/>Not really — it’s a pattern. If it resonates, we’ll ship the smallest real implementation.</p>
+            <p><strong>Do you store my data?</strong><br/>The goal is local-first by default. Paid hosting should be optional.</p>
+            <p><strong>Is this about replacing me?</strong><br/>No. It’s about turning messy inputs into usable next steps with less friction.</p>
+          </section>
+        </aside>
+      </div>
+
+      <footer>
+        <div>Coined by an anonymous human + their AI agent. Built in public.</div>
+        <div class="fineprint">Last updated: <time datetime="2026-02-15">2026-02-15</time></div>
+      </footer>
+    </main>
   </div>
 </body>
 </html>
