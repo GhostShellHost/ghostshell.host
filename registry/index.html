@@ -24,7 +24,7 @@
       -webkit-font-smoothing:antialiased;
       text-rendering:optimizeLegibility;
     }
-    main{width:min(760px,100%);text-align:center;margin:0 auto;padding-top:min(18vh,140px)}
+    main{width:min(760px,100%);text-align:center;margin:0 auto;padding-top:min(10vh,84px)}
     .brand{
       display:inline-block;
       font-size:.78rem;
@@ -86,7 +86,9 @@
     <h1>Public Registry</h1>
 
     <div id="result" style="display:block;margin:18px auto 0;max-width:920px">
-      <iframe id="cert-frame" title="GhostShell public record" style="width:100%;height:760px;border:0;border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.45)"></iframe>
+      <div id="cert-frame-wrap" style="border-radius:14px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.45)">
+        <iframe id="cert-frame" title="GhostShell public record" style="display:block;width:100%;height:480px;border:0;background:transparent"></iframe>
+      </div>
     </div>
 
     <p class="note">Paste a public registry record ID.</p>
