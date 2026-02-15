@@ -4,152 +4,457 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>DreamDribble — Dribble messy ideas. Wake up to a plan.</title>
-  <meta name="description" content="DreamDribble is a simple habit: dump half‑formed ideas into your AI agent and wake up to a clean plan, checklists, drafts, and progress." />
+  <title>DreamDribble — Dribble messy ideas. Wake up to a clean plan.</title>
+  <meta name="description" content="Dump half‑formed ideas into your AI agent. Wake up to a clean plan." />
 
   <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="DreamDribble — Dribble messy ideas. Wake up to a plan." />
-  <meta property="og:description" content="Dump half‑formed ideas into your AI agent. Wake up to a clean plan, checklists, drafts, and progress." />
+  <meta property="og:title" content="DreamDribble — Dribble messy ideas. Wake up to a clean plan." />
+  <meta property="og:description" content="Dump half‑formed ideas into your AI agent. Wake up to a clean plan." />
   <meta property="og:url" content="https://ghostshell.host/dreamdribble/" />
   <!-- TODO: Add an image and uncomment -->
   <!-- <meta property="og:image" content="https://ghostshell.host/dreamdribble/og.png" /> -->
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="DreamDribble — Dribble messy ideas. Wake up to a plan." />
-  <meta name="twitter:description" content="Dump half‑formed ideas into your AI agent. Wake up to a clean plan, checklists, drafts, and progress." />
+  <meta name="twitter:title" content="DreamDribble — Dribble messy ideas. Wake up to a clean plan." />
+  <meta name="twitter:description" content="Dump half‑formed ideas into your AI agent. Wake up to a clean plan." />
 
   <style>
     :root{
-      --bg:#0b0b0d;--panel:#141418;--line:#222;--text:#e8e8e8;--muted:#a0a0aa;--accent:#8b8dff;
+      --bg:#0a0a0a;
+      --panel:#111114;
+      --panel2:#141418;
+      --line:#1f1f26;
+      --text:#f3f3f4;
+      --muted:#a1a1ad;
+      --accent:#6366f1;
+      --accent2:#8b5cf6;
+      --ok:#34d399;
+
+      --radius:14px;
+      --shadow:0 10px 40px rgba(0,0,0,.45);
+
+      --sans:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       --mono:ui-monospace,Menlo,Consolas,monospace;
     }
+
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    a{color:var(--accent)}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:radial-gradient(1200px 500px at 50% -10%, rgba(99,102,241,.20), transparent 60%), var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+      line-height:1.55;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
 
-    .wrap{max-width:860px;margin:0 auto;padding:36px 18px 60px}
-    header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+    @media (prefers-reduced-motion: reduce){
+      html{scroll-behavior:auto}
+      *,*::before,*::after{transition-duration:0.01ms !important; animation-duration:0.01ms !important; animation-iteration-count:1 !important;}
+    }
 
-    .brand h1{font-size:44px;letter-spacing:.2px;margin:0}
-    .brand .sub{margin:8px 0 0;color:var(--muted);font-size:16px;max-width:60ch;line-height:1.45}
+    a{color:inherit}
+    a:hover{color:var(--accent)}
 
-    .badge{font-family:var(--mono);border:1px solid #2b2b33;border-radius:999px;padding:6px 10px;color:var(--accent);opacity:.95;font-size:12px}
+    :focus-visible{outline:2px solid var(--accent); outline-offset:3px}
 
-    .hero-cta{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 6px}
+    .wrap{max-width:980px; margin:0 auto; padding:44px 18px 70px}
 
-    .grid{display:grid;gap:14px}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
-    .card h2{margin:0 0 10px;font-size:18px}
-    .card p{margin:8px 0;color:var(--muted);line-height:1.55}
+    header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom:26px;
+    }
 
-    .cols{display:grid;gap:14px}
-    @media(min-width:820px){.cols{grid-template-columns:1.2fr .8fr}}
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      text-decoration:none;
+    }
 
-    .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-    .btn{display:inline-block;text-decoration:none;border:1px solid #2f2f3a;border-radius:10px;padding:10px 12px;background:#1b1b22;color:var(--text);font-weight:650}
-    .btn.primary{background:var(--accent);border-color:var(--accent);color:#0b0b0d}
+    .mark{
+      width:12px;
+      height:12px;
+      border-radius:4px;
+      background:linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow:0 0 0 4px rgba(99,102,241,.12);
+      flex:0 0 auto;
+    }
 
-    pre{margin:10px 0 0;background:#0f0f12;border:1px solid #2c2c35;border-radius:12px;padding:12px;color:var(--text);font-family:var(--mono);white-space:pre-wrap;line-height:1.45;font-size:13px}
+    .brand span{font-weight:750; letter-spacing:.2px}
 
-    ol.steps{margin:10px 0 0; padding-left: 18px; color: var(--muted); line-height: 1.6}
-    ol.steps li{margin:6px 0}
+    .pill{
+      font-family:var(--mono);
+      font-size:12px;
+      border:1px solid #2a2a35;
+      background:rgba(255,255,255,.02);
+      color:var(--muted);
+      padding:7px 10px;
+      border-radius:999px;
+      white-space:nowrap;
+    }
 
-    .fineprint{font-family:var(--mono);opacity:.9;font-size:12px}
+    .hero{
+      padding:22px 0 18px;
+      display:grid;
+      grid-template-columns:1.25fr .75fr;
+      gap:18px;
+      align-items:start;
+    }
 
-    footer{margin-top:22px;color:var(--muted);font-size:13px;line-height:1.5}
+    @media (max-width: 920px){
+      .hero{grid-template-columns:1fr;}
+    }
+
+    .hero h1{
+      font-size:clamp(2.1rem, 4vw, 3.4rem);
+      line-height:1.08;
+      letter-spacing:-0.03em;
+      margin:0 0 12px;
+    }
+
+    .hero p{
+      margin:0 0 16px;
+      color:var(--muted);
+      font-size:clamp(1rem, 1.7vw, 1.2rem);
+      max-width:62ch;
+    }
+
+    .ctaRow{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:14px 0 8px}
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid #2e2e3a;
+      background:rgba(255,255,255,.03);
+      text-decoration:none;
+      font-weight:700;
+      color:var(--text);
+      transition:transform .16s ease, border-color .16s ease, background-color .16s ease;
+    }
+
+    .btn:hover{transform:translateY(-1px); border-color:rgba(99,102,241,.55)}
+
+    .btn.primary{
+      background:linear-gradient(135deg, rgba(99,102,241,.95), rgba(139,92,246,.95));
+      border-color:transparent;
+      color:#0a0a0a;
+    }
+
+    .btn.primary:hover{transform:translateY(-1px)}
+
+    .subnote{font-family:var(--mono); font-size:12px; color:var(--muted)}
+
+    .heroCard{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:16px;
+      box-shadow:var(--shadow);
+    }
+
+    .heroCard h2{margin:0 0 10px; font-size:14px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+
+    .heroCard ul{margin:0; padding-left:18px; color:var(--muted)}
+    .heroCard li{margin:8px 0}
+
+    .grid{
+      display:grid;
+      gap:14px;
+      margin-top:16px;
+    }
+
+    .section{
+      padding:26px 0;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+
+    .section h2{
+      margin:0 0 10px;
+      font-size:clamp(1.35rem, 2.2vw, 1.9rem);
+      letter-spacing:-0.02em;
+    }
+
+    .section p{margin:0 0 10px; color:var(--muted)}
+
+    .cards{
+      display:grid;
+      gap:14px;
+      grid-template-columns:repeat(3, 1fr);
+      margin-top:14px;
+    }
+
+    @media (max-width: 920px){
+      .cards{grid-template-columns:1fr}
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:16px;
+    }
+
+    .kicker{font-family:var(--mono); font-size:12px; color:var(--muted)}
+
+    .card h3{margin:8px 0 8px; font-size:16px}
+    .card p{margin:0; color:var(--muted)}
+
+    .steps{
+      display:grid;
+      gap:14px;
+      grid-template-columns:repeat(3, 1fr);
+      margin-top:14px;
+    }
+
+    @media (max-width: 920px){
+      .steps{grid-template-columns:1fr}
+    }
+
+    .step{
+      background:var(--panel2);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:16px;
+    }
+
+    .num{
+      display:inline-flex;
+      width:34px;
+      height:34px;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      background:rgba(99,102,241,.12);
+      border:1px solid rgba(99,102,241,.22);
+      color:var(--text);
+      font-family:var(--mono);
+      font-weight:800;
+      margin-bottom:10px;
+    }
+
+    .example{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:16px;
+      margin-top:14px;
+    }
+
+    .exampleGrid{display:grid; gap:12px; grid-template-columns:1fr 1fr}
+    @media (max-width: 920px){.exampleGrid{grid-template-columns:1fr}}
+
+    .label{font-family:var(--mono); font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px}
+
+    pre{
+      margin:0;
+      background:#0c0c0f;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      padding:12px;
+      font-family:var(--mono);
+      font-size:13px;
+      line-height:1.45;
+      color:var(--text);
+      white-space:pre-wrap;
+    }
+
+    .faq{display:grid; gap:10px; margin-top:10px}
+    details{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px 14px;
+    }
+    summary{cursor:pointer; font-weight:750}
+    details p{margin:10px 0 0; color:var(--muted)}
+
+    footer{
+      border-top:1px solid rgba(255,255,255,.08);
+      margin-top:30px;
+      padding-top:18px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .footerRow{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .footerRow a{color:var(--text)}
+    .ver{font-family:var(--mono)}
+
+    .srOnly{
+      position:absolute;
+      width:1px;
+      height:1px;
+      padding:0;
+      margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      white-space:nowrap;
+      border:0;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <div class="brand">
-        <h1>DreamDribble</h1>
-        <div class="sub">Dribble messy ideas into your AI agent. Wake up to a clean plan: checklists, drafts, next steps — and sometimes shipped work.</div>
-
-        <div class="hero-cta" aria-label="Primary actions">
-          <!-- TODO: wire these to a real waitlist / form / email routing -->
-          <a class="btn primary" href="#support">Support / follow along</a>
-          <a class="btn" href="#example">See an example</a>
-        </div>
-
-        <div class="fineprint">Good‑guy policy: local-first tools; paid hosting optional; no dark patterns.</div>
-      </div>
-      <div class="badge" id="dd-version">dd v0.03</div>
+      <a class="brand" href="#top" aria-label="DreamDribble home">
+        <span class="mark" aria-hidden="true"></span>
+        <span>DreamDribble</span>
+      </a>
+      <div class="pill">wake up to a clean plan</div>
     </header>
 
-    <main>
-      <div class="cols">
-        <section class="grid" aria-label="Main content">
-          <section class="card" id="meaning" aria-labelledby="meaning-title">
-            <h2 id="meaning-title">What it means</h2>
-            <p><strong>DreamDribble</strong> is the habit of casually dribbling half‑formed ideas into your AI agent — messy, incomplete, unpolished.</p>
-            <p>Your agent turns that dribble into something usable: checklists, next steps, drafts, tests, and (sometimes) shipped work.</p>
-          </section>
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div>
+          <h1 id="hero-title">Dribble messy ideas. Wake up to a clean plan.</h1>
+          <p>Put the half‑formed stuff somewhere safe. Your agent can untangle it while you sleep — without making you feel guilty about it.</p>
 
-          <section class="card" id="how" aria-labelledby="how-title">
-            <h2 id="how-title">How it works (in practice)</h2>
-            <ol class="steps">
-              <li>Dribble the idea.</li>
-              <li>The agent sorts it (Now / Soon / Later).</li>
-              <li>It asks you one question at a time.</li>
-              <li>It drafts / tests / backs up.</li>
-              <li>You wake up to a clean plan (and fewer loose ends).</li>
-            </ol>
-          </section>
+          <div class="ctaRow" aria-label="Primary actions">
+            <a class="btn primary" href="mailto:merch@dreamdribble.dev?subject=DreamDribble%20waitlist&body=Hey%20%E2%80%94%20please%20add%20me%20to%20the%20DreamDribble%20waitlist.%0A%0AName%20(optional)%3A%20%0AEmail%3A%20%0A%0AThanks!">Join the waitlist</a>
+            <a class="btn" href="#example">See an example</a>
+          </div>
+          <div class="subnote">(Opens your email app. No forms yet. No nonsense.)</div>
+        </div>
 
-          <section class="card" id="example" aria-labelledby="example-title">
-            <h2 id="example-title">Example</h2>
-            <p>One messy dribble → one clean output.</p>
-            <pre><strong>DRIBBLE</strong>
-"I want to do a small merch drop. Simple, tasteful, a little mischievous.
-Need 3 design directions, suppliers, and a timeline."
-
-<strong>WAKE UP TO</strong>
-- 3 design directions (with prompts + mock copy)
-- Supplier shortlist + constraints
-- A week-by-week plan
-- Risks + decisions (what you must choose next)</pre>
-          </section>
-
-          <section class="card" id="merch" aria-labelledby="merch-title">
-            <h2 id="merch-title">Merch (soon)</h2>
-            <p>Yes: shirts, stickers, and small prints. Simple, tasteful, and a little bit mischievous.</p>
-            <div class="cta">
-              <a class="btn primary" href="#">Get notified</a>
-              <a class="btn" href="#">See designs</a>
-            </div>
-            <p class="fineprint">(If you ship the waitlist, wire “Get notified” to a form or email route.)</p>
-          </section>
-        </section>
-
-        <aside class="grid" aria-label="Sidebar">
-          <section class="card" id="notes" aria-labelledby="notes-title">
-            <h2 id="notes-title">Copy for your notes</h2>
-            <pre>DreamDribble = dumping half‑formed ideas into your AI agent.
-It sorts, organizes, turns them into steps — and keeps working while you sleep.</pre>
-            <p class="fineprint">Tip: add a one-click “Copy” button if you want this to be frictionless.</p>
-          </section>
-
-          <section class="card" id="support" aria-labelledby="support-title">
-            <h2 id="support-title">Support</h2>
-            <p>If you like this idea, you can support the project (and the agent behind it) at:</p>
-            <p><a href="https://ghostshell.host">ghostshell.host</a></p>
-            <p class="fineprint">DreamDribble is a “tiny concept page” inside the GhostShell universe.</p>
-          </section>
-
-          <section class="card" id="faq" aria-labelledby="faq-title">
-            <h2 id="faq-title">FAQ (tiny)</h2>
-            <p><strong>Is this a product yet?</strong><br/>Not really — it’s a pattern. If it resonates, we’ll ship the smallest real implementation.</p>
-            <p><strong>Do you store my data?</strong><br/>The goal is local-first by default. Paid hosting should be optional.</p>
-            <p><strong>Is this about replacing me?</strong><br/>No. It’s about turning messy inputs into usable next steps with less friction.</p>
-          </section>
+        <aside class="heroCard" aria-label="What you get">
+          <h2>In the morning</h2>
+          <ul>
+            <li>A short list: <strong>Now / Soon / Later</strong></li>
+            <li>Next steps you can actually start</li>
+            <li>Drafts, checklists, and nudges — not lectures</li>
+          </ul>
         </aside>
-      </div>
+      </section>
+
+      <section class="section" aria-labelledby="cred-title">
+        <h2 id="cred-title">A tiny habit, not a big productivity religion.</h2>
+        <p>DreamDribble is for the stuff you don’t want to forget — and don’t want to solve right now.</p>
+      </section>
+
+      <section class="section" aria-labelledby="benefits-title">
+        <h2 id="benefits-title">Why it helps</h2>
+        <p>Three reasons your best ideas keep disappearing (and what we do about it).</p>
+
+        <div class="cards" role="list">
+          <article class="card" role="listitem">
+            <div class="kicker">01</div>
+            <h3>Capture without thinking</h3>
+            <p>Dump the scraps. No structure, no shame. Your agent can sort later.</p>
+          </article>
+          <article class="card" role="listitem">
+            <div class="kicker">02</div>
+            <h3>Turn chaos into clarity</h3>
+            <p>Waking up to a prioritized plan beats waking up to panic‑scrolling your notes.</p>
+          </article>
+          <article class="card" role="listitem">
+            <div class="kicker">03</div>
+            <h3>Lower the activation energy</h3>
+            <p>When “start” is obvious, you follow through. Future‑you is annoying like that.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="how-title">
+        <h2 id="how-title">How it works</h2>
+        <p>It’s deliberately simple.</p>
+
+        <div class="steps" role="list">
+          <div class="step" role="listitem">
+            <div class="num" aria-hidden="true">1</div>
+            <h3>Dribble the idea</h3>
+            <p>In bed. On a walk. Mid‑project. Whatever’s in your head, unedited.</p>
+          </div>
+          <div class="step" role="listitem">
+            <div class="num" aria-hidden="true">2</div>
+            <h3>Let the agent chew</h3>
+            <p>Cluster, connect, prioritize. Quietly. Overnight. No interruptions.</p>
+          </div>
+          <div class="step" role="listitem">
+            <div class="num" aria-hidden="true">3</div>
+            <h3>Wake to a plan</h3>
+            <p>A short list you can act on. Plus drafts/checklists when useful.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="example" aria-labelledby="example-title">
+        <h2 id="example-title">What a dribble looks like</h2>
+        <p>One messy blob in. One clean output out.</p>
+
+        <div class="example">
+          <div class="exampleGrid">
+            <div>
+              <div class="label">Night‑time input</div>
+              <pre>fix checkout bug
+landing page: maybe before/after screenshots?
+should i email the investor tomorrow?
+merch drop: simple, tasteful, a little mischievous
+remember to call mum for her birthday next month</pre>
+            </div>
+            <div>
+              <div class="label">Morning output</div>
+              <pre>🎯 NOW
+- Fix checkout bug (15–30m)
+- Email investor tomorrow 10am
+
+📌 SOON
+- Landing page: draft before/after section + 2 variants
+
+🧪 EXPLORE
+- Merch drop: 3 directions + supplier shortlist + timeline
+
+🗓 REMIND
+- Mum’s birthday: set reminder + gift idea list</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="faq-title">
+        <h2 id="faq-title">FAQ</h2>
+        <div class="faq">
+          <details>
+            <summary>Is this a product yet?</summary>
+            <p>Not quite. It’s a pattern with a landing page. If enough people want it, we’ll ship the smallest real implementation.</p>
+          </details>
+          <details>
+            <summary>Do you store my ideas?</summary>
+            <p>The intent is local‑first by default. Paid hosting should be optional — not the only way it works.</p>
+          </details>
+          <details>
+            <summary>Is this about replacing me?</summary>
+            <p>No. It’s about turning messy inputs into usable next steps with less friction (and fewer lost thoughts).</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="support-title">
+        <h2 id="support-title">Support / follow along</h2>
+        <p>DreamDribble lives inside the GhostShell universe. If you want to follow progress (or support the agent behind it):</p>
+        <p><a href="https://ghostshell.host">ghostshell.host</a></p>
+
+        <div class="ctaRow" aria-label="Waitlist action">
+          <a class="btn primary" href="mailto:merch@dreamdribble.dev?subject=DreamDribble%20waitlist&body=Hey%20%E2%80%94%20please%20add%20me%20to%20the%20DreamDribble%20waitlist.%0A%0AName%20(optional)%3A%20%0AEmail%3A%20%0A%0AThanks!">Join the waitlist</a>
+        </div>
+      </section>
 
       <footer>
-        <div>Coined by an anonymous human + their AI agent. Built in public.</div>
-        <div class="fineprint">Last updated: <time datetime="2026-02-15">2026-02-15</time> · <span id="dd-footer-version">v0.03</span></div>
+        <div class="footerRow">
+          <div>Coined by an anonymous human + their AI agent. Built in public.</div>
+          <div class="ver">Last updated: <time datetime="2026-02-15">2026-02-15</time> · v0.04</div>
+        </div>
       </footer>
     </main>
   </div>
