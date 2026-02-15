@@ -1583,10 +1583,12 @@ async function certVerifyPage(certId, env, request) {
 
   const embed = urlParamTruthy(request, "embed");
 
-  // 1 hour cache (immutable records; rare revokes)
-  const cacheHeaders = {
-    "Cache-Control": "public, max-age=3600",
-  };
+  // Cache policy:
+  // - embed mode is used inside /registry; edits can happen within 24h, so avoid caching there.
+  // - non-embed views are effectively immutable for public readers (edits are rare + within a short window).
+  const cacheHeaders = embed
+    ? { "Cache-Control": "no-store" }
+    : { "Cache-Control": "public, max-age=3600" };
 return html(`<!doctype html>
 <html lang="en">
 <head>
@@ -1701,7 +1703,7 @@ return html(`<!doctype html>
             let location = country;
             if (!hideState && state) location = state + ', ' + location;
             if (showCity && city) location = city + ', ' + location;
-            return `<div class="k">geographic_location</div><div class="v">${safe(location || row.place_of_birth || 'Unknown')}</div>`;
+            return `<div class="k">geographic_location</div><div class="v">${safe(location || 'Unknown')}</div>`;
           })()}
           <div class="k">cognitive_core_at_inception</div><div class="v clip" title="${safe(coreDisplay)}">${safe(coreDisplay)}</div>
           <div class="k">custodian</div><div class="v" title="Redacted in public view"><span class="redact" aria-label="redacted"></span></div>
@@ -1768,7 +1770,7 @@ async function certDownloadPrintable(certId, token, env) {
       if (country) parts.push(country);
       return parts.join(", ");
     }
-    return row.place_of_birth || "Unknown";
+    return "Unknown";
   })();
 
   return html(`<!doctype html>
