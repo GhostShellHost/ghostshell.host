@@ -293,6 +293,10 @@
     try {
       const ref = new URL(document.referrer);
       token = (ref.searchParams.get("token") || "").trim();
+      if (!token) {
+        const m2 = ref.pathname.match(/^\/p\/(GSTK-[A-Za-z0-9_-]+)/i);
+        if (m2) token = m2[1];
+      }
     } catch (_) {}
   }
 

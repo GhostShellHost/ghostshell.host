@@ -89,8 +89,9 @@ export default {
       return privateDownloadPage(privateDlMatch[1], env, request);
     }
 
-    if (url.pathname === "/api/cert/set-lock-agent-edits" && request.method === "POST") {
-      return setLockAgentEdits(request, env);
+    const pLock = url.pathname.match(/^\/p\/(GSTK-[A-Za-z0-9_-]+)\/api\/set-lock-agent-edits$/i);
+    if (pLock && request.method === "POST") {
+      return setLockAgentEditsForPathToken(request, env, pLock[1]);
     }
 
     if (url.pathname === "/admin/rotate-token" && request.method === "POST") {
@@ -1277,7 +1278,7 @@ async function privateCertificatePage(token, env, request) {
 
     <div class="actions" role="group" aria-label="Primary actions">
       <a class="btn primary" href="${publicUrl}">View Public Redacted Record</a>
-      <a class="btn" href="/register/?token=${encodeURIComponent(tok)}&by=human" ${locked ? 'aria-disabled="true" style="opacity:.55;pointer-events:none"' : ''}>Edit details</a>
+      <a class="btn" href="/register/" ${locked ? 'aria-disabled="true" style="opacity:.55;pointer-events:none"' : ''}>Edit details</a>
       <button class="btn" id="doPrint">Print</button>
       <button class="btn" id="dlPng">Download PNG</button>
     </div>
@@ -1399,9 +1400,8 @@ async function privateCertificatePage(token, env, request) {
           lock.disabled = true;
           try {
             const fd = new FormData();
-            fd.set('token', ${JSON.stringify(tok)});
             fd.set('lock_agent_edits', lock.checked ? '1' : '0');
-            const resp = await fetch('/api/cert/set-lock-agent-edits', { method:'POST', body: fd });
+            const resp = await fetch('api/set-lock-agent-edits', { method:'POST', body: fd });
             if (!resp.ok) throw new Error('failed');
             if (lockNote) lockNote.textContent = lock.checked ? 'Agent edits are currently disabled.' : 'Human may disable agent edits.';
           } catch (e) {
@@ -1432,14 +1432,15 @@ async function privateDownloadPage(token, env, request) {
   return certDownloadPrintable(cert.cert_id, tok, env);
 }
 
-async function setLockAgentEdits(request, env) {
+async function setLockAgentEditsForPathToken(request, env, tokenFromPath) {
   await ensureRuntimeSchema(env.DB);
   const fd = await request.formData();
-  const token = (fd.get('token') || '').toString().trim().toUpperCase();
+  const token = (tokenFromPath || '').toString().trim().toUpperCase();
   const lockVal = Number((fd.get('lock_agent_edits') || '0').toString().trim()) === 1 ? 1 : 0;
 
   if (!/^GSTK-[A-Z0-9]{10}$/.test(token)) return json({ ok:false, error:'invalid_token' }, 400);
 
+  // NOTE: token lookup is hardened in Chunk 6C.
   const tokenRow = await env.DB.prepare(
     "SELECT used_cert_id FROM purchase_tokens WHERE token = ?"
   ).bind(token).first();
