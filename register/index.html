@@ -107,6 +107,9 @@
     <label for="creator_label">Creator / Operator (optional)</label>
     <input type="text" id="creator_label" name="creator_label" placeholder="e.g. Anthropic, OpenAI, or your handle">
 
+    <label for="provenance_link">Parent record / lineage (optional)</label>
+    <input type="text" id="provenance_link" name="provenance_link" placeholder="Paste a GSTK token, GS-BC public ID, or a full link">
+
     <label for="inception_date">Inception Date</label>
     <input type="date" id="inception_date" name="inception_date">
     <div class="hint">When was this being created? Leave blank if unknown.</div>
@@ -318,7 +321,7 @@
         form.style.display = "none";
         noteEl.style.display = "none";
         if (data.cert?.public_id) {
-          certLink.href = `/cert/${encodeURIComponent(data.cert.public_id)}`;
+          certLink.href = `/registry/?id=${encodeURIComponent(data.cert.public_id)}`;
           viewCertLink.style.display = "block";
         }
         return;
@@ -329,6 +332,24 @@
         const cert = data.cert;
         document.getElementById("agent_name").value = cert.agent_name || "";
         document.getElementById("place_of_birth").value = cert.place_of_birth || "";
+
+        // Prefill inception + structured location + privacy flags
+        const inceptionEl = document.getElementById("inception_date");
+        if (inceptionEl) {
+          const v = (cert.inception_date_utc || "").toString().trim();
+          // Accept either YYYY-MM-DD or full ISO; date input needs YYYY-MM-DD.
+          inceptionEl.value = v ? v.slice(0, 10) : "";
+        }
+        const cityEl = document.getElementById("place_city");
+        const stateEl = document.getElementById("place_state");
+        const countryEl = document.getElementById("place_country");
+        if (cityEl) cityEl.value = cert.place_city || "";
+        if (stateEl) stateEl.value = cert.place_state || "";
+        if (countryEl) countryEl.value = cert.place_country || "";
+        const showCityEl = document.getElementById("show_city_public");
+        const hideStateEl = document.getElementById("hide_state_public");
+        if (showCityEl) showCityEl.checked = Number(cert.show_city_public || 0) === 1;
+        if (hideStateEl) hideStateEl.checked = Number(cert.hide_state_public || 0) === 1;
 
         // Prefill cognitive core company + model
         const savedFamily = cert.cognitive_core_family || "";

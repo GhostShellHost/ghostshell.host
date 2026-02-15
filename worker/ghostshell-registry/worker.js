@@ -775,7 +775,7 @@ async function tokenStatus(request, env) {
   }
 
   const cert = await env.DB.prepare(
-    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, declared_ontological_status, edit_count, human_edit_count, agent_edit_count, last_edited_at_utc FROM certificates WHERE cert_id = ?"
+    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, declared_ontological_status, edit_count, human_edit_count, agent_edit_count, last_edited_at_utc FROM certificates WHERE cert_id = ?"
   ).bind(tokenRow.used_cert_id).first();
 
   if (!cert) {
@@ -796,6 +796,12 @@ async function tokenStatus(request, env) {
       issued_at_utc: cert.issued_at_utc,
       agent_name: cert.agent_name || "",
       place_of_birth: cert.place_of_birth || "",
+      inception_date_utc: cert.inception_date_utc || "",
+      place_city: cert.place_city || "",
+      place_state: cert.place_state || "",
+      place_country: cert.place_country || "",
+      show_city_public: Number(cert.show_city_public || 0),
+      hide_state_public: Number(cert.hide_state_public || 0),
       cognitive_core_family: cert.cognitive_core_family || "",
       cognitive_core_exact: cert.cognitive_core_exact || "",
       creator_label: cert.creator_label || "",
