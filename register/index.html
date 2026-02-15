@@ -102,10 +102,6 @@
 
     <label for="creator_label">Custodian (optional)</label>
     <input type="text" id="creator_label" name="creator_label" placeholder="e.g. Anthropic, OpenAI, or your handle">
-
-    <label for="provenance_link">Parent record / lineage (optional)</label>
-    <input type="text" id="provenance_link" name="provenance_link" placeholder="Paste a GSTK token, GS-BC public ID, or a full link">
-
     <label for="inception_date">Inception Date</label>
     <input type="date" id="inception_date" name="inception_date">
     <div class="hint">When was this being created? Leave blank if unknown.</div>
@@ -388,8 +384,7 @@
             [savedFamily, savedExact].filter(Boolean).join("/");
         }
         document.getElementById("creator_label").value = cert.creator_label || "";
-        document.getElementById("provenance_link").value = cert.provenance_link || "";
-        if (cert.declared_ontological_status) {
+                if (cert.declared_ontological_status) {
           const ontoEl = document.getElementById("declared_ontological_status");
           if (ontoEl) {
             ontoEl.value = cert.declared_ontological_status;

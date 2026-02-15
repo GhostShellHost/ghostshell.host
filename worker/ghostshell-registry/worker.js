@@ -1708,16 +1708,7 @@ return html(`<!doctype html>
           <div class="k">cognitive_core_at_inception</div><div class="v clip" title="${safe(coreDisplay)}">${safe(coreDisplay)}</div>
           <div class="k">custodian</div><div class="v" title="Redacted in public view"><span class="redact" aria-label="redacted"></span></div>
           <div class="k">amendments (24h)</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
-          ${row.provenance_link ? (() => {
-            const p = (row.provenance_link || '').trim();
-            const hrefRaw = /^https?:\/\//i.test(p) ? p : `${(env.BASE_URL || 'https://ghostshell.host')}/registry/?id=${encodeURIComponent(p)}`;
-            const href = hrefRaw.replace(/"/g, '&quot;');
-            const pSafe = safe(p);
-            const parentStatus = (row.parent_record_status || 'claimed').toString().toLowerCase();
-            const label = parentStatus === 'verified' ? 'verified' : 'claimed';
-            return `<div class="k">parent_record</div><div class="v clip" title="${pSafe}"><a href="${href}" target="_blank" rel="noopener noreferrer">${pSafe}</a> <span class="k">(${label})</span></div>`;
-          })() : ''}
-        </div>
+                  </div>
 
         <!-- Copy actions removed for cleaner public view -->
 
