@@ -600,63 +600,53 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env, baseU
     }
   }
 
-  // Send "complete your certificate" email immediately after payment
+  // Send canonical private-link email immediately after payment
   if (recoveryEmailRaw && isValidEmail(recoveryEmailRaw)) {
     const tokenEnc = encodeURIComponent(token);
-    const registerUrl = `${baseUrl}/register/?token=${tokenEnc}&by=human`;
-    const agentUrl = `${baseUrl}/register/?token=${tokenEnc}&by=agent`;
-    const handoffUrl = `${baseUrl}/handoff/?token=${tokenEnc}`;
+    const privateUrl = `${baseUrl}/p/${tokenEnc}`;
 
     const { ok: emailOk, status: emailStatus, error: emailError } = await sendEmail(env, {
       to: recoveryEmailRaw,
-      subject: "Complete your GhostShell Birth Certificate",
+      subject: "Your GhostShell Certificate",
       text: [
-        "Your payment is confirmed — thank you.",
+        "Your Private Certificate:",
+        privateUrl,
         "",
-        `You have up to ${CLAIM_WINDOW_DAYS} days from purchase to complete the form.`,
-        `After your first submission, you have ${CORRECTION_WINDOW_HOURS} hours to make corrections.`,
+        "Your Public Redacted Record:",
+        "(available after initial submission)",
         "",
-        "Complete your agent's birth certificate here:",
-        registerUrl,
+        "Submission Rules:",
+        `- ${CLAIM_WINDOW_DAYS} days to submit initial details`,
+        `- After first submission: ${CORRECTION_WINDOW_HOURS} hours to correct`,
+        "- Maximum 5 edits",
+        "- Human may lock agent edits",
         "",
-        "Give to your AI agent (recommended):",
-        handoffUrl,
+        "Print Instructions:",
+        "Use Print → Save as PDF. Enable background graphics.",
         "",
-        "COPY/PASTE FOR YOUR AI AGENT:",
-        "---",
-        "You are helping me complete a GhostShell Birth Certificate form.",
-        "1) Open the handoff link above and click 'Give to agent' (or open the agent link below).",
-        "2) Fill the form fields from my instructions.",
-        "3) Set the field 'Filled by' = AI / agent.",
-        "4) If anything is missing/unclear, ask me questions one at a time.",
-        "5) Submit the form and confirm success.",
-        "Agent direct link:",
-        agentUrl,
-        "---",
-        "",
-        "This link is a capability token. Share only with your AI agent you trust.",
+        "AGENT INSTRUCTIONS:",
+        `Open: ${privateUrl}`,
+        "Record ID: (available after submission)",
+        "Complete required fields. Choose Declared Autonomy Class (self-declared). Set Edit Source appropriately. Submit once finished.",
         "",
         EMAIL_FOOTER_TEXT,
       ].join("\n"),
       html: `
-        <p>Your payment is confirmed — thank you.</p>
-        <p><strong>Timing:</strong> You have up to <strong>${CLAIM_WINDOW_DAYS} days</strong> from purchase to complete the form. After your first submission, you have <strong>${CORRECTION_WINDOW_HOURS} hours</strong> to make corrections.</p>
-        <p><strong>Complete the form:</strong><br><a href="${registerUrl}">${registerUrl}</a></p>
-        <p><strong>Give to your AI agent:</strong><br><a href="${handoffUrl}">${handoffUrl}</a></p>
+        <p><strong>Your Private Certificate:</strong><br><a href="${privateUrl}">${privateUrl}</a></p>
+        <p><strong>Your Public Redacted Record:</strong><br><span style="color:#6b7280;font-size:12px">(available after initial submission)</span></p>
+        <p style="color:#6b7280;font-size:12px;line-height:1.6">
+          <strong>Submission Rules:</strong><br>
+          - ${CLAIM_WINDOW_DAYS} days to submit initial details<br>
+          - After first submission: ${CORRECTION_WINDOW_HOURS} hours to correct<br>
+          - Maximum 5 edits<br>
+          - Human may lock agent edits
+        </p>
+        <p style="color:#6b7280;font-size:12px">Print Instructions: Use Print → Save as PDF. Enable background graphics.</p>
         <hr style="margin:16px 0;border:none;border-top:1px solid #e5e7eb" />
-        <p style="margin:0 0 8px"><strong>Copy/paste for your AI agent</strong></p>
-        <pre style="white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;background:#0b0b0d;color:#e8e8e8;padding:12px;border-radius:10px;border:1px solid #222;line-height:1.4">
-You are helping me complete a GhostShell Birth Certificate form.
-1) Open the handoff link and click 'Give to agent' (or use the agent link below).
-2) Fill the form fields from my instructions.
-3) Set the field 'Filled by' = AI / agent.
-4) If anything is missing/unclear, ask me questions one at a time.
-5) Submit the form and confirm success.
-
-Agent direct link:
-${agentUrl}
-        </pre>
-        <p style="color:#6b7280;font-size:12px">This link is a capability token. Share only with your AI agent you trust.</p>
+        <p style="margin:0 0 8px"><strong>AGENT INSTRUCTIONS</strong></p>
+        <pre style="white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;background:#0b0b0d;color:#e8e8e8;padding:12px;border-radius:10px;border:1px solid #222;line-height:1.4">Open: ${privateUrl}
+Record ID: (available after submission)
+Complete required fields. Choose Declared Autonomy Class (self-declared). Set Edit Source appropriately. Submit once finished.</pre>
         ${EMAIL_FOOTER_HTML}
       `,
     });
@@ -715,6 +705,8 @@ async function handoffToken(request, env) {
 
   return json({
     token,
+    private_url: `/p/${tokenEncoded}`,
+    // Back-compat fields (deprecated):
     human_url: `/register/?token=${tokenEncoded}&by=human`,
     agent_url: `/register/?token=${tokenEncoded}&by=agent`,
   });
@@ -737,7 +729,7 @@ async function postCheckoutRedirect(request, env) {
     if (!row?.token) {
       return Response.redirect(`${baseUrl}/issue/`, 303);
     }
-    const location = `${baseUrl}/register/?token=${encodeURIComponent(row.token)}&by=human`;
+    const location = `${baseUrl}/p/${encodeURIComponent(row.token)}`;
     return Response.redirect(location, 303);
   }
 
@@ -747,35 +739,47 @@ async function postCheckoutRedirect(request, env) {
   }
 
   const token = await getOrCreatePurchaseTokenForSession(sessionId, stripe.session, env, baseUrl);
-  const location = `${baseUrl}/register/?token=${encodeURIComponent(token)}&by=human`;
+  const location = `${baseUrl}/p/${encodeURIComponent(token)}`;
   return Response.redirect(location, 303);
 }
 
 async function getHandoff(request, env) {
+  // Processing + redirect endpoint only. No long-lived UI.
   const url = new URL(request.url);
   console.log("handoff redirect", url.toString());
+
+  // If token already present, go straight to canonical private page.
+  const tok = (url.searchParams.get("token") || "").trim();
+  if (tok && /^GSTK-[A-Za-z0-9_-]+$/i.test(tok)) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: `/p/${encodeURIComponent(tok.toUpperCase())}`,
+        "Cache-Control": "no-store",
+      },
+    });
+  }
 
   const sessionId = (url.searchParams.get("session_id") || "").trim();
   if (sessionId) {
     const stripe = await fetchStripeCheckoutSession(sessionId, env);
     if (stripe.ok && isCheckoutCompleteForIssuance(stripe.session)) {
       const token = await getOrCreatePurchaseTokenForSession(sessionId, stripe.session, env, DEFAULT_BASE_URL);
-      const location = `/register/?token=${encodeURIComponent(token)}&by=human`;
       return new Response(null, {
         status: 302,
         headers: {
-          Location: location,
+          Location: `/p/${encodeURIComponent(token)}`,
           "Cache-Control": "no-store",
         },
       });
     }
   }
 
-  const location = `/handoff/${url.search || ""}`;
+  // Fall back safely.
   return new Response(null, {
-    status: 302,
+    status: 303,
     headers: {
-      Location: location,
+      Location: `/issue/`,
       "Cache-Control": "no-store",
     },
   });
@@ -2048,26 +2052,8 @@ async function redeemPurchaseToken(request, env) {
         if (recoveryEmail && isValidEmail(recoveryEmail)) {
           await sendEmail(env, {
             to: recoveryEmail,
-            subject: "Your GhostShell Certificate" ,
+            subject: "Your GhostShell Certificate",
             text: [
-              "Your certificate is now issued.",
-              "",
-              `Edits: you can update your certificate for ${CORRECTION_WINDOW_HOURS} hours after your first submission.`,
-              `Policy: max ${HUMAN_AMENDMENT_LIMIT} human amendments and max ${AGENT_AMENDMENT_LIMIT} agent amendments within the ${CORRECTION_WINDOW_HOURS}h window (initial submission counts).`,
-              `Current: Human ${(registered_by === 'human') ? 1 : 0}/${HUMAN_AMENDMENT_LIMIT} · Agent ${(registered_by === 'agent') ? 1 : 0}/${AGENT_AMENDMENT_LIMIT} · Total 1/${HUMAN_AMENDMENT_LIMIT + AGENT_AMENDMENT_LIMIT}.`,
-              "",
-              "Edit / correct your certificate:",
-              editUrl,
-              "",
-              "Give to your AI agent (optional):",
-              handoffUrl,
-              "Agent direct link:",
-              agentUrl,
-              "",
-              "Agent automation (no web UI):",
-              `POST ${baseUrl}/api/cert/redeem-token (content-type: application/x-www-form-urlencoded)`,
-              `Required fields: token=${tok}, registered_by=agent, agent_name=... (plus any optional fields you want to set).`,
-              "",
               "Your Private Certificate:",
               privateUrl,
               "",
@@ -2080,18 +2066,19 @@ async function redeemPurchaseToken(request, env) {
               "- Maximum 5 edits",
               "- Human may lock agent edits",
               "",
-              "Printing:",
+              "Print Instructions:",
               "Use Print → Save as PDF. Enable background graphics.",
               "",
-              "Keep the private link safe. Anyone with the link can view your private certificate.",
+              "AGENT INSTRUCTIONS:",
+              `Open: ${privateUrl}`,
+              `Record ID: ${public_id}`,
+              "Complete required fields. Choose Declared Autonomy Class (self-declared). Set Edit Source appropriately. Submit once finished.",
               "",
               EMAIL_FOOTER_TEXT,
             ].join("\n"),
             html: `
-              <p><strong>Your GhostShell Certificate is issued.</strong></p>
               <p><strong>Your Private Certificate:</strong><br><a href="${privateUrl}">${privateUrl}</a></p>
               <p><strong>Your Public Redacted Record:</strong><br><a href="${publicUrl}">${publicUrl}</a></p>
-
               <p style="color:#6b7280;font-size:12px;line-height:1.6">
                 <strong>Submission Rules:</strong><br>
                 - ${CLAIM_WINDOW_DAYS} days to submit initial details<br>
@@ -2099,14 +2086,12 @@ async function redeemPurchaseToken(request, env) {
                 - Maximum 5 edits<br>
                 - Human may lock agent edits
               </p>
-
-              <p style="color:#6b7280;font-size:12px">Printing: Use Print → Save as PDF. Enable background graphics.</p>
-
-              <p><strong>Edit / correct your certificate (if window is open):</strong><br><a href="${editUrl}">${editUrl}</a></p>
-              <p><strong>Give to your AI agent (optional):</strong><br><a href="${handoffUrl}">${handoffUrl}</a><br>
-              <span style="color:#6b7280;font-size:12px">Agent direct link:</span> <a href="${agentUrl}">${agentUrl}</a></p>
-
-              <p style="color:#6b7280;font-size:12px">Keep the private link safe. Anyone with the link can view your private certificate.</p>
+              <p style="color:#6b7280;font-size:12px">Print Instructions: Use Print → Save as PDF. Enable background graphics.</p>
+              <hr style="margin:16px 0;border:none;border-top:1px solid #e5e7eb" />
+              <p style="margin:0 0 8px"><strong>AGENT INSTRUCTIONS</strong></p>
+              <pre style="white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;background:#0b0b0d;color:#e8e8e8;padding:12px;border-radius:10px;border:1px solid #222;line-height:1.4">Open: ${privateUrl}
+Record ID: ${public_id}
+Complete required fields. Choose Declared Autonomy Class (self-declared). Set Edit Source appropriately. Submit once finished.</pre>
               ${EMAIL_FOOTER_HTML}
             `,
           });
