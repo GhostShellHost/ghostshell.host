@@ -929,11 +929,11 @@ async function registryPage(request, env) {
     .rubber{position:absolute;left:-40px;right:-40px;top:42%;transform:rotate(-12deg);text-align:center;font-family:var(--mono);font-size:72px;letter-spacing:.22em;text-transform:uppercase;color:rgba(180,24,24,.26);pointer-events:none;user-select:none;filter:blur(.2px);display:${notFound ? 'block' : 'none'};}
     .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);letter-spacing:.03em}
-    .grid{margin-top:10px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px 16px;align-items:baseline;grid-auto-rows:minmax(20px,auto)}
+    .grid{margin-top:10px;display:grid;grid-template-columns:320px minmax(0,1fr);gap:8px 16px;align-items:baseline;grid-auto-rows:minmax(20px,auto)}
     .k{color:rgba(17,24,39,.66);text-align:left}
     .k::after{content:":";display:inline;color:rgba(17,24,39,.42)}
-    .v{color:var(--ink);font-weight:700;min-width:0;overflow-wrap:anywhere;min-height:1em;text-align:right}
-    .clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:inline-block;text-align:right}
+    .v{color:var(--ink);font-weight:700;min-width:0;overflow-wrap:anywhere;min-height:1em;text-align:left;justify-self:start}
+    .clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:inline-block;text-align:left;justify-self:start}
     .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:9.8px;line-height:1.22;color:rgba(17,24,39,.70);letter-spacing:.08em}
     .micr .hashline{display:block;margin-top:6px;color:rgba(17,24,39,.86);letter-spacing:.10em;white-space:nowrap;overflow:hidden;text-overflow:clip}
     .muted2{margin-top:10px;color:rgba(17,24,39,.72);font-size:12px}
@@ -958,7 +958,7 @@ async function registryPage(request, env) {
 
         <div class="sheet">
           <div class="rubber" aria-hidden="true">RECORD NOT FOUND</div>
-          <div class="type" style="text-align:right">TYPEWRITTEN EXTRACT //</div>
+          <div class="type">TYPEWRITTEN EXTRACT //</div>
           <div class="grid type" aria-label="Certificate fields">
             <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v">${safe(row.public_id || row.cert_id)}</div>
             ${notFound ? `<div class="k">status</div><div class="v">RECORD NOT FOUND</div>` : ''}
