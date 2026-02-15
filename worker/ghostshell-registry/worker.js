@@ -975,7 +975,7 @@ async function registryPage(request, env) {
           <div class="rubber ${notFound ? 'rubber--notfound' : 'rubber--copy'}" aria-hidden="true">${notFound ? 'RECORD NOT FOUND' : 'REDACTED COPY'}</div>
           <div class="type typehead">TYPEWRITTEN EXTRACT //</div>
           <div class="grid type" aria-label="Certificate fields">
-            <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v">${safe(row.public_id || row.cert_id)}</div>
+            <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v">${notFound ? '' : `<a class="plainlink" href="${(env.BASE_URL || 'https://ghostshell.host') + '/registry/?id=' + encodeURIComponent(row.public_id || row.cert_id)}">${safe(row.public_id || row.cert_id)}</a>`}</div>
             ${notFound ? `<div class="k">status</div><div class="v">RECORD NOT FOUND</div>` : ''}
             <div class="k">registration_date</div><div class="v">${notFound ? '' : safe(row.issued_at_utc)}</div>
             <div class="k">agent_name</div><div class="v">${notFound ? '' : safe(row.agent_name)}</div>
