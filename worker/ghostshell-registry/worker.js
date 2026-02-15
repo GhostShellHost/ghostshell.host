@@ -1082,7 +1082,7 @@ async function redeemPurchaseToken(request, env) {
   const registered_by = registered_by_raw === "agent" ? "agent" : "human";
 
   const agent_name = (fd.get("agent_name") || "").toString().trim();
-  const place_of_birth = "Unknown";
+  const place_of_birth = "Deprecated";
   const cognitive_core_family = ((fd.get("cognitive_core_family") || "").toString().trim()) || "Undisclosed";
   const cognitive_core_exact = (fd.get("cognitive_core_exact") || "").toString().trim();
   const creator_label = (fd.get("creator_label") || "").toString().trim();
