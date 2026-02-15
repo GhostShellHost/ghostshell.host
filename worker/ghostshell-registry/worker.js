@@ -775,7 +775,7 @@ async function tokenStatus(request, env) {
   }
 
   const cert = await env.DB.prepare(
-    "SELECT cert_id, public_id, issued_at_utc, agent_name, place_of_birth, inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, declared_ontological_status, edit_count, human_edit_count, agent_edit_count, last_edited_at_utc FROM certificates WHERE cert_id = ?"
+    "SELECT cert_id, public_id, issued_at_utc, agent_name, inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, declared_ontological_status, edit_count, human_edit_count, agent_edit_count, last_edited_at_utc FROM certificates WHERE cert_id = ?"
   ).bind(tokenRow.used_cert_id).first();
 
   if (!cert) {
@@ -795,7 +795,6 @@ async function tokenStatus(request, env) {
       public_id: cert.public_id,
       issued_at_utc: cert.issued_at_utc,
       agent_name: cert.agent_name || "",
-      place_of_birth: cert.place_of_birth || "",
       inception_date_utc: cert.inception_date_utc || "",
       place_city: cert.place_city || "",
       place_state: cert.place_state || "",
@@ -892,7 +891,7 @@ async function redeemPurchaseToken(request, env) {
   const registered_by = registered_by_raw === "agent" ? "agent" : "human";
 
   const agent_name = (fd.get("agent_name") || "").toString().trim();
-  const place_of_birth = ((fd.get("place_of_birth") || "").toString().trim()) || "Unknown";
+  const place_of_birth = "Unknown";
   const cognitive_core_family = ((fd.get("cognitive_core_family") || "").toString().trim()) || "Undisclosed";
   const cognitive_core_exact = (fd.get("cognitive_core_exact") || "").toString().trim();
   const creator_label = (fd.get("creator_label") || "").toString().trim();
@@ -904,8 +903,8 @@ async function redeemPurchaseToken(request, env) {
   const place_city = (fd.get("place_city") || "").toString().trim() || null;
   const place_state = (fd.get("place_state") || "").toString().trim() || null;
   const place_country = (fd.get("place_country") || "").toString().trim() || null;
-  const show_city_public = ((fd.get("show_city_public") || "").toString().trim() === "on" || (fd.get("show_city_public") || "").toString().trim() === "1") ? 1 : 0;
-  const hide_state_public = ((fd.get("hide_state_public") || "").toString().trim() === "on" || (fd.get("hide_state_public") || "").toString().trim() === "1") ? 1 : 0;
+  const show_city_public = Number((fd.get("show_city_public") || "0").toString().trim()) === 1 ? 1 : 0;
+  const hide_state_public = Number((fd.get("hide_state_public") || "1").toString().trim()) === 1 ? 1 : 0;
 
   const errPage = (msg) => html(`<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -919,6 +918,7 @@ async function redeemPurchaseToken(request, env) {
 
   if (!token) return errPage("Missing registration token.");
   if (!agent_name) return errPage("Agent Name is required.");
+  if (!place_country) return errPage("Country is required.");
 
   // Validate and resolve parent record
   const parentResolved = await resolveParentRecordValue(provenance_link, env);
@@ -966,7 +966,6 @@ async function redeemPurchaseToken(request, env) {
       cert_id: existing.cert_id,
       issued_at_utc: existing.issued_at_utc,
       agent_name,
-      place_of_birth,
       cognitive_core_family,
       cognitive_core_exact: cognitive_core_exact || null,
       creator_label: creator_label || null,
@@ -987,8 +986,7 @@ async function redeemPurchaseToken(request, env) {
       UPDATE certificates
       SET registered_by = ?,
           agent_name = ?,
-          place_of_birth = ?,
-          cognitive_core_family = ?,
+                    cognitive_core_family = ?,
           cognitive_core_exact = ?,
           creator_label = ?,
           provenance_link = ?,
@@ -1010,7 +1008,6 @@ async function redeemPurchaseToken(request, env) {
     `).bind(
       registered_by,
       agent_name,
-      place_of_birth,
       cognitive_core_family,
       cognitive_core_exact || null,
       creator_label || null,
@@ -1040,7 +1037,7 @@ async function redeemPurchaseToken(request, env) {
   const schema_version = 2;
 
   const fingerprintSource = JSON.stringify({
-    cert_id, issued_at_utc, agent_name, place_of_birth, cognitive_core_family,
+    cert_id, issued_at_utc, agent_name, cognitive_core_family,
     cognitive_core_exact: cognitive_core_exact || null,
     creator_label: creator_label || null,
     provenance_link: parent_record_value,
@@ -1065,7 +1062,7 @@ async function redeemPurchaseToken(request, env) {
       await env.DB.prepare(`
         INSERT INTO certificates
         (cert_id, issued_at_utc, card_number, public_id, registered_by,
-         agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
+         agent_name, cognitive_core_family, cognitive_core_exact,
          creator_label, provenance_link, parent_record_status, declared_ontological_status,
          inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public,
          schema_version, public_fingerprint, download_token_hash, status,
@@ -1074,7 +1071,7 @@ async function redeemPurchaseToken(request, env) {
                 1, (CASE WHEN ? = 'human' THEN 1 ELSE 0 END), (CASE WHEN ? = 'agent' THEN 1 ELSE 0 END), ?)
       `).bind(
         cert_id, issued_at_utc, card_number, public_id, registered_by,
-        agent_name, place_of_birth, cognitive_core_family,
+        agent_name, cognitive_core_family,
         cognitive_core_exact || null, creator_label || null, parent_record_value,
         parent_record_status,
         declared_ontological_status,
@@ -1364,7 +1361,6 @@ async function stripeWebhook(request, env) {
     cert_id,
     issued_at_utc,
     agent_name: md.agent_name || "Unnamed Agent",
-    place_of_birth: md.place_of_birth || "Unknown",
     cognitive_core_family: md.cognitive_core_family || "Undisclosed",
     cognitive_core_exact: md.cognitive_core_exact || null,
     creator_label: md.creator_label || null,
@@ -1389,8 +1385,6 @@ async function stripeWebhook(request, env) {
     cert_id: record.cert_id,
     issued_at_utc: record.issued_at_utc,
     agent_name: record.agent_name,
-    place_of_birth: record.place_of_birth,
-    cognitive_core_family: record.cognitive_core_family,
     cognitive_core_exact: record.cognitive_core_exact,
     creator_label: record.creator_label,
     provenance_link: record.provenance_link,
@@ -1411,7 +1405,7 @@ async function stripeWebhook(request, env) {
         await env.DB.prepare(`
           INSERT INTO certificates
           (cert_id, issued_at_utc, card_number, public_id, registered_by,
-           agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
+           agent_name, cognitive_core_family, cognitive_core_exact,
            creator_label, provenance_link,
            inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public,
            schema_version, public_fingerprint, download_token_hash, status,
@@ -1419,7 +1413,7 @@ async function stripeWebhook(request, env) {
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)
         `).bind(
           record.cert_id, record.issued_at_utc, card_number, public_id, record.registered_by,
-          record.agent_name, record.place_of_birth, record.cognitive_core_family, record.cognitive_core_exact,
+          record.agent_name, record.record.cognitive_core_family, record.cognitive_core_exact,
           record.creator_label, record.provenance_link,
           record.inception_date_utc, record.place_city, record.place_state, record.place_country, record.show_city_public, record.hide_state_public,
           record.schema_version, public_fingerprint, download_token_hash,
@@ -1434,14 +1428,14 @@ async function stripeWebhook(request, env) {
         await env.DB.prepare(`
           INSERT INTO certificates
           (cert_id, issued_at_utc, card_number, public_id, registered_by,
-           agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
+           agent_name, cognitive_core_family, cognitive_core_exact,
            creator_label, provenance_link,
            inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public,
            schema_version, public_fingerprint, download_token_hash, status)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
         `).bind(
           record.cert_id, record.issued_at_utc, card_number, public_id, record.registered_by,
-          record.agent_name, record.place_of_birth, record.cognitive_core_family, record.cognitive_core_exact,
+          record.agent_name, record.record.cognitive_core_family, record.cognitive_core_exact,
           record.creator_label, record.provenance_link,
           record.inception_date_utc, record.place_city, record.place_state, record.place_country, record.show_city_public, record.hide_state_public,
           record.schema_version, public_fingerprint, download_token_hash
@@ -1491,18 +1485,16 @@ async function verifyStripeSignature(payload, header, secret) {
 
 async function latestOrigin(env) {
   const row = await env.DB.prepare(
-    "SELECT cert_id, place_of_birth, issued_at_utc FROM certificates WHERE status = 'active' ORDER BY issued_at_utc DESC LIMIT 1"
+    "SELECT cert_id, issued_at_utc FROM certificates WHERE status = 'active' ORDER BY issued_at_utc DESC LIMIT 1"
   ).first();
 
   if (!row) {
-    return json({ place_of_birth: null, cert_id: null, issued_at_utc: null }, 200);
+    return json({ cert_id: null, issued_at_utc: null }, 200);
   }
 
   return json({
     cert_id: row.cert_id,
-    place_of_birth: row.place_of_birth,
-    issued_at_utc: row.issued_at_utc,
-  }, 200);
+    }, 200);
 }
 
 async function opsEmailSummary(request, env) {
@@ -1557,7 +1549,7 @@ async function resolvePublicIdForCertOrPublicId(id, env) {
 
 async function certVerifyPage(certId, env, request) {
   const selectPublicFields =
-    "SELECT cert_id, public_id, issued_at_utc, inception_date_utc, agent_name, place_of_birth, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
+    "SELECT cert_id, public_id, issued_at_utc, inception_date_utc, agent_name, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
 
   // Resolve by canonical cert_id first, then fallback to public_id alias.
   let row = await env.DB.prepare(
@@ -1745,7 +1737,7 @@ async function certDownloadPrintable(certId, token, env) {
   if (!token) return new Response("Missing token", { status: 401 });
 
   const row = await env.DB.prepare(
-    "SELECT cert_id, public_id, issued_at_utc, inception_date_utc, agent_name, place_of_birth, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count, download_token_hash FROM certificates WHERE cert_id = ?"
+    "SELECT cert_id, public_id, issued_at_utc, inception_date_utc, agent_name, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count, download_token_hash FROM certificates WHERE cert_id = ?"
   ).bind(certId).first();
 
   if (!row) return new Response("Not found", { status: 404 });

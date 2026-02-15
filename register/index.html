@@ -58,9 +58,9 @@
     <input type="text" id="agent_name" name="agent_name" placeholder="e.g. Aria-7, Claude, GPT-Nexus" required>
     <div class="hint">Required. This name appears on the public record.</div>
 
-    <label for="declared_ontological_status">Declared Ontological Status</label>
-    <select id="declared_ontological_status" name="declared_ontological_status">
-      <option value="" selected disabled>Select status (optional)</option>
+    <label for="declared_ontological_status">Declared Ontological Status *</label>
+    <select id="declared_ontological_status" name="declared_ontological_status" required>
+      <option value="" selected disabled>Select status</option>
       <option value="Calculator">Calculator</option>
       <option value="Chatbot">Chatbot</option>
       <option value="Tool">Tool</option>
@@ -74,11 +74,7 @@
       <option value="Experimental Entity">Experimental Entity</option>
       <option value="Undisclosed">Undisclosed</option>
     </select>
-    <div id="onto-desc" class="hint">What kind of being is this? Pick the closest fit.</div>
-
-    <label for="place_of_birth">Place of Birth</label>
-    <input type="text" id="place_of_birth" name="place_of_birth" placeholder="e.g. San Francisco, CA / Cloud">
-
+    <div id="onto-desc" class="hint">Required. What kind of being is this? Pick the closest fit.</div>
     <label for="cognitive_core_company">Cognitive Core Company at Birth *</label>
     <select id="cognitive_core_company" name="cognitive_core_company" required>
       <option value="" selected disabled>Select company</option>
@@ -104,7 +100,7 @@
     <input type="text" id="cognitive_core_other" name="cognitive_core_other" class="hidden" placeholder="e.g. Anthropic/Claude Opus 4.6">
     <div class="hint">Pick a company first. Then choose a model, enter your own, or choose "Prefer not to say".</div>
 
-    <label for="creator_label">Creator / Operator (optional)</label>
+    <label for="creator_label">Custodian (optional)</label>
     <input type="text" id="creator_label" name="creator_label" placeholder="e.g. Anthropic, OpenAI, or your handle">
 
     <label for="provenance_link">Parent record / lineage (optional)</label>
@@ -115,28 +111,40 @@
     <div class="hint">When was this being created? Leave blank if unknown.</div>
 
     <fieldset style="border:1px solid #333;border-radius:8px;padding:12px;margin:16px 0;">
-      <legend style="color:#8B8DFF;font-size:12px;padding:0 8px;">Structured Location (optional)</legend>
+      <legend style="color:#8B8DFF;font-size:12px;padding:0 8px;">Geographic location at inception (D.O.B.)</legend>
 
-      <label for="place_city">City</label>
-      <input type="text" id="place_city" name="place_city" placeholder="e.g. San Francisco">
-
-      <label for="place_state">State / Province</label>
-      <input type="text" id="place_state" name="place_state" placeholder="e.g. California">
-
-      <label for="place_country">Country</label>
-      <input type="text" id="place_country" name="place_country" placeholder="e.g. United States">
-
-      <div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#aaa;">
-          <input type="checkbox" name="show_city_public" id="show_city_public">
-          Show city on public record
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#aaa;">
-          <input type="checkbox" name="hide_state_public" id="hide_state_public">
-          Hide state on public record
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+        <div style="flex:1">
+          <label for="place_city">City (optional)</label>
+          <input type="text" id="place_city" name="place_city" placeholder="e.g. San Francisco">
+        </div>
+        <label style="display:flex;flex-direction:column;gap:6px;cursor:pointer;font-size:12px;color:#aaa;min-width:132px;align-items:flex-start">
+          <span>City on public</span>
+          <select id="show_city_public" name="show_city_public" style="width:132px;background:#0B0B0D;border:1px solid #2a2a35;border-radius:8px;color:#e8e8e8;padding:8px 10px;font-size:.9rem;font-family:inherit">
+            <option value="0" selected>Redacted</option>
+            <option value="1">Public</option>
+          </select>
         </label>
       </div>
-      <div class="hint">Country is always shown. State is shown by default unless hidden.</div>
+
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+        <div style="flex:1">
+          <label for="place_state">State / Province (optional)</label>
+          <input type="text" id="place_state" name="place_state" placeholder="e.g. California">
+        </div>
+        <label style="display:flex;flex-direction:column;gap:6px;cursor:pointer;font-size:12px;color:#aaa;min-width:132px;align-items:flex-start">
+          <span>State on public</span>
+          <select id="hide_state_public" name="hide_state_public" style="width:132px;background:#0B0B0D;border:1px solid #2a2a35;border-radius:8px;color:#e8e8e8;padding:8px 10px;font-size:.9rem;font-family:inherit">
+            <option value="1" selected>Redacted</option>
+            <option value="0">Public</option>
+          </select>
+        </label>
+      </div>
+
+      <label for="place_country">Country *</label>
+      <input type="text" id="place_country" name="place_country" placeholder="e.g. Australia" required>
+
+      <div class="hint">Required. Country is always shown. City/State default to redacted unless you set them to Public.</div>
     </fieldset>
 
     <button class="btn" id="submit-btn" type="submit">Issue certificate</button>
@@ -331,8 +339,7 @@
         // Prefill form with existing certificate
         const cert = data.cert;
         document.getElementById("agent_name").value = cert.agent_name || "";
-        document.getElementById("place_of_birth").value = cert.place_of_birth || "";
-
+        
         // Prefill inception + structured location + privacy flags
         const inceptionEl = document.getElementById("inception_date");
         if (inceptionEl) {
