@@ -1025,7 +1025,7 @@ async function redeemPurchaseToken(request, env) {
       existing.cert_id
     ).run();
 
-    return Response.redirect(`${baseUrl}/cert/${encodeURIComponent(existing.public_id)}`, 303);
+    return Response.redirect(`${baseUrl}/registry/?id=${encodeURIComponent(existing.public_id)}`, 303);
   }
 
   // First issuance path
