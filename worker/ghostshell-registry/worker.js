@@ -8,7 +8,7 @@
 // If you paste this into Cloudflare, you should see this version string at the top.
 //
 export const WORKER_VERSION = "2026-02-14.001";
-const PAGE_VERSION = "v0.020";
+const PAGE_VERSION = "v0.030";
 
 // Purchase token rules
 const CLAIM_WINDOW_DAYS = 7; // time allowed to submit the form after purchase
@@ -930,10 +930,10 @@ async function registryPage(request, env) {
     .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);letter-spacing:.03em}
     .grid{margin-top:10px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px 16px;align-items:baseline;grid-auto-rows:minmax(20px,auto)}
-    .k{color:rgba(17,24,39,.66)}
+    .k{color:rgba(17,24,39,.66);text-align:left}
     .k::after{content:":";display:inline;color:rgba(17,24,39,.42)}
-    .v{color:var(--ink);font-weight:700;min-width:0;overflow-wrap:anywhere;min-height:1em}
-    .clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:inline-block}
+    .v{color:var(--ink);font-weight:700;min-width:0;overflow-wrap:anywhere;min-height:1em;text-align:right}
+    .clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:inline-block;text-align:right}
     .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:9.8px;line-height:1.22;color:rgba(17,24,39,.70);letter-spacing:.08em}
     .micr .hashline{display:block;margin-top:6px;color:rgba(17,24,39,.86);letter-spacing:.10em;white-space:nowrap;overflow:hidden;text-overflow:clip}
     .muted2{margin-top:10px;color:rgba(17,24,39,.72);font-size:12px}
@@ -958,7 +958,7 @@ async function registryPage(request, env) {
 
         <div class="sheet">
           <div class="rubber" aria-hidden="true">RECORD NOT FOUND</div>
-          <div class="type">TYPEWRITTEN EXTRACT //</div>
+          <div class="type" style="text-align:right">TYPEWRITTEN EXTRACT //</div>
           <div class="grid type" aria-label="Certificate fields">
             <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v">${safe(row.public_id || row.cert_id)}</div>
             ${notFound ? `<div class="k">status</div><div class="v">RECORD NOT FOUND</div>` : ''}
