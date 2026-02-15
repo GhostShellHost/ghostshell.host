@@ -931,13 +931,13 @@ async function registryPage(request, env) {
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);letter-spacing:.03em}
     .typehead{text-align:left}
     .grid{margin-top:10px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:8px 10px;align-items:baseline;grid-auto-rows:minmax(20px,auto)}
-    .k{color:rgba(17,24,39,.90);text-align:left;font-weight:700}
-    .k::after{content:":";display:inline;color:rgba(17,24,39,.55)}
-    .v{color:var(--ink);font-weight:800;min-width:0;overflow-wrap:anywhere;min-height:1em;text-align:left;justify-self:start}
+    .k{color:rgba(17,24,39,.72);text-align:left;font-weight:600}
+    .k::after{content:":";display:inline;color:rgba(17,24,39,.45)}
+    .v{color:rgba(17,24,39,.96);font-weight:800;min-width:0;overflow-wrap:anywhere;min-height:1em;text-align:left;justify-self:start}
     .clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:inline-block;text-align:left;justify-self:start}
-    .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:9.8px;line-height:1.22;color:rgba(17,24,39,.70);letter-spacing:.08em}
-    .micr .hashline{display:block;margin-top:6px;color:rgba(17,24,39,.86);letter-spacing:.10em;white-space:nowrap;overflow:hidden;text-overflow:clip}
-    .muted2{margin-top:10px;color:rgba(17,24,39,.72);font-size:12px}
+    .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:9.8px;line-height:1.22;color:rgba(17,24,39,.70);letter-spacing:.08em;text-align:left}
+    .micr .hashline{display:block;margin-top:6px;color:rgba(17,24,39,.86);letter-spacing:.10em;white-space:nowrap;overflow:hidden;text-overflow:clip;text-align:left}
+    .muted2{margin-top:10px;color:rgba(17,24,39,.72);font-size:12px;font-family:var(--mono);letter-spacing:.02em}
     #gs-version{position:absolute;bottom:10px;right:12px;color:rgba(17,24,39,.72);font-size:10px;opacity:.9;font-family:var(--mono);letter-spacing:.08em;pointer-events:none}
     .redact{display:inline-block;height:1.05em;width:18ch;vertical-align:middle;background:#050608;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0.5px 0 rgba(0,0,0,.35);}
   </style>
