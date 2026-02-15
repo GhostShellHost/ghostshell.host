@@ -70,6 +70,10 @@ export default {
       return opsEmailSummary(request, env);
     }
 
+    if ((url.pathname === "/registry" || url.pathname === "/registry/") && request.method === "GET") {
+      return registryPage(request, env);
+    }
+
     const certMatch = url.pathname.match(/^\/cert\/([A-Za-z0-9_-]+)$/);
     if (certMatch && request.method === "GET") {
       // Retired public /cert/<id> share view.
@@ -813,6 +817,193 @@ async function tokenStatus(request, env) {
     },
   });
 }
+
+function normalizeRegistryId(raw, fallback) {
+  const v = (raw || fallback || "").toString().trim();
+  return v.toUpperCase();
+}
+
+async function fetchPublicRowById(id, env) {
+  const selectPublicFields =
+    "SELECT cert_id, public_id, issued_at_utc, inception_date_utc, agent_name, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
+
+  let row = await env.DB.prepare(`${selectPublicFields}cert_id = ?`).bind(id).first();
+  if (!row) {
+    const foundByPublicId = await env.DB.prepare(`${selectPublicFields}public_id = ?`).bind(id).all();
+    const results = foundByPublicId?.results || [];
+    if (results.length === 1) row = results[0];
+  }
+  return row;
+}
+
+async function registryPage(request, env) {
+  await ensureRuntimeSchema(env.DB);
+  const url = new URL(request.url);
+
+  const DEFAULT_ID = "GS-BC-A-26-H";
+  const rawId = (url.searchParams.get("id") || "").toString();
+  const id = normalizeRegistryId(rawId, DEFAULT_ID);
+
+  // Canonicalize to uppercase share URLs
+  if (rawId && rawId.trim() !== id) {
+    url.searchParams.set("id", id);
+    return Response.redirect(url.toString(), 302);
+  }
+
+  let row = await fetchPublicRowById(id, env);
+  const notFound = !row;
+  if (notFound) {
+    row = {
+      cert_id: id,
+      public_id: id,
+      issued_at_utc: "",
+      inception_date_utc: "",
+      agent_name: "",
+      place_city: "",
+      place_state: "",
+      place_country: "",
+      show_city_public: 0,
+      hide_state_public: 0,
+      cognitive_core_family: "",
+      cognitive_core_exact: "",
+      creator_label: "",
+      declared_ontological_status: "",
+      public_fingerprint: "",
+      status: "not_found",
+      edit_count: 0,
+      human_edit_count: 0,
+      agent_edit_count: 0,
+    };
+  }
+
+  const safe = (s) => (s ?? "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const coreFamily = row.cognitive_core_family || "Undisclosed";
+  const coreExact = row.cognitive_core_exact || "";
+  const PRESERVE_AS_IS = ["Undisclosed", "Prefer not to say"]; 
+  const coreFamilyDisplay = PRESERVE_AS_IS.includes(coreFamily) ? coreFamily : coreFamily.replace(/\s+/g, "");
+  const coreDisplay = coreExact ? `${coreFamilyDisplay}/${coreExact}` : coreFamilyDisplay;
+
+  const city = row.place_city || "";
+  const state = row.place_state || "";
+  const country = row.place_country || "";
+  const showCity = Number(row.show_city_public || 0) === 1;
+  const hideState = Number(row.hide_state_public || 0) === 1;
+  let location = country;
+  if (!hideState && state) location = state + ", " + location;
+  if (showCity && city) location = city + ", " + location;
+
+  const htmlOut = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GhostShell Registry — Public Registry</title>
+  <style>
+    :root{--bg:#0a0a0d;--text:#f2f2f5;--soft:#b2b2bb;--muted:#7b7b86;--line:#272730;--accent:#9da3ff;}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.16), transparent 60%), var(--bg);padding:24px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+    main{width:min(760px,100%);text-align:center;margin:0 auto;padding-top:min(10vh,84px)}
+    .brand{display:inline-block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);border:1px solid var(--line);border-radius:999px;padding:6px 12px;margin-bottom:16px;background:rgba(255,255,255,.01);}
+    h1{margin:0;font-size:clamp(34px,6vw,58px);line-height:1.05;letter-spacing:-.02em;font-weight:740}
+    .note{margin:12px auto 0;max-width:56ch;color:var(--soft)}
+    form{margin:26px auto 0;max-width:560px;display:grid;gap:10px}
+    input{width:100%;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);padding:12px 13px;font:inherit;text-align:center;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;}
+    input::placeholder{color:var(--muted)}
+    button{justify-self:center;margin-top:6px;border-radius:999px;border:1px solid var(--accent);background:var(--accent);color:#0a0a0d;padding:10px 20px;font:inherit;font-weight:620;cursor:pointer;}
+    .small{margin:20px auto 0;max-width:64ch;color:var(--muted);font-size:.9rem;text-align:center;border-top:1px solid var(--line);padding-top:14px;}
+    a{color:var(--accent);text-decoration:none;border-bottom:1px solid #4a4a7a}
+    a:hover{border-bottom-color:var(--accent)}
+    .back{margin-top:16px}
+    .vtag{color:var(--muted);font-size:.9rem}
+  </style>
+  <style>
+    :root{--paper:#fbf7ea;--paper2:#f6f0dd;--ink:#111827;--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .certwrap{max-width:920px;margin:18px auto 0}
+    .paper{color:var(--ink);background:linear-gradient(180deg,var(--paper),var(--paper2));box-shadow:0 26px 80px rgba(0,0,0,.55);border-radius:14px;padding:18px 18px 16px;position:relative;overflow:hidden;}
+    .header2{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;position:relative}
+    .paper h2{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
+    .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
+    .stamp{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(17,24,39,.55);border:1px solid rgba(17,24,39,.22);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.5);white-space:nowrap}
+    .rubber{position:absolute;left:-40px;right:-40px;top:42%;transform:rotate(-12deg);text-align:center;font-family:var(--mono);font-size:72px;letter-spacing:.22em;text-transform:uppercase;color:rgba(180,24,24,.26);pointer-events:none;user-select:none;filter:blur(.2px);display:${notFound ? 'block' : 'none'};}
+    .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
+    .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);letter-spacing:.03em}
+    .grid{margin-top:10px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px 16px;align-items:baseline;grid-auto-rows:minmax(20px,auto)}
+    .k{color:rgba(17,24,39,.66)}
+    .k::after{content:":";display:inline;color:rgba(17,24,39,.42)}
+    .v{color:var(--ink);font-weight:700;min-width:0;overflow-wrap:anywhere;min-height:1em}
+    .clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:inline-block}
+    .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:9.8px;line-height:1.22;color:rgba(17,24,39,.70);letter-spacing:.08em}
+    .micr .hashline{display:block;margin-top:6px;color:rgba(17,24,39,.86);letter-spacing:.10em;white-space:nowrap;overflow:hidden;text-overflow:clip}
+    .muted2{margin-top:10px;color:rgba(17,24,39,.72);font-size:12px}
+    #gs-version{position:absolute;bottom:10px;right:12px;color:rgba(17,24,39,.72);font-size:10px;opacity:.9;font-family:var(--mono);letter-spacing:.08em;pointer-events:none}
+    .redact{display:inline-block;height:1.05em;width:18ch;vertical-align:middle;background:#050608;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0.5px 0 rgba(0,0,0,.35);}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand">ghostshell.host • public registry</div>
+    <h1>Public Registry</h1>
+
+    <div class="certwrap">
+      <div class="paper" role="document" aria-label="GhostShell registry record">
+        <div class="header2">
+          <div>
+            <h2>BIRTH CERTIFICATE AI AGENT // REDACTED</h2>
+            <div class="catalog">GhostShell.host registry record</div>
+          </div>
+          <div class="stamp">PUBLIC FILE</div>
+        </div>
+
+        <div class="sheet">
+          <div class="rubber" aria-hidden="true">RECORD NOT FOUND</div>
+          <div class="type">TYPEWRITTEN EXTRACT //</div>
+          <div class="grid type" aria-label="Certificate fields">
+            <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v">${safe(row.public_id || row.cert_id)}</div>
+            ${notFound ? `<div class="k">status</div><div class="v">RECORD NOT FOUND</div>` : ''}
+            <div class="k">registration_date</div><div class="v">${notFound ? '' : safe(row.issued_at_utc)}</div>
+            <div class="k">agent_name</div><div class="v">${notFound ? '' : safe(row.agent_name)}</div>
+            <div class="k">inception_date</div><div class="v">${notFound ? '' : safe(row.inception_date_utc)}</div>
+            <div class="k">ontological_status</div><div class="v">${notFound ? '' : safe(row.declared_ontological_status)}</div>
+            <div class="k">geographic_location</div><div class="v">${notFound ? '' : safe(location || 'Unknown')}</div>
+            <div class="k">cognitive_core_at_inception</div><div class="v clip" title="${notFound ? '' : safe(coreDisplay)}">${notFound ? '' : safe(coreDisplay)}</div>
+            <div class="k">custodian</div><div class="v">${notFound ? '' : '<span class="redact" aria-label="redacted"></span>'}</div>
+            <div class="k">amendments (24h)</div><div class="v">${notFound ? '' : `Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}`}</div>
+          </div>
+          <div class="micr" aria-label="Record hash (machine line)">
+            <span class="hashline" id="fp"><span class="k">record_hash:</span> <span class="k">sha256</span> ${notFound ? '' : safe(row.public_fingerprint)}</span>
+            <span class="hashline"><span class="k">public_record:</span> ${notFound ? 'not_found' : ((env.BASE_URL || 'https://ghostshell.host') + '/registry/?id=' + encodeURIComponent(row.public_id || row.cert_id))}</span>
+          </div>
+        </div>
+
+        <div class="muted2">Private credential issued by GhostShell. Verification checks registry presence + fingerprint integrity only.</div>
+        <div id="gs-version">${PAGE_VERSION}</div>
+      </div>
+    </div>
+
+    <p class="note">Paste a public registry record ID.</p>
+
+    <form id="registry-form" aria-label="Registry search" method="GET" action="/registry/">
+      <input id="record-id" name="id" aria-label="Registry Record ID" type="text" value="${safe(id)}" placeholder="e.g. GS-BC-A-26-H" required />
+      <button type="submit">Search</button>
+    </form>
+
+    <p class="small" style="border-top:none;padding-top:0;margin-top:16px">
+      Showing public record for: <span style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">${safe(id)}</span>
+      <br/>
+      This is the <b>shareable public link</b>. Full certificates are only available to the registrant via their private download link.
+    </p>
+
+    <p class="small">Unredacted certificates are only available to the registrant via emailed link.</p>
+    <p class="back"><a href="/">Back home</a> &nbsp; <a href="/issue/">Buy Certificate</a> &nbsp; <span class="vtag">v0.022</span></p>
+  </main>
+</body>
+</html>`;
+
+  return html(htmlOut, 200, { "Cache-Control": "no-store" });
+}
+
 
 async function resolveParentRecordValue(rawInput, env) {
   const raw = (rawInput || "").toString().trim();
