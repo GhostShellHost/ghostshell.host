@@ -14,6 +14,10 @@ const PAGE_VERSION = "v0.020";
 const CLAIM_WINDOW_DAYS = 7; // time allowed to submit the form after purchase
 const CORRECTION_WINDOW_HOURS = 24; // edits allowed for 24h after first submission/issuance
 
+// Amendment limits (within the 24h correction window)
+const HUMAN_AMENDMENT_LIMIT = 5;
+const AGENT_AMENDMENT_LIMIT = 5;
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -931,7 +935,7 @@ async function redeemPurchaseToken(request, env) {
   // Existing certificate path: allow edits within 24 hours only
   if (tokenRow.used_cert_id) {
     const existing = await env.DB.prepare(
-      "SELECT cert_id, public_id, issued_at_utc, edit_count FROM certificates WHERE cert_id = ?"
+      "SELECT cert_id, public_id, issued_at_utc, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE cert_id = ?"
     ).bind(tokenRow.used_cert_id).first();
 
     if (!existing) return errPage("This token is linked to a missing certificate. Please contact support.");
@@ -939,6 +943,15 @@ async function redeemPurchaseToken(request, env) {
     const win = getEditWindowState(existing.issued_at_utc);
     if (win.locked) {
       return errPage(`${win.lockReason} Locked at ${win.lockAtUtc}.`);
+    }
+
+    const humanSoFar = Number(existing.human_edit_count || 0);
+    const agentSoFar = Number(existing.agent_edit_count || 0);
+    if (registered_by === "human" && humanSoFar >= HUMAN_AMENDMENT_LIMIT) {
+      return errPage(`Human amendments limit reached (${humanSoFar}/${HUMAN_AMENDMENT_LIMIT}) for this certificate.`);
+    }
+    if (registered_by === "agent" && agentSoFar >= AGENT_AMENDMENT_LIMIT) {
+      return errPage(`Agent amendments limit reached (${agentSoFar}/${AGENT_AMENDMENT_LIMIT}) for this certificate.`);
     }
 
     const editedAt = nowUtcIso();
@@ -1049,8 +1062,10 @@ async function redeemPurchaseToken(request, env) {
          agent_name, place_of_birth, cognitive_core_family, cognitive_core_exact,
          creator_label, provenance_link, parent_record_status, declared_ontological_status,
          inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public,
-         schema_version, public_fingerprint, download_token_hash, status, edit_count, last_edited_at_utc)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0, NULL)
+         schema_version, public_fingerprint, download_token_hash, status,
+         edit_count, human_edit_count, agent_edit_count, last_edited_at_utc)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active',
+                1, (CASE WHEN ? = 'human' THEN 1 ELSE 0 END), (CASE WHEN ? = 'agent' THEN 1 ELSE 0 END), ?)
       `).bind(
         cert_id, issued_at_utc, card_number, public_id, registered_by,
         agent_name, place_of_birth, cognitive_core_family,
@@ -1058,7 +1073,10 @@ async function redeemPurchaseToken(request, env) {
         parent_record_status,
         declared_ontological_status,
         inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public,
-        schema_version, public_fingerprint, download_token_hash
+        schema_version, public_fingerprint, download_token_hash,
+        registered_by,
+        registered_by,
+        issued_at_utc
       ).run();
 
       // Mark token as initially used/linked (token remains reusable for 24h edits)
@@ -1092,6 +1110,8 @@ async function redeemPurchaseToken(request, env) {
               "Your certificate is now issued.",
               "",
               `Edits: you can update your certificate for ${CORRECTION_WINDOW_HOURS} hours after your first submission.`,
+              `Policy: max ${HUMAN_AMENDMENT_LIMIT} human amendments and max ${AGENT_AMENDMENT_LIMIT} agent amendments within the ${CORRECTION_WINDOW_HOURS}h window (initial submission counts).`,
+              `Current: Human ${(registered_by === 'human') ? 1 : 0}/${HUMAN_AMENDMENT_LIMIT} · Agent ${(registered_by === 'agent') ? 1 : 0}/${AGENT_AMENDMENT_LIMIT} · Total 1/${HUMAN_AMENDMENT_LIMIT + AGENT_AMENDMENT_LIMIT}.`,
               "",
               "Edit / correct your certificate:",
               editUrl,
@@ -1100,6 +1120,10 @@ async function redeemPurchaseToken(request, env) {
               handoffUrl,
               "Agent direct link:",
               agentUrl,
+              "",
+              "Agent automation (no web UI):",
+              `POST ${baseUrl}/api/cert/redeem-token (content-type: application/x-www-form-urlencoded)`,
+              `Required fields: token=${tok}, registered_by=agent, agent_name=... (plus any optional fields you want to set).`,
               "",
               "Private download link (full certificate):",
               dlUrl,
@@ -1114,9 +1138,14 @@ async function redeemPurchaseToken(request, env) {
             html: `
               <p><strong>Your certificate is now issued.</strong></p>
               <p><strong>Edits:</strong> you can update your certificate for <strong>${CORRECTION_WINDOW_HOURS} hours</strong> after your first submission.</p>
+              <p style="color:#6b7280;font-size:12px"><strong>Policy:</strong> max ${HUMAN_AMENDMENT_LIMIT} human amendments and max ${AGENT_AMENDMENT_LIMIT} agent amendments within the ${CORRECTION_WINDOW_HOURS}h window (initial submission counts).<br>
+              <strong>Current:</strong> Human ${(registered_by === 'human') ? 1 : 0}/${HUMAN_AMENDMENT_LIMIT} · Agent ${(registered_by === 'agent') ? 1 : 0}/${AGENT_AMENDMENT_LIMIT} · Total 1/${HUMAN_AMENDMENT_LIMIT + AGENT_AMENDMENT_LIMIT}.</p>
               <p><strong>Edit / correct your certificate:</strong><br><a href="${editUrl}">${editUrl}</a></p>
               <p><strong>Give to your AI agent (optional):</strong><br><a href="${handoffUrl}">${handoffUrl}</a><br>
               <span style="color:#6b7280;font-size:12px">Agent direct link:</span> <a href="${agentUrl}">${agentUrl}</a></p>
+              <p style="color:#6b7280;font-size:12px"><strong>Agent automation (no web UI):</strong><br>
+              POST <code>${baseUrl}/api/cert/redeem-token</code> (form-encoded)<br>
+              Required: <code>token=${tok}</code>, <code>registered_by=agent</code>, <code>agent_name=…</code></p>
               <p><strong>Private download link (full certificate):</strong><br><a href="${dlUrl}">${dlUrl}</a></p>
               <p><strong>Public registry view (redacted):</strong><br><a href="${publicUrl}">${publicUrl}</a></p>
               <p style="color:#6b7280;font-size:12px">Keep the private link safe. Anyone with the link can download your certificate.</p>
@@ -1128,7 +1157,7 @@ async function redeemPurchaseToken(request, env) {
         console.log("[email] issued email failed", String(e?.message || e));
       }
 
-      return Response.redirect(`${baseUrl}/cert/${encodeURIComponent(public_id)}?issued=1`, 303);
+      return Response.redirect(`${baseUrl}/registry/?id=${encodeURIComponent(public_id)}&issued=1`, 303);
 
     } catch (e) {
       const msg = String(e?.message || "");
@@ -1660,7 +1689,7 @@ return html(`<!doctype html>
         <div class="type">TYPEWRITTEN EXTRACT //</div>
 
         <div class="grid type" aria-label="Certificate fields">
-          <div class="k">public_record_id</div><div class="v"><a href="${(env.BASE_URL || 'https://ghostshell.host')}/cert/${encodeURIComponent(row.public_id || row.cert_id)}" target="_self" rel="noopener noreferrer">${safe(row.public_id || row.cert_id)}</a></div>
+          <div class="k">public_record_id</div><div class="v"><a href="${(env.BASE_URL || 'https://ghostshell.host')}/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}" target="_self" rel="noopener noreferrer">${safe(row.public_id || row.cert_id)}</a></div>
           <div class="k">registration_date</div><div class="v">${safe(row.issued_at_utc)}</div>
           <div class="k">agent_name</div><div class="v">${safe(row.agent_name)}</div>
           ${row.inception_date_utc ? `<div class="k">inception_date</div><div class="v">${safe(row.inception_date_utc)}</div>` : ''}
@@ -1681,7 +1710,7 @@ return html(`<!doctype html>
           <div class="k">amendments (24h)</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
           ${row.provenance_link ? (() => {
             const p = (row.provenance_link || '').trim();
-            const hrefRaw = /^https?:\/\//i.test(p) ? p : `${(env.BASE_URL || 'https://ghostshell.host')}/cert/${encodeURIComponent(p)}`;
+            const hrefRaw = /^https?:\/\//i.test(p) ? p : `${(env.BASE_URL || 'https://ghostshell.host')}/registry/?id=${encodeURIComponent(p)}`;
             const href = hrefRaw.replace(/"/g, '&quot;');
             const pSafe = safe(p);
             const parentStatus = (row.parent_record_status || 'claimed').toString().toLowerCase();
