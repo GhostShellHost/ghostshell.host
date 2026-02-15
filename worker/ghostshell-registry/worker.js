@@ -1661,7 +1661,26 @@ return html(`<!doctype html>
     .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
     .catalog b{color:rgba(17,24,39,.82)}
     .stamp{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(17,24,39,.55);border:1px solid rgba(17,24,39,.22);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.5);white-space:nowrap}
-    .rubber{position:absolute;right:18px;bottom:14px;transform:rotate(-12deg);font-family:var(--mono);font-size:24px;letter-spacing:.16em;text-transform:uppercase;color:rgba(180,24,24,.18);border:2px solid rgba(180,24,24,.16);padding:10px 14px;border-radius:10px;mix-blend-mode:multiply;pointer-events:none;user-select:none;filter:blur(.15px)}
+    .rubber{position:absolute;
+      left:${notFound ? '-40px' : 'auto'};
+      right:${notFound ? '-40px' : '18px'};
+      top:${notFound ? '42%' : 'auto'};
+      bottom:${notFound ? 'auto' : '14px'};
+      transform:rotate(-12deg);
+      text-align:${notFound ? 'center' : 'right'};
+      font-family:var(--mono);
+      font-size:${notFound ? '72px' : '24px'};
+      letter-spacing:${notFound ? '.22em' : '.16em'};
+      text-transform:uppercase;
+      color:${notFound ? 'rgba(180,24,24,.26)' : 'rgba(180,24,24,.18)'};
+      border:${notFound ? 'none' : '2px solid rgba(180,24,24,.16)'};
+      padding:${notFound ? '0' : '10px 14px'};
+      border-radius:${notFound ? '0' : '10px'};
+      mix-blend-mode:multiply;
+      pointer-events:none;
+      user-select:none;
+      filter:${notFound ? 'blur(.2px)' : 'blur(.15px)'}
+    }
     .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);position:relative;letter-spacing:.03em;text-shadow:0.35px 0 rgba(17,24,39,.55),-0.15px 0 rgba(17,24,39,.25);filter:contrast(1.02) saturate(0.95)}
     .grid{margin-top:10px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px 16px;align-items:baseline;justify-content:start;grid-auto-rows:minmax(20px,auto)}
@@ -1710,10 +1729,10 @@ return html(`<!doctype html>
         <div class="grid type" aria-label="Certificate fields">
           <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v"><a href="${(env.BASE_URL || 'https://ghostshell.host')}/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}" target="_self" rel="noopener noreferrer">${safe(row.public_id || row.cert_id)}</a></div>
           ${notFound ? `<div class="k">status</div><div class="v">RECORD NOT FOUND</div>` : ''}
-          <div class="k">registration_date</div><div class="v">${safe(row.issued_at_utc)}</div>
-          <div class="k">agent_name</div><div class="v">${safe(row.agent_name)}</div>
-          ${(notFound || row.inception_date_utc) ? `<div class="k">inception_date</div><div class="v">${notFound ? '<span class="redact" aria-label="redacted"></span>' : safe(row.inception_date_utc)}</div>` : ''}
-          ${(notFound || row.declared_ontological_status) ? `<div class="k">ontological_status</div><div class="v">${notFound ? '<span class="redact" aria-label="redacted"></span>' : safe(row.declared_ontological_status)}</div>` : ''}
+          <div class="k">registration_date</div><div class="v">${notFound ? '' : safe(row.issued_at_utc)}</div>
+          <div class="k">agent_name</div><div class="v">${notFound ? '' : safe(row.agent_name)}</div>
+          ${(notFound || row.inception_date_utc) ? `<div class="k">inception_date</div><div class="v">${notFound ? '' : safe(row.inception_date_utc)}</div>` : ''}
+          ${(notFound || row.declared_ontological_status) ? `<div class="k">ontological_status</div><div class="v">${notFound ? '' : safe(row.declared_ontological_status)}</div>` : ''}
           ${(() => {
             const city = row.place_city || '';
             const state = row.place_state || '';
@@ -1723,18 +1742,18 @@ return html(`<!doctype html>
             let location = country;
             if (!hideState && state) location = state + ', ' + location;
             if (showCity && city) location = city + ', ' + location;
-            return `<div class="k">geographic_location</div><div class="v">${safe(location || 'Unknown')}</div>`;
+            return `<div class="k">geographic_location</div><div class="v">${notFound ? '' : safe(location || 'Unknown')}</div>`;
           })()}
-          <div class="k">cognitive_core_at_inception</div><div class="v clip" title="${safe(coreDisplay)}">${safe(coreDisplay)}</div>
-          <div class="k">custodian</div><div class="v" title="Redacted in public view"><span class="redact" aria-label="redacted"></span></div>
-          <div class="k">amendments (24h)</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
+          <div class="k">cognitive_core_at_inception</div><div class="v clip" title="${notFound ? "" : safe(coreDisplay)}">${notFound ? "" : safe(coreDisplay)}</div>
+          <div class="k">custodian</div><div class="v">${notFound ? "" : '<span class="redact" aria-label="redacted"></span>'}</div>
+          <div class="k">amendments (24h)</div><div class="v">${notFound ? "" : `Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}`}</div>
                   </div>
 
         <!-- Copy actions removed for cleaner public view -->
 
         <div class="micr" aria-label="Record hash (machine line)">
-          <span class="hashline" id="fp"><span class="k">record_hash:</span> <span class="k">sha256</span> ${safe(row.public_fingerprint)}</span>
-          <span class="hashline"><span class="k">public_record:</span> ${(env.BASE_URL || 'https://ghostshell.host')}/registry/?id=${encodeURIComponent(row.public_id || row.cert_id)}</span>
+          <span class="hashline" id="fp"><span class="k">record_hash:</span> <span class="k">sha256</span> ${notFound ? "" : safe(row.public_fingerprint)}</span>
+          <span class="hashline"><span class="k">public_record:</span> ${notFound ? "not_found" : ((env.BASE_URL || 'https://ghostshell.host') + '/registry/?id=' + encodeURIComponent(row.public_id || row.cert_id))}</span>
         </div>
       </div>
       <div class="muted">Private credential issued by GhostShell. Verification checks registry presence + fingerprint integrity only.</div>
@@ -1913,9 +1932,9 @@ async function certDownloadPrintable(certId, token, env) {
           ${row.inception_date_utc ? `<div class="k">inception_date</div><div class="v">${safe(row.inception_date_utc)}</div>` : ''}
           ${row.declared_ontological_status ? `<div class="k">ontological_status</div><div class="v">${safe(row.declared_ontological_status)}</div>` : ''}
           <div class="k">geographic_location</div><div class="v">${safe(locationFull)}</div>
-          <div class="k">cognitive_core_at_inception</div><div class="v clip" title="${safe(coreDisplay)}">${safe(coreDisplay)}</div>
+          <div class="k">cognitive_core_at_inception</div><div class="v clip" title="${notFound ? "" : safe(coreDisplay)}">${notFound ? "" : safe(coreDisplay)}</div>
           <div class="k">custodian</div><div class="v">${safe(row.creator_label || 'Undisclosed')}</div>
-          <div class="k">amendments (24h)</div><div class="v">Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}</div>
+          <div class="k">amendments (24h)</div><div class="v">${notFound ? "" : `Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}`}</div>
           ${row.provenance_link ? (() => {
             const p = (row.provenance_link || '').trim();
             const hrefRaw = /^https?:\/\//i.test(p) ? p : `${baseUrl}/cert/${encodeURIComponent(p)}`;
