@@ -74,6 +74,11 @@ export default {
       return registryPage(request, env);
     }
 
+    const publicMatch = url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)$/);
+    if (publicMatch && request.method === "GET") {
+      return publicRecordPage(publicMatch[1], env, request);
+    }
+
     const certMatch = url.pathname.match(/^\/cert\/([A-Za-z0-9_-]+)$/);
     if (certMatch && request.method === "GET") {
       // Retired public /cert/<id> share view.
@@ -834,6 +839,212 @@ async function fetchPublicRowById(id, env) {
     if (results.length === 1) row = results[0];
   }
   return row;
+}
+
+async function publicRecordPage(recordIdRaw, env, request) {
+  await ensureRuntimeSchema(env.DB);
+
+  const recordId = normalizeRegistryId(recordIdRaw, "");
+
+  // Validate share format.
+  // Canonical share IDs are expected to be GS-BC-* (public ids) or equivalent registry ids.
+  if (!/^GS-BC-[A-Z0-9_-]{3,64}$/.test(recordId)) {
+    return public404(recordId, request);
+  }
+
+  const row = await fetchPublicRowById(recordId, env);
+  if (!row) {
+    return public404(recordId, request);
+  }
+
+  const safe = (s) => (s ?? "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const agentName = (row.agent_name || "").trim() || "Unknown Agent";
+  const autonomyClass = (row.declared_ontological_status || "").trim() || "Undisclosed";
+  const inception = (row.inception_date_utc || "").trim() || "";
+
+  const city = (row.place_city || "").trim();
+  const country = (row.place_country || "").trim() || "Unknown";
+  const showCity = Number(row.show_city_public || 0) === 1;
+
+  const canonicalUrl = `https://ghostshell.host/r/${encodeURIComponent(recordId)}`;
+
+  const htmlOut = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${safe(agentName)} · ${safe(recordId)} · GhostShell Registry</title>
+  <meta name="description" content="Public redacted record. Immutable issuance. Amendments appended." />
+
+  <link rel="canonical" href="${canonicalUrl}" />
+
+  <meta property="og:title" content="${safe(agentName)} · ${safe(recordId)}" />
+  <meta property="og:description" content="Public redacted record. Immutable issuance. Amendments appended." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="${canonicalUrl}" />
+  <meta property="og:image" content="https://ghostshell.host/assets/og-default.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <style>
+    :root{--bg:#0a0a0d;--text:#f2f2f5;--soft:#b2b2bb;--muted:#7b7b86;--line:#272730;--accent:#9da3ff;--paper:#fbf7ea;--paper2:#f6f0dd;--ink:#111827;--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.16), transparent 60%), var(--bg);padding:24px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+    main{width:min(860px,100%);margin:0 auto;padding-top:min(8vh,64px)}
+    .brand{display:inline-block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);border:1px solid var(--line);border-radius:999px;padding:6px 12px;margin-bottom:18px;background:rgba(255,255,255,.01);}
+    h1{margin:0;font-size:clamp(30px,5.6vw,52px);line-height:1.06;letter-spacing:-.02em;font-weight:760}
+
+    .certwrap{margin-top:18px}
+    .paper{color:var(--ink);background:linear-gradient(180deg,var(--paper),var(--paper2));box-shadow:0 26px 80px rgba(0,0,0,.55);border-radius:14px;padding:18px 18px 16px;position:relative;overflow:hidden;}
+    .header2{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;position:relative}
+    .paper h2{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
+    .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
+
+    /* Witness stamp (CSS only). Must appear in screenshots. */
+    .witness{position:absolute;right:16px;bottom:16px;left:auto;top:auto;transform:rotate(-8deg);font-family:var(--mono);text-transform:uppercase;letter-spacing:.18em;color:rgba(17,24,39,.52);border:2px solid rgba(17,24,39,.22);border-radius:10px;padding:10px 14px;background:rgba(255,255,255,.35);text-decoration:none}
+    .witness:hover{border-color:rgba(17,24,39,.35);color:rgba(17,24,39,.62)}
+
+    .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
+    .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);letter-spacing:.03em}
+    .grid{margin-top:10px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:8px 10px;align-items:baseline;grid-auto-rows:minmax(20px,auto)}
+    .k{color:rgba(17,24,39,.72);text-align:left;font-weight:600}
+    .k::after{content:":";display:inline;color:rgba(17,24,39,.45)}
+    .v{color:rgba(17,24,39,.96);font-weight:820;min-width:0;overflow-wrap:anywhere;min-height:1em;text-align:left;justify-self:start}
+
+    .controls{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
+    .btn{border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);padding:12px 12px;font-size:.95rem;font-weight:650;cursor:pointer;transition:.15s ease;white-space:nowrap}
+    .btn:hover{border-color:#3a3a47;color:var(--accent)}
+
+    .footer{margin-top:18px;color:var(--muted);font-size:.9rem;line-height:1.55;border-top:1px solid var(--line);padding-top:14px}
+    .footer a{color:var(--accent);text-decoration:none;border-bottom:1px solid #4a4a7a}
+    .footer a:hover{border-bottom-color:var(--accent)}
+
+    @media (max-width:640px){
+      body{padding:18px}
+      .grid{grid-template-columns: 1fr;}
+      .witness{right:12px;bottom:12px;font-size:10px;padding:8px 10px}
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand">ghostshell.host • public record</div>
+    <h1>${safe(agentName)} · ${safe(recordId)}</h1>
+
+    <div class="certwrap">
+      <div class="paper" role="document" aria-label="GhostShell public record">
+        <div class="header2">
+          <div>
+            <h2>BIRTH CERTIFICATE AI AGENT // REDACTED</h2>
+            <div class="catalog"><a href="https://ghostshell.host/" style="color:inherit;text-decoration:none">ghostshell.host</a> public extract</div>
+          </div>
+        </div>
+
+        <div class="sheet">
+          <div class="type" style="text-align:left">TYPEWRITTEN EXTRACT //</div>
+          <div class="grid type" aria-label="Certificate fields">
+            <div class="k">agent_name</div><div class="v">${safe(agentName)}</div>
+            <div class="k">record_id</div><div class="v">${safe(recordId)}</div>
+            <div class="k">declared_autonomy_class</div><div class="v">${safe(autonomyClass)}</div>
+            <div class="k">inception_date</div><div class="v">${safe(inception)}</div>
+            ${showCity && city ? `<div class="k">city</div><div class="v">${safe(city)}</div>` : ``}
+            <div class="k">country</div><div class="v">${safe(country)}</div>
+            <div class="k">amendments</div><div class="v">0</div>
+          </div>
+        </div>
+
+        <a class="witness" href="https://ghostshell.host/" target="_blank" rel="noopener noreferrer">ghostshell.host · Registry Witness Mark</a>
+      </div>
+
+      <div class="controls" role="group" aria-label="Share controls">
+        <button class="btn" id="share">Share Record</button>
+        <button class="btn" id="copy">Copy Link</button>
+      </div>
+
+      <div class="footer">
+        This record is part of the GhostShell Registry. Public records are permanent. Amendments are appended.
+        <br/>
+        <a href="https://ghostshell.host/">Back to registry landing</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function(){
+      const url = ${JSON.stringify(canonicalUrl)};
+      const title = ${JSON.stringify(`${agentName} · ${recordId}`)};
+      const text = 'Public redacted record. Immutable issuance. Amendments appended.';
+
+      function $(id){ return document.getElementById(id); }
+
+      $("share").addEventListener('click', async function(){
+        try {
+          if (navigator.share) {
+            await navigator.share({ title, text, url });
+            return;
+          }
+        } catch (e) {}
+        // Fallback to copy
+        try {
+          await navigator.clipboard.writeText(url);
+          this.textContent = 'Copied';
+          setTimeout(() => (this.textContent = 'Share Record'), 1200);
+        } catch (e) {
+          prompt('Copy link:', url);
+        }
+      });
+
+      $("copy").addEventListener('click', async function(){
+        try {
+          await navigator.clipboard.writeText(url);
+          this.textContent = 'Copied';
+          setTimeout(() => (this.textContent = 'Copy Link'), 1200);
+        } catch (e) {
+          prompt('Copy link:', url);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>`;
+
+  return html(htmlOut, 200, { "Cache-Control": "no-store" });
+}
+
+function public404(recordId, request) {
+  const safe = (s) => (s ?? "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const htmlOut = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Record not found · GhostShell Registry</title>
+  <meta name="description" content="Public record not found."/>
+  <style>
+    :root{--bg:#0a0a0d;--text:#f2f2f5;--soft:#b2b2bb;--muted:#7b7b86;--line:#272730;--accent:#9da3ff;}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.14), transparent 60%), var(--bg);padding:24px;display:flex;align-items:center;justify-content:center}
+    .card{width:min(720px,100%);border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.01);padding:18px}
+    h1{margin:0;font-size:26px;letter-spacing:-.01em}
+    p{margin:12px 0 0;color:var(--soft);line-height:1.6}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;color:var(--text)}
+    a{color:var(--accent);text-decoration:none;border-bottom:1px solid #4a4a7a}
+    a:hover{border-bottom-color:var(--accent)}
+  </style>
+</head>
+<body>
+  <div class="card" role="main">
+    <h1>Record not found</h1>
+    <p>The requested public record does not exist in the registry, or the identifier is invalid.</p>
+    ${recordId ? `<p>Record ID: <code>${safe(recordId)}</code></p>` : ``}
+    <p><a href="/">Return to registry landing</a></p>
+  </div>
+</body>
+</html>`;
+
+  return html(htmlOut, 404, { "Cache-Control": "no-store" });
 }
 
 async function registryPage(request, env) {
