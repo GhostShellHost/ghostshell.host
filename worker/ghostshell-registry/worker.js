@@ -889,9 +889,17 @@ async function registryPage(request, env) {
   const country = row.place_country || "";
   const showCity = Number(row.show_city_public || 0) === 1;
   const hideState = Number(row.hide_state_public || 0) === 1;
-  let location = country;
-  if (!hideState && state) location = state + ", " + location;
-  if (showCity && city) location = city + ", " + location;
+
+  // Render location with explicit redaction markers when values exist but are hidden.
+  const redactSpan = (wCh) => `<span class="redact" style="width:${wCh}ch" aria-label="redacted"></span>`;
+
+  let locationHtml = safe(country || "Unknown");
+  if (state) {
+    locationHtml = (hideState ? redactSpan(Math.max(8, Math.min(16, state.length))) : safe(state)) + ", " + locationHtml;
+  }
+  if (city) {
+    locationHtml = (showCity ? safe(city) : redactSpan(Math.max(8, Math.min(16, city.length)))) + ", " + locationHtml;
+  }
 
   const htmlOut = `<!doctype html>
 <html lang="en">
@@ -934,8 +942,8 @@ async function registryPage(request, env) {
     .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);letter-spacing:.03em}
     .typehead{text-align:left}
-    a.plainlink{color:inherit;text-decoration:none}
-    a.plainlink:hover{text-decoration:none}
+    a.plainlink{color:inherit;text-decoration:none;border-bottom:0}
+    a.plainlink:hover{text-decoration:none;border-bottom:0}
     .grid{margin-top:10px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:8px 10px;align-items:baseline;grid-auto-rows:minmax(20px,auto)}
     .k{color:rgba(17,24,39,.72);text-align:left;font-weight:600}
     .k::after{content:":";display:inline;color:rgba(17,24,39,.45)}
@@ -943,7 +951,7 @@ async function registryPage(request, env) {
     .clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:inline-block;text-align:left;justify-self:start}
     .micr{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(17,24,39,.22);font-family:var(--mono);font-size:9.8px;line-height:1.22;color:rgba(17,24,39,.70);letter-spacing:.08em;text-align:left}
     .micr .hashline{display:block;margin-top:6px;color:rgba(17,24,39,.86);letter-spacing:.10em;white-space:nowrap;overflow:hidden;text-overflow:clip;text-align:left}
-    .muted2{margin-top:10px;color:rgba(17,24,39,.72);font-size:12px;font-family:var(--mono);letter-spacing:.02em}
+    .muted2{margin-top:10px;color:rgba(17,24,39,.72);font-size:10px;font-family:var(--mono);letter-spacing:.02em;white-space:nowrap}
     #gs-version{position:absolute;bottom:10px;right:12px;color:rgba(17,24,39,.72);font-size:10px;opacity:.9;font-family:var(--mono);letter-spacing:.08em;pointer-events:none}
     .redact{display:inline-block;height:1.05em;width:18ch;vertical-align:middle;background:#050608;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0.5px 0 rgba(0,0,0,.35);}
   </style>
@@ -973,7 +981,7 @@ async function registryPage(request, env) {
             <div class="k">agent_name</div><div class="v">${notFound ? '' : safe(row.agent_name)}</div>
             <div class="k">inception_date</div><div class="v">${notFound ? '' : safe(row.inception_date_utc)}</div>
             <div class="k">ontological_status</div><div class="v">${notFound ? '' : safe(row.declared_ontological_status)}</div>
-            <div class="k">geographic_location</div><div class="v">${notFound ? '' : safe(location || 'Unknown')}</div>
+            <div class="k">geographic_location</div><div class="v">${notFound ? '' : locationHtml}</div>
             <div class="k">cognitive_core_at_inception</div><div class="v clip" title="${notFound ? '' : safe(coreDisplay)}">${notFound ? '' : safe(coreDisplay)}</div>
             <div class="k">custodian</div><div class="v">${notFound ? '' : '<span class="redact" aria-label="redacted"></span>'}</div>
             <div class="k">amendments (24h)</div><div class="v">${notFound ? '' : `Human: ${Number(row.human_edit_count || 0)} · Agent: ${Number(row.agent_edit_count || 0)} · Total: ${Number(row.edit_count || 0)}`}</div>
