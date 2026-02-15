@@ -1253,16 +1253,18 @@ async function redeemPurchaseToken(request, env) {
       await env.DB.prepare(`
         INSERT INTO certificates
         (cert_id, issued_at_utc, card_number, public_id, registered_by,
-         agent_name, cognitive_core_family, cognitive_core_exact,
+         agent_name, place_of_birth,
+         cognitive_core_family, cognitive_core_exact,
          creator_label, provenance_link, parent_record_status, declared_ontological_status,
          inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public,
          schema_version, public_fingerprint, download_token_hash, status,
          edit_count, human_edit_count, agent_edit_count, last_edited_at_utc)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active',
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active',
                 1, (CASE WHEN ? = 'human' THEN 1 ELSE 0 END), (CASE WHEN ? = 'agent' THEN 1 ELSE 0 END), ?)
       `).bind(
         cert_id, issued_at_utc, card_number, public_id, registered_by,
-        agent_name, cognitive_core_family,
+        agent_name, place_of_birth,
+        cognitive_core_family,
         cognitive_core_exact || null, creator_label || null, parent_record_value,
         parent_record_status,
         declared_ontological_status,
