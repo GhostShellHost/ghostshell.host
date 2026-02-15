@@ -996,7 +996,7 @@ async function registryPage(request, env) {
     </p>
 
     <p class="small">Unredacted certificates are only available to the registrant via emailed link.</p>
-    <p class="back"><a href="/">Back home</a> &nbsp; <a href="/issue/">Buy Certificate</a> &nbsp; <span class="vtag">v0.022</span></p>
+    <p class="back"><a href="/">Back home</a> &nbsp; <a href="/issue/">Buy Certificate</a> &nbsp; <span class="vtag">v0.030-reg</span></p>
   </main>
 </body>
 </html>`;
