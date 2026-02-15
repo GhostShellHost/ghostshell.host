@@ -928,7 +928,7 @@ async function registryPage(request, env) {
     .stamp{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(17,24,39,.55);border:1px solid rgba(17,24,39,.22);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.5);white-space:nowrap}
     .rubber{position:absolute;pointer-events:none;user-select:none;font-family:var(--mono);text-transform:uppercase;letter-spacing:.22em;filter:blur(.2px)}
     /* Legacy-style corner stamp (matches ORIGINAL COPY geometry, but red) */
-    .rubber--copy{right:18px;bottom:18px;left:auto;top:auto;transform:rotate(-12deg);text-align:center;font-size:42px;letter-spacing:.18em;color:rgba(180,24,24,.22);border:3px solid rgba(180,24,24,.18);border-radius:12px;padding:10px 18px;background:transparent}
+    .rubber--copy{right:18px;bottom:18px;left:auto;top:auto;transform:rotate(-12deg);text-align:center;font-size:32px;letter-spacing:.18em;color:rgba(180,24,24,.22);border:3px solid rgba(180,24,24,.18);border-radius:12px;padding:10px 18px;background:transparent}
     /* Big mid-page stamp for not-found */
     .rubber--notfound{left:-40px;right:-40px;top:42%;transform:rotate(-12deg);text-align:center;font-size:72px;color:rgba(180,24,24,.26);border:none;padding:0;background:transparent}
     .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
