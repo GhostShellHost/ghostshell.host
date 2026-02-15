@@ -926,10 +926,12 @@ async function registryPage(request, env) {
     .paper h2{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
     .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
     .stamp{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(17,24,39,.55);border:1px solid rgba(17,24,39,.22);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.5);white-space:nowrap}
-    .rubber{position:absolute;left:-40px;right:-40px;top:42%;transform:rotate(-12deg);text-align:center;font-family:var(--mono);font-size:72px;letter-spacing:.22em;text-transform:uppercase;color:rgba(180,24,24,.26);pointer-events:none;user-select:none;filter:blur(.2px);display:${notFound ? 'block' : 'none'};}
+    .rubber{position:absolute;left:-40px;right:-40px;top:42%;transform:rotate(-12deg);text-align:center;font-family:var(--mono);font-size:72px;letter-spacing:.22em;text-transform:uppercase;color:rgba(180,24,24,.26);pointer-events:none;user-select:none;filter:blur(.2px);display:block;}
     .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);letter-spacing:.03em}
     .typehead{text-align:left}
+    a.plainlink{color:inherit;text-decoration:none}
+    a.plainlink:hover{text-decoration:none}
     .grid{margin-top:10px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:8px 10px;align-items:baseline;grid-auto-rows:minmax(20px,auto)}
     .k{color:rgba(17,24,39,.72);text-align:left;font-weight:600}
     .k::after{content:":";display:inline;color:rgba(17,24,39,.45)}
@@ -952,13 +954,13 @@ async function registryPage(request, env) {
         <div class="header2">
           <div>
             <h2>BIRTH CERTIFICATE AI AGENT // REDACTED</h2>
-            <div class="catalog">GhostShell.host registry record</div>
+            <div class="catalog"><a class="plainlink" href="${safe(env.BASE_URL || 'https://ghostshell.host')}/">GhostShell.host</a> registry record</div>
           </div>
           <div class="stamp">PUBLIC FILE</div>
         </div>
 
         <div class="sheet">
-          <div class="rubber" aria-hidden="true">RECORD NOT FOUND</div>
+          <div class="rubber" aria-hidden="true">${notFound ? 'RECORD NOT FOUND' : 'REDACTED COPY'}</div>
           <div class="type typehead">TYPEWRITTEN EXTRACT //</div>
           <div class="grid type" aria-label="Certificate fields">
             <div class="k">${notFound ? 'registry_record_id' : 'public_record_id'}</div><div class="v">${safe(row.public_id || row.cert_id)}</div>
@@ -974,7 +976,7 @@ async function registryPage(request, env) {
           </div>
           <div class="micr" aria-label="Record hash (machine line)">
             <span class="hashline" id="fp"><span class="k">record_hash:</span> <span class="k">sha256</span> ${notFound ? '' : safe(row.public_fingerprint)}</span>
-            <span class="hashline"><span class="k">public_record:</span> ${notFound ? 'not_found' : ((env.BASE_URL || 'https://ghostshell.host') + '/registry/?id=' + encodeURIComponent(row.public_id || row.cert_id))}</span>
+            <span class="hashline"><span class="k">public_record:</span> ${notFound ? 'not_found' : `<a class="plainlink" href="${(env.BASE_URL || 'https://ghostshell.host') + '/registry/?id=' + encodeURIComponent(row.public_id || row.cert_id)}">${(env.BASE_URL || 'https://ghostshell.host') + '/registry/?id=' + encodeURIComponent(row.public_id || row.cert_id)}</a>`}</span>
           </div>
         </div>
 
