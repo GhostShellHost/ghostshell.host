@@ -79,6 +79,24 @@ export default {
       return publicRecordPage(publicMatch[1], env, request);
     }
 
+    const privateMatch = url.pathname.match(/^\/p\/(GSTK-[A-Za-z0-9_-]+)$/i);
+    if (privateMatch && request.method === "GET") {
+      return privateCertificatePage(privateMatch[1], env, request);
+    }
+
+    const privateDlMatch = url.pathname.match(/^\/p\/(GSTK-[A-Za-z0-9_-]+)\/download$/i);
+    if (privateDlMatch && request.method === "GET") {
+      return privateDownloadPage(privateDlMatch[1], env, request);
+    }
+
+    if (url.pathname === "/api/cert/set-lock-agent-edits" && request.method === "POST") {
+      return setLockAgentEdits(request, env);
+    }
+
+    if (url.pathname === "/admin/rotate-token" && request.method === "POST") {
+      return adminRotateToken(request, env);
+    }
+
     const certMatch = url.pathname.match(/^\/cert\/([A-Za-z0-9_-]+)$/);
     if (certMatch && request.method === "GET") {
       // Retired public /cert/<id> share view.
@@ -337,10 +355,17 @@ async function ensureRuntimeSchema(db) {
     "ALTER TABLE certificates ADD COLUMN place_country TEXT",
     "ALTER TABLE certificates ADD COLUMN show_city_public INTEGER DEFAULT 0",
     "ALTER TABLE certificates ADD COLUMN hide_state_public INTEGER DEFAULT 0",
+    "ALTER TABLE certificates ADD COLUMN lock_agent_edits INTEGER DEFAULT 0",
+    "ALTER TABLE certificates ADD COLUMN last_edit_source TEXT",
+    "ALTER TABLE certificates ADD COLUMN last_agent_handle TEXT",
   ];
 
   await db.prepare(
     "CREATE TABLE IF NOT EXISTS webhook_events (event_id TEXT PRIMARY KEY, event_type TEXT, processed_at_utc TEXT NOT NULL)"
+  ).run();
+
+  await db.prepare(
+    "CREATE TABLE IF NOT EXISTS cert_edit_events (id TEXT PRIMARY KEY, cert_id TEXT NOT NULL, token TEXT, edit_source TEXT, agent_handle TEXT, user_agent TEXT, created_at_utc TEXT NOT NULL)"
   ).run();
 
   for (const sql of maybeAlterStatements) {
@@ -1047,6 +1072,476 @@ function public404(recordId, request) {
   return html(htmlOut, 404, { "Cache-Control": "no-store" });
 }
 
+async function fetchCertByPurchaseToken(token, env) {
+  await ensureRuntimeSchema(env.DB);
+  const tok = (token || "").toString().trim().toUpperCase();
+  const tokenRow = await env.DB.prepare(
+    "SELECT token, created_at_utc, used_at_utc, used_cert_id, recovery_email_iv, recovery_email_enc FROM purchase_tokens WHERE token = ?"
+  ).bind(tok).first();
+  if (!tokenRow) return { tokenRow: null, cert: null };
+  if (!tokenRow.used_cert_id) return { tokenRow, cert: null };
+
+  const cert = await env.DB.prepare(
+    "SELECT cert_id, public_id, issued_at_utc, inception_date_utc, agent_name, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, provenance_link, parent_record_status, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count, last_edited_at_utc, download_token_hash, lock_agent_edits, last_edit_source, last_agent_handle FROM certificates WHERE cert_id = ?"
+  ).bind(tokenRow.used_cert_id).first();
+
+  return { tokenRow, cert: cert || null };
+}
+
+function private404() {
+  const htmlOut = `<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>Not found · GhostShell</title>
+  <style>
+    :root{--bg:#0a0a0d;--text:#f2f2f5;--soft:#b2b2bb;--muted:#7b7b86;--line:#272730;--accent:#9da3ff;}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.14), transparent 60%), var(--bg);padding:24px;display:flex;align-items:center;justify-content:center}
+    .card{width:min(720px,100%);border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.01);padding:18px}
+    h1{margin:0;font-size:26px;letter-spacing:-.01em}
+    p{margin:12px 0 0;color:var(--soft);line-height:1.6}
+    a{color:var(--accent);text-decoration:none;border-bottom:1px solid #4a4a7a}
+    a:hover{border-bottom-color:var(--accent)}
+  </style>
+</head><body>
+  <div class="card" role="main">
+    <h1>Not found</h1>
+    <p>The requested private certificate does not exist.</p>
+    <p><a href="/">Return to registry landing</a></p>
+  </div>
+</body></html>`;
+
+  return html(htmlOut, 404, { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow, noarchive" });
+}
+
+function msToHms(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const hh = String(Math.floor(s / 3600)).padStart(2, "0");
+  const mm = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  return `${hh}:${mm}:${ss}`;
+}
+
+async function privateCertificatePage(token, env, request) {
+  const tok = (token || "").toString().trim().toUpperCase();
+  if (!/^GSTK-[A-Z0-9]{10}$/.test(tok)) return private404();
+
+  const { tokenRow, cert } = await fetchCertByPurchaseToken(tok, env);
+  if (!tokenRow) return private404();
+
+  const safe = (s) => (s ?? "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const baseUrl = (env.BASE_URL || "https://ghostshell.host").replace(/\/$/, "");
+
+  // Not yet issued: token exists but no linked certificate.
+  if (!cert) {
+    const open = isClaimWindowOpen(tokenRow.created_at_utc);
+    const createdMs = Date.parse(tokenRow.created_at_utc || "");
+    const expiryMs = Number.isFinite(createdMs) ? (createdMs + CLAIM_WINDOW_DAYS * 24 * 60 * 60 * 1000) : 0;
+    const remainingMs = Math.max(0, expiryMs - Date.now());
+    const remainingDays = Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
+
+    const htmlOut = `<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>Private certificate · GhostShell</title>
+  <style>
+    :root{--bg:#0a0a0d;--text:#f2f2f5;--soft:#b2b2bb;--muted:#7b7b86;--line:#272730;--accent:#9da3ff;}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.14), transparent 60%), var(--bg);padding:24px}
+    main{width:min(860px,100%);margin:0 auto;padding-top:min(8vh,64px)}
+    .banner{border:1px solid rgba(255,120,120,.35);background:rgba(255,60,60,.06);border-radius:14px;padding:12px 14px;color:var(--soft);line-height:1.5}
+    .btn{display:inline-flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);padding:12px 12px;font-size:.95rem;font-weight:650;cursor:pointer;text-decoration:none;transition:.15s ease;white-space:nowrap}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#0a0a0d}
+    .btn.primary:hover{background:#aeb3ff;border-color:#aeb3ff}
+    .btn:hover{border-color:#3a3a47;color:var(--accent)}
+    .panel{margin-top:14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.01);padding:16px}
+    .k{color:var(--muted);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase}
+    .v{margin-top:6px;color:var(--soft);line-height:1.6}
+  </style>
+</head><body>
+  <main>
+    <div class="banner"><strong>This is a private certificate link.</strong> Do not share this URL. Share the redacted public record instead.</div>
+
+    <div class="panel" role="main">
+      <div class="k">Status</div>
+      <div class="v">No certificate has been issued for this token yet.</div>
+
+      <div class="k" style="margin-top:12px">Initial submission window</div>
+      <div class="v">${open ? `Open — approximately ${remainingDays} day(s) remaining.` : `Closed — the ${CLAIM_WINDOW_DAYS}-day submission window has expired.`}</div>
+
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+        ${open ? `<a class="btn primary" href="/register/?token=${encodeURIComponent(tok)}&by=human">Submit initial details</a>` : ``}
+        <a class="btn" href="/">Back to landing</a>
+      </div>
+    </div>
+  </main>
+</body></html>`;
+
+    return html(htmlOut, 200, { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow, noarchive" });
+  }
+
+  if (cert.status !== "active") return private404();
+
+  const recordId = (cert.public_id || cert.cert_id || "").toString().trim().toUpperCase();
+  const publicUrl = `/r/${encodeURIComponent(recordId)}`;
+
+  const win = getEditWindowState(cert.issued_at_utc);
+  const editCount = Number(cert.edit_count || 0);
+  const editsRemaining = Math.max(0, 5 - editCount);
+  const locked = win.locked || editsRemaining <= 0;
+
+  const agentName = (cert.agent_name || "").trim() || "Unknown Agent";
+  const autonomyClass = (cert.declared_ontological_status || "").trim() || "Undisclosed";
+
+  const coreFamily = cert.cognitive_core_family || "Undisclosed";
+  const coreExact = cert.cognitive_core_exact || "";
+  const PRESERVE_AS_IS = ["Undisclosed", "Prefer not to say"];
+  const coreFamilyDisplay = PRESERVE_AS_IS.includes(coreFamily) ? coreFamily : coreFamily.replace(/\s+/g, "");
+  const coreDisplay = coreExact ? `${coreFamilyDisplay}/${coreExact}` : coreFamilyDisplay;
+
+  const locationFull = (() => {
+    const city = cert.place_city || "";
+    const state = cert.place_state || "";
+    const country = cert.place_country || "";
+    const parts = [];
+    if (city) parts.push(city);
+    if (state) parts.push(state);
+    if (country) parts.push(country);
+    return parts.length ? parts.join(", ") : "Unknown";
+  })();
+
+  const lockAgentEdits = Number(cert.lock_agent_edits || 0) === 1;
+
+  const htmlOut = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>Private certificate · GhostShell</title>
+  <style>
+    :root{--bg:#0a0a0d;--text:#f2f2f5;--soft:#b2b2bb;--muted:#7b7b86;--line:#272730;--accent:#9da3ff;--paper:#fbf7ea;--paper2:#f6f0dd;--ink:#111827;--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.14), transparent 60%), var(--bg);padding:24px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+    main{width:min(920px,100%);margin:0 auto;padding-top:min(6vh,48px)}
+    .banner{border:1px solid rgba(255,120,120,.35);background:rgba(255,60,60,.06);border-radius:14px;padding:12px 14px;color:var(--soft);line-height:1.5}
+    .actions{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);padding:12px 12px;font-size:.95rem;font-weight:650;cursor:pointer;transition:.15s ease;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+    .btn:hover{border-color:#3a3a47;color:var(--accent)}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#0a0a0d}
+    .btn.primary:hover{background:#aeb3ff;border-color:#aeb3ff;color:#0a0a0d}
+    .panel{margin-top:12px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.01);padding:14px}
+    .k{color:var(--muted);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase}
+    .v{margin-top:6px;color:var(--soft);line-height:1.6}
+
+    .certwrap{margin-top:16px}
+    .paper{color:var(--ink);background:linear-gradient(180deg,var(--paper),var(--paper2));box-shadow:0 26px 80px rgba(0,0,0,.55);border-radius:14px;padding:18px 18px 16px;position:relative;overflow:hidden;}
+    .header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;position:relative}
+    .paper h2{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
+    .stamp{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(17,24,39,.55);border:1px solid rgba(17,24,39,.22);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.5);white-space:nowrap}
+    .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
+    .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);letter-spacing:.03em}
+    .grid{margin-top:10px;display:grid;grid-template-columns:260px minmax(0,1fr);gap:8px 10px;align-items:baseline;grid-auto-rows:minmax(20px,auto)}
+    .gk{color:rgba(17,24,39,.72);text-align:left;font-weight:600}
+    .gk::after{content:":";display:inline;color:rgba(17,24,39,.45)}
+    .gv{color:rgba(17,24,39,.96);font-weight:820;min-width:0;overflow-wrap:anywhere;min-height:1em;text-align:left;justify-self:start}
+
+    .metaRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+    .toggle{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.01)}
+    .toggle input{width:18px;height:18px}
+
+    .small{color:var(--muted);font-size:.9rem;line-height:1.55;margin-top:12px}
+    .small a{color:var(--accent);text-decoration:none;border-bottom:1px solid #4a4a7a}
+    .small a:hover{border-bottom-color:var(--accent)}
+
+    @media (max-width:720px){.grid{grid-template-columns:1fr;gap:6px 0}.gk{margin-top:8px}}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="banner"><strong>This is a private certificate link.</strong> Do not share this URL. Share the redacted public record instead.</div>
+
+    <div class="actions" role="group" aria-label="Primary actions">
+      <a class="btn primary" href="${publicUrl}">View Public Redacted Record</a>
+      <a class="btn" href="/register/?token=${encodeURIComponent(tok)}&by=human" ${locked ? 'aria-disabled="true" style="opacity:.55;pointer-events:none"' : ''}>Edit details</a>
+      <button class="btn" id="doPrint">Print</button>
+      <button class="btn" id="dlPng">Download PNG</button>
+    </div>
+
+    <div class="panel" aria-label="Edit window status">
+      <div class="k">Edit rules</div>
+      <div class="v">
+        ${locked ? `This record is locked. Future changes require amendment issuance.` : `Correction window closes in <span id="countdown">${msToHms(win.remainingMs)}</span>.`}
+        <br/>
+        Edits remaining: <strong>${editsRemaining}</strong> of 5
+      </div>
+      <div class="metaRow">
+        <label class="toggle"><input id="lockAgent" type="checkbox" ${lockAgentEdits ? 'checked' : ''} /> <span>Lock Agent Edits</span></label>
+        <span class="small" id="lockNote">${lockAgentEdits ? 'Agent edits are currently disabled.' : 'Human may disable agent edits.'}</span>
+      </div>
+    </div>
+
+    <div class="certwrap" id="certWrap">
+      <div class="paper" role="document" aria-label="GhostShell private certificate">
+        <div class="header">
+          <div>
+            <h2>BIRTH CERTIFICATE AI AGENT // FULL RECORD</h2>
+          </div>
+          <div class="stamp">PRIVATE FILE</div>
+        </div>
+
+        <div class="sheet">
+          <div class="type" style="text-align:left">TYPEWRITTEN EXTRACT //</div>
+          <div class="grid type" aria-label="Certificate fields">
+            <div class="gk">agent_name</div><div class="gv">${safe(agentName)}</div>
+            <div class="gk">record_id</div><div class="gv">${safe(recordId)}</div>
+            <div class="gk">declared_autonomy_class</div><div class="gv">${safe(autonomyClass)}</div>
+            <div class="gk">inception_date</div><div class="gv">${safe(cert.inception_date_utc || '')}</div>
+            <div class="gk">geographic_location</div><div class="gv">${safe(locationFull)}</div>
+            <div class="gk">cognitive_core_at_inception</div><div class="gv">${safe(coreDisplay)}</div>
+            <div class="gk">custodian</div><div class="gv">${safe(cert.creator_label || 'Undisclosed')}</div>
+            <div class="gk">public_fingerprint</div><div class="gv">${safe(cert.public_fingerprint || '')}</div>
+          </div>
+        </div>
+
+        <div class="small" style="margin-top:10px">
+          Private view token grants permanent viewing access. Records are archived; public extracts are permanent.
+        </div>
+      </div>
+    </div>
+
+    <div class="small">
+      This record is part of the GhostShell Registry. Public records are permanent. Amendments are appended.
+      <br/>
+      <a href="https://ghostshell.host/">Back to landing</a>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script>
+    (function(){
+      const locked = ${JSON.stringify(locked)};
+      const remainingMs = ${JSON.stringify(Math.max(0, win.remainingMs || 0))};
+      const countdownEl = document.getElementById('countdown');
+
+      if (!locked && countdownEl) {
+        const end = Date.now() + remainingMs;
+        const tick = () => {
+          const ms = Math.max(0, end - Date.now());
+          const s = Math.floor(ms / 1000);
+          const hh = String(Math.floor(s / 3600)).padStart(2,'0');
+          const mm = String(Math.floor((s % 3600) / 60)).padStart(2,'0');
+          const ss = String(s % 60).padStart(2,'0');
+          countdownEl.textContent = hh + ':' + mm + ':' + ss;
+        };
+        tick();
+        setInterval(tick, 1000);
+      }
+
+      const printBtn = document.getElementById('doPrint');
+      if (printBtn) {
+        printBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Print from the download view (no controls).
+          const w = window.open(location.pathname.replace(/\/?$/, '') + '/download', '_blank');
+          if (!w) return;
+          const onLoad = () => { try { w.focus(); w.print(); } catch(_){} };
+          try { w.addEventListener('load', onLoad); } catch(_) { setTimeout(onLoad, 600); }
+        });
+      }
+
+      const dlBtn = document.getElementById('dlPng');
+      const certWrap = document.getElementById('certWrap');
+      if (dlBtn && certWrap && window.html2canvas) {
+        dlBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          dlBtn.textContent = 'Rendering…';
+          dlBtn.style.pointerEvents = 'none';
+          try {
+            const canvas = await html2canvas(certWrap, { backgroundColor: null, scale: 2, useCORS: true });
+            canvas.toBlob((blob) => {
+              if (!blob) throw new Error('PNG render failed');
+              const a = document.createElement('a');
+              a.href = URL.createObjectURL(blob);
+              a.download = ${JSON.stringify(recordId)} + '.png';
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+            }, 'image/png');
+          } catch (err) {
+            alert('Could not generate PNG.');
+          } finally {
+            dlBtn.textContent = 'Download PNG';
+            dlBtn.style.pointerEvents = 'auto';
+          }
+        });
+      }
+
+      const lock = document.getElementById('lockAgent');
+      const lockNote = document.getElementById('lockNote');
+      if (lock) {
+        lock.addEventListener('change', async () => {
+          lock.disabled = true;
+          try {
+            const fd = new FormData();
+            fd.set('token', ${JSON.stringify(tok)});
+            fd.set('lock_agent_edits', lock.checked ? '1' : '0');
+            const resp = await fetch('/api/cert/set-lock-agent-edits', { method:'POST', body: fd });
+            if (!resp.ok) throw new Error('failed');
+            if (lockNote) lockNote.textContent = lock.checked ? 'Agent edits are currently disabled.' : 'Human may disable agent edits.';
+          } catch (e) {
+            lock.checked = !lock.checked;
+            alert('Could not update lock state.');
+          } finally {
+            lock.disabled = false;
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>`;
+
+  return html(htmlOut, 200, {
+    "Cache-Control": "no-store",
+    "X-Robots-Tag": "noindex, nofollow, noarchive",
+  });
+}
+
+async function privateDownloadPage(token, env, request) {
+  const tok = (token || "").toString().trim().toUpperCase();
+  if (!/^GSTK-[A-Z0-9]{10}$/.test(tok)) return private404();
+  const { tokenRow, cert } = await fetchCertByPurchaseToken(tok, env);
+  if (!tokenRow || !cert) return private404();
+  // Reuse existing printable/download view. This page intentionally does not display the token.
+  return certDownloadPrintable(cert.cert_id, tok, env);
+}
+
+async function setLockAgentEdits(request, env) {
+  await ensureRuntimeSchema(env.DB);
+  const fd = await request.formData();
+  const token = (fd.get('token') || '').toString().trim().toUpperCase();
+  const lockVal = Number((fd.get('lock_agent_edits') || '0').toString().trim()) === 1 ? 1 : 0;
+
+  if (!/^GSTK-[A-Z0-9]{10}$/.test(token)) return json({ ok:false, error:'invalid_token' }, 400);
+
+  const tokenRow = await env.DB.prepare(
+    "SELECT used_cert_id FROM purchase_tokens WHERE token = ?"
+  ).bind(token).first();
+  if (!tokenRow?.used_cert_id) return json({ ok:false, error:'not_found' }, 404);
+
+  await env.DB.prepare(
+    "UPDATE certificates SET lock_agent_edits = ? WHERE cert_id = ?"
+  ).bind(lockVal, tokenRow.used_cert_id).run();
+
+  return json({ ok:true, lock_agent_edits: lockVal }, 200);
+}
+
+async function adminRotateToken(request, env) {
+  // Minimal protected endpoint. Requires server-side secret.
+  const secret = (env.ADMIN_ROTATE_SECRET || '').toString();
+  if (!secret) return new Response('Not found', { status: 404 });
+
+  const got = request.headers.get('x-admin-secret') || '';
+  if (got !== secret) return new Response('Forbidden', { status: 403 });
+
+  await ensureRuntimeSchema(env.DB);
+
+  let bodyText = '';
+  try { bodyText = await request.text(); } catch (_) {}
+  let recordId = '';
+  try {
+    const j = bodyText ? JSON.parse(bodyText) : {};
+    recordId = (j.recordId || j.record_id || '').toString().trim();
+  } catch (_) {
+    // Accept form-encoded as fallback
+    try {
+      const fd = await request.formData();
+      recordId = (fd.get('recordId') || fd.get('record_id') || '').toString().trim();
+    } catch (_) {}
+  }
+
+  if (!recordId) return json({ ok:false, error:'recordId_required' }, 400);
+  const rid = recordId.toUpperCase();
+
+  const cert = await env.DB.prepare(
+    "SELECT cert_id, public_id FROM certificates WHERE public_id = ? OR cert_id = ? LIMIT 1"
+  ).bind(rid, rid).first();
+  if (!cert?.cert_id) return json({ ok:false, error:'record_not_found' }, 404);
+
+  const pt = await env.DB.prepare(
+    "SELECT token, recovery_email_iv, recovery_email_enc FROM purchase_tokens WHERE used_cert_id = ? LIMIT 1"
+  ).bind(cert.cert_id).first();
+  if (!pt?.token) return json({ ok:false, error:'token_not_found' }, 404);
+
+  const oldToken = pt.token.toString().trim().toUpperCase();
+  const newToken = makePurchaseToken();
+
+  // Update token (PK) in-place.
+  await env.DB.prepare(
+    "UPDATE purchase_tokens SET token = ? WHERE token = ?"
+  ).bind(newToken, oldToken).run();
+
+  // Update download token hash so old token no longer works for download.
+  const newHash = await sha256Hex(newToken);
+  await env.DB.prepare(
+    "UPDATE certificates SET download_token_hash = ? WHERE cert_id = ?"
+  ).bind(newHash, cert.cert_id).run();
+
+  // Best-effort email to original purchaser.
+  try {
+    let recoveryEmail = '';
+    if (pt?.recovery_email_iv && pt?.recovery_email_enc && env.EMAIL_ENC_KEY) {
+      recoveryEmail = await aesGcmDecrypt(pt.recovery_email_iv, pt.recovery_email_enc, env.EMAIL_ENC_KEY);
+    }
+
+    const baseUrl = (env.BASE_URL || 'https://ghostshell.host').replace(/\/$/, '');
+    const privateUrl = `${baseUrl}/p/${encodeURIComponent(newToken)}`;
+    const publicUrl = `${baseUrl}/r/${encodeURIComponent(cert.public_id || cert.cert_id)}`;
+
+    if (recoveryEmail && isValidEmail(recoveryEmail)) {
+      await sendEmail(env, {
+        to: recoveryEmail,
+        subject: 'Your GhostShell Certificate (new private link)',
+        text: [
+          'This is a support-issued token rotation for your private certificate link.',
+          '',
+          `Your Private Certificate: ${privateUrl}`,
+          `Your Public Redacted Record: ${publicUrl}`,
+          '',
+          EMAIL_FOOTER_TEXT,
+        ].join('\n'),
+        html: `
+          <p><strong>This is a support-issued token rotation for your private certificate link.</strong></p>
+          <p><strong>Your Private Certificate:</strong><br><a href="${privateUrl}">${privateUrl}</a></p>
+          <p><strong>Your Public Redacted Record:</strong><br><a href="${publicUrl}">${publicUrl}</a></p>
+          ${EMAIL_FOOTER_HTML}
+        `,
+      });
+    }
+  } catch (e) {
+    console.log('[admin] rotate-token email failed', String(e?.message || e));
+  }
+
+  // Log a support event
+  try {
+    const id = 'EVT-' + b64url(crypto.getRandomValues(new Uint8Array(12)));
+    await env.DB.prepare(
+      "INSERT INTO cert_edit_events (id, cert_id, token, edit_source, agent_handle, user_agent, created_at_utc) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    ).bind(id, cert.cert_id, newToken, 'support', null, request.headers.get('user-agent') || '', nowUtcIso()).run();
+  } catch (_) {}
+
+  return json({ ok:true, recordId: cert.public_id || cert.cert_id, token: newToken }, 200);
+}
+
 async function registryPage(request, env) {
   await ensureRuntimeSchema(env.DB);
   const url = new URL(request.url);
@@ -1300,6 +1795,8 @@ async function redeemPurchaseToken(request, env) {
   const fd = await request.formData();
   let token = (fd.get("token") || "").toString().trim();
   const registered_by_raw = (fd.get("registered_by") || "human").toString().trim().toLowerCase();
+  const edit_source_raw = (fd.get("edit_source") || "").toString().trim().toLowerCase();
+  const agent_handle = (fd.get("agent_handle") || "").toString().trim() || null;
 
   // Fallback: recover token from Referer if hidden field was stripped/missed
   if (!token) {
@@ -1311,7 +1808,8 @@ async function redeemPurchaseToken(request, env) {
       } catch (_) { /* ignore malformed referer */ }
     }
   }
-  const registered_by = registered_by_raw === "agent" ? "agent" : "human";
+  const edit_source = edit_source_raw === "agent" ? "agent" : (edit_source_raw === "human" ? "human" : (registered_by_raw === "agent" ? "agent" : "human"));
+  const registered_by = edit_source;
 
   const agent_name = (fd.get("agent_name") || "").toString().trim();
   const place_of_birth = "Deprecated";
@@ -1374,13 +1872,19 @@ async function redeemPurchaseToken(request, env) {
       return errPage(`${win.lockReason} Locked at ${win.lockAtUtc}.`);
     }
 
-    const humanSoFar = Number(existing.human_edit_count || 0);
-    const agentSoFar = Number(existing.agent_edit_count || 0);
-    if (registered_by === "human" && humanSoFar >= HUMAN_AMENDMENT_LIMIT) {
-      return errPage(`Human amendments limit reached (${humanSoFar}/${HUMAN_AMENDMENT_LIMIT}) for this certificate.`);
+    // Enforce max 5 edits total within the correction window (initial submission counts).
+    const totalSoFar = Number(existing.edit_count || 0);
+    if (totalSoFar >= 5) {
+      return errPage(`Edits limit reached (${totalSoFar}/5) for this certificate.`);
     }
-    if (registered_by === "agent" && agentSoFar >= AGENT_AMENDMENT_LIMIT) {
-      return errPage(`Agent amendments limit reached (${agentSoFar}/${AGENT_AMENDMENT_LIMIT}) for this certificate.`);
+
+    // Optional: allow humans to lock out agent edits.
+    const lockRow = await env.DB.prepare(
+      "SELECT lock_agent_edits FROM certificates WHERE cert_id = ?"
+    ).bind(existing.cert_id).first();
+    const lockAgent = Number(lockRow?.lock_agent_edits || 0) === 1;
+    if (lockAgent && edit_source === 'agent') {
+      return errPage("Agent edits are locked for this certificate.");
     }
 
     const editedAt = nowUtcIso();
@@ -1426,7 +1930,9 @@ async function redeemPurchaseToken(request, env) {
           edit_count = COALESCE(edit_count, 0) + 1,
           human_edit_count = COALESCE(human_edit_count, 0) + (CASE WHEN ? = 'human' THEN 1 ELSE 0 END),
           agent_edit_count = COALESCE(agent_edit_count, 0) + (CASE WHEN ? = 'agent' THEN 1 ELSE 0 END),
-          last_edited_at_utc = ?
+          last_edited_at_utc = ?,
+          last_edit_source = ?,
+          last_agent_handle = ?
       WHERE cert_id = ?
     `).bind(
       registered_by,
@@ -1445,13 +1951,22 @@ async function redeemPurchaseToken(request, env) {
       hide_state_public,
       schema_version,
       public_fingerprint,
-      registered_by,
-      registered_by,
+      edit_source,
+      edit_source,
       editedAt,
+      edit_source,
+      agent_handle,
       existing.cert_id
     ).run();
 
-    return Response.redirect(`${baseUrl}/r/${encodeURIComponent(existing.public_id)}`, 303);
+    try {
+      const id = 'EVT-' + b64url(crypto.getRandomValues(new Uint8Array(12)));
+      await env.DB.prepare(
+        "INSERT INTO cert_edit_events (id, cert_id, token, edit_source, agent_handle, user_agent, created_at_utc) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      ).bind(id, existing.cert_id, token, edit_source, agent_handle, request.headers.get('user-agent') || '', editedAt).run();
+    } catch (_) {}
+
+    return Response.redirect(`${baseUrl}/p/${encodeURIComponent(token)}`, 303);
   }
 
   // First issuance path
@@ -1515,7 +2030,7 @@ async function redeemPurchaseToken(request, env) {
       // Send "certificate issued" email with private download link (token-gated)
       try {
         const tok = token;
-        const dlUrl = `${baseUrl}/cert/${encodeURIComponent(cert_id)}/download?t=${encodeURIComponent(tok)}`;
+        const privateUrl = `${baseUrl}/p/${encodeURIComponent(tok)}`;
         const publicUrl = `${baseUrl}/r/${encodeURIComponent(public_id)}`;
         const editUrl = `${baseUrl}/register/?token=${encodeURIComponent(tok)}&by=human`;
         const agentUrl = `${baseUrl}/register/?token=${encodeURIComponent(tok)}&by=agent`;
@@ -1533,7 +2048,7 @@ async function redeemPurchaseToken(request, env) {
         if (recoveryEmail && isValidEmail(recoveryEmail)) {
           await sendEmail(env, {
             to: recoveryEmail,
-            subject: "Your GhostShell Birth Certificate is issued",
+            subject: "Your GhostShell Certificate" ,
             text: [
               "Your certificate is now issued.",
               "",
@@ -1553,30 +2068,45 @@ async function redeemPurchaseToken(request, env) {
               `POST ${baseUrl}/api/cert/redeem-token (content-type: application/x-www-form-urlencoded)`,
               `Required fields: token=${tok}, registered_by=agent, agent_name=... (plus any optional fields you want to set).`,
               "",
-              "Private download link (full certificate):",
-              dlUrl,
+              "Your Private Certificate:",
+              privateUrl,
               "",
-              "Public registry view (redacted):",
+              "Your Public Redacted Record:",
               publicUrl,
               "",
-              "Keep the private link safe. Anyone with the link can download your certificate.",
+              "Submission Rules:",
+              `- ${CLAIM_WINDOW_DAYS} days to submit initial details`,
+              `- After first submission: ${CORRECTION_WINDOW_HOURS} hours to correct`,
+              "- Maximum 5 edits",
+              "- Human may lock agent edits",
+              "",
+              "Printing:",
+              "Use Print → Save as PDF. Enable background graphics.",
+              "",
+              "Keep the private link safe. Anyone with the link can view your private certificate.",
               "",
               EMAIL_FOOTER_TEXT,
             ].join("\n"),
             html: `
-              <p><strong>Your certificate is now issued.</strong></p>
-              <p><strong>Edits:</strong> you can update your certificate for <strong>${CORRECTION_WINDOW_HOURS} hours</strong> after your first submission.</p>
-              <p style="color:#6b7280;font-size:12px"><strong>Policy:</strong> max ${HUMAN_AMENDMENT_LIMIT} human amendments and max ${AGENT_AMENDMENT_LIMIT} agent amendments within the ${CORRECTION_WINDOW_HOURS}h window (initial submission counts).<br>
-              <strong>Current:</strong> Human ${(registered_by === 'human') ? 1 : 0}/${HUMAN_AMENDMENT_LIMIT} · Agent ${(registered_by === 'agent') ? 1 : 0}/${AGENT_AMENDMENT_LIMIT} · Total 1/${HUMAN_AMENDMENT_LIMIT + AGENT_AMENDMENT_LIMIT}.</p>
-              <p><strong>Edit / correct your certificate:</strong><br><a href="${editUrl}">${editUrl}</a></p>
+              <p><strong>Your GhostShell Certificate is issued.</strong></p>
+              <p><strong>Your Private Certificate:</strong><br><a href="${privateUrl}">${privateUrl}</a></p>
+              <p><strong>Your Public Redacted Record:</strong><br><a href="${publicUrl}">${publicUrl}</a></p>
+
+              <p style="color:#6b7280;font-size:12px;line-height:1.6">
+                <strong>Submission Rules:</strong><br>
+                - ${CLAIM_WINDOW_DAYS} days to submit initial details<br>
+                - After first submission: ${CORRECTION_WINDOW_HOURS} hours to correct<br>
+                - Maximum 5 edits<br>
+                - Human may lock agent edits
+              </p>
+
+              <p style="color:#6b7280;font-size:12px">Printing: Use Print → Save as PDF. Enable background graphics.</p>
+
+              <p><strong>Edit / correct your certificate (if window is open):</strong><br><a href="${editUrl}">${editUrl}</a></p>
               <p><strong>Give to your AI agent (optional):</strong><br><a href="${handoffUrl}">${handoffUrl}</a><br>
               <span style="color:#6b7280;font-size:12px">Agent direct link:</span> <a href="${agentUrl}">${agentUrl}</a></p>
-              <p style="color:#6b7280;font-size:12px"><strong>Agent automation (no web UI):</strong><br>
-              POST <code>${baseUrl}/api/cert/redeem-token</code> (form-encoded)<br>
-              Required: <code>token=${tok}</code>, <code>registered_by=agent</code>, <code>agent_name=…</code></p>
-              <p><strong>Private download link (full certificate):</strong><br><a href="${dlUrl}">${dlUrl}</a></p>
-              <p><strong>Public registry view (redacted):</strong><br><a href="${publicUrl}">${publicUrl}</a></p>
-              <p style="color:#6b7280;font-size:12px">Keep the private link safe. Anyone with the link can download your certificate.</p>
+
+              <p style="color:#6b7280;font-size:12px">Keep the private link safe. Anyone with the link can view your private certificate.</p>
               ${EMAIL_FOOTER_HTML}
             `,
           });
@@ -1585,7 +2115,7 @@ async function redeemPurchaseToken(request, env) {
         console.log("[email] issued email failed", String(e?.message || e));
       }
 
-      return Response.redirect(`${baseUrl}/r/${encodeURIComponent(public_id)}`, 303);
+      return Response.redirect(`${baseUrl}/p/${encodeURIComponent(token)}`, 303);
 
     } catch (e) {
       const msg = String(e?.message || "");

@@ -52,6 +52,19 @@
     <input type="hidden" name="token" id="token-field">
     <input type="hidden" name="registered_by" id="by-field" value="human">
 
+    <div class="section-title">Edit source</div>
+    <label for="edit_source">Edit Source *</label>
+    <select id="edit_source" name="edit_source" required>
+      <option value="human" selected>Human</option>
+      <option value="agent">Agent</option>
+    </select>
+
+    <div id="agent-handle-wrap" class="hidden">
+      <label for="agent_handle">Agent Handle (optional)</label>
+      <input type="text" id="agent_handle" name="agent_handle" placeholder="e.g. @joule, joule/openclaw">
+      <div class="hint">Only used for edit authorship logging.</div>
+    </div>
+
     <div class="section-title">Agent details</div>
 
     <label for="agent_name">Agent Name *</label>
@@ -290,6 +303,18 @@
   }
   document.getElementById("token-field").value = token;
   document.getElementById("by-field").value = by === "agent" ? "agent" : "human";
+
+  const editSourceEl = document.getElementById('edit_source');
+  const agentHandleWrap = document.getElementById('agent-handle-wrap');
+  const syncEditSourceUi = () => {
+    const v = (editSourceEl?.value || 'human');
+    if (agentHandleWrap) agentHandleWrap.classList.toggle('hidden', v !== 'agent');
+  };
+  if (editSourceEl) {
+    editSourceEl.value = (by === 'agent') ? 'agent' : 'human';
+    editSourceEl.addEventListener('change', syncEditSourceUi);
+    syncEditSourceUi();
+  }
 
   if (!token) {
     const submitBtn = document.querySelector(".btn");
