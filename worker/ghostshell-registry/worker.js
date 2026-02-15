@@ -532,7 +532,8 @@ function makePurchaseToken() {
 }
 
 async function fetchStripeCheckoutSession(sessionId, env) {
-  console.log("[handoff-token] stripe session lookup", sessionId);
+  // SECURITY: do not log session ids
+  console.log("[handoff-token] stripe session lookup");
   const stripeResp = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
     headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
   });
@@ -557,7 +558,8 @@ async function getOrCreatePurchaseTokenForSession(sessionId, session, env, baseU
   // We'll still update the row below with payment/email details once paid.
   const token = row?.token || makePurchaseToken();
   if (row?.token) {
-    console.log("[handoff-token] token reused", sessionId);
+    // SECURITY: do not log session ids
+    console.log("[handoff-token] token reused");
   }
   const emailRaw = (session.customer_details?.email || "").toLowerCase().trim();
   const emailHash = emailRaw ? await sha256Hex(emailRaw) : null;
@@ -746,7 +748,8 @@ async function postCheckoutRedirect(request, env) {
 async function getHandoff(request, env) {
   // Processing + redirect endpoint only. No long-lived UI.
   const url = new URL(request.url);
-  console.log("handoff redirect", url.toString());
+  // SECURITY: do not log full URLs (may contain tokens/session ids)
+  console.log("handoff redirect", url.pathname);
 
   // If token already present, go straight to canonical private page.
   const tok = (url.searchParams.get("token") || "").trim();
