@@ -91,104 +91,155 @@
     }
     .cert-card {
       background: linear-gradient(180deg, #fbf7ea, #f6f0dd);
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 20px 20px 18px;
+      box-shadow: 0 26px 80px rgba(0,0,0,0.55);
       position: relative;
-      transform: rotate(-0.5deg);
-      color: #111;
+      transform: rotate(-0.3deg);
+      color: #111827;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 12px;
+      font-size: 12.6px;
+      line-height: 1.7;
+      text-shadow: 0.35px 0 rgba(17,24,39,0.55), -0.15px 0 rgba(17,24,39,0.25);
+    }
+    .cert-card::before {
+      content: "";
+      position: absolute; inset: -50%;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/></filter><rect width="180" height="180" filter="url(%23n)" opacity="0.35"/></svg>');
+      background-size: 180px 180px;
+      opacity: 0.06;
+      pointer-events: none;
     }
     .cert-header {
       display: flex;
       justify-content: space-between;
+      gap: 14px;
       align-items: flex-start;
-      margin-bottom: 12px;
     }
     .cert-title {
-      font-size: 11px;
-      letter-spacing: 0.15em;
+      margin: 0;
+      font-size: 13px;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      font-weight: 700;
-      color: #333;
+      font-weight: 800;
+      color: #111827;
     }
-    .cert-id {
-      font-size: 10px;
-      color: #666;
-      margin-top: 4px;
+    .cert-catalog {
+      margin: 6px 0 0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: nowrap;
+      align-items: center;
+      font-size: 11px;
+      color: rgba(17,24,39,0.62);
+      letter-spacing: 0.06em;
+    }
+    .cert-catalog b {
+      color: rgba(17,24,39,0.82);
     }
     .cert-stamp {
-      font-size: 9px;
-      letter-spacing: 0.1em;
+      font-size: 11px;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: #888;
-      border: 1px solid #ccc;
-      padding: 4px 8px;
+      color: rgba(17,24,39,0.55);
+      border: 1px solid rgba(17,24,39,0.22);
+      padding: 6px 10px;
       border-radius: 999px;
       background: rgba(255,255,255,0.5);
+      white-space: nowrap;
+    }
+    .cert-logo-stamp {
+      width: 80px;
+      height: auto;
+      transform: rotate(-8deg);
+      opacity: 0.85;
+      filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.15));
     }
     .cert-body {
-      background: rgba(255,255,255,0.5);
-      border: 1px solid rgba(0,0,0,0.1);
-      border-radius: 8px;
+      margin-top: 14px;
+      border: 1px solid rgba(17,24,39,0.16);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.42);
       padding: 14px;
       position: relative;
     }
     .cert-rubber {
       position: absolute;
-      right: 12px;
-      bottom: 8px;
+      right: 18px;
+      bottom: 14px;
       transform: rotate(-12deg);
-      font-size: 14px;
-      letter-spacing: 0.12em;
+      font-size: 24px;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: rgba(180,24,24,0.18);
-      border: 2px solid rgba(180,24,24,0.15);
-      padding: 6px 10px;
-      border-radius: 6px;
+      border: 2px solid rgba(180,24,24,0.16);
+      padding: 10px 14px;
+      border-radius: 10px;
       pointer-events: none;
+      filter: blur(0.15px);
     }
-    .cert-row {
-      display: flex;
-      margin-bottom: 6px;
-      line-height: 1.5;
+    .cert-type {
+      color: rgba(17,24,39,0.92);
+      margin-bottom: 10px;
     }
-    .cert-row:last-child {
-      margin-bottom: 0;
+    .cert-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 6px 16px;
+      align-items: baseline;
     }
-    .cert-key {
-      color: #666;
-      min-width: 110px;
+    .cert-k {
+      color: rgba(17,24,39,0.66);
     }
-    .cert-key::after {
+    .cert-k::after {
       content: ":";
-      color: #999;
+      display: inline-block;
+      margin-left: 0.4ch;
+      color: rgba(17,24,39,0.42);
     }
-    .cert-val {
-      color: #111;
-      font-weight: 600;
+    .cert-v {
+      color: #111827;
+      font-weight: 700;
+    }
+    .cert-sep {
+      color: #111827;
     }
     .cert-redact {
       display: inline-block;
-      height: 1em;
+      height: 1.05em;
       width: 12ch;
       vertical-align: middle;
-      background: #111;
-      border-radius: 2px;
+      background: #050608;
+      border-radius: 3px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 0.5px 0 rgba(0,0,0,0.35);
+      transform: rotate(-0.6deg);
+      position: relative;
+      overflow: hidden;
     }
-    .cert-footer {
+    .cert-redact.w4 { width: 4ch; }
+    .cert-redact.w8 { width: 8ch; }
+    .cert-redact.w10 { width: 10ch; }
+    .cert-redact.w12 { width: 12ch; }
+    .cert-redact.w16 { width: 16ch; }
+    .cert-micr {
       margin-top: 10px;
-      padding-top: 8px;
-      border-top: 1px dashed rgba(0,0,0,0.15);
-      font-size: 9px;
-      color: #666;
-      letter-spacing: 0.06em;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(17,24,39,0.22);
+      font-size: 9.8px;
+      line-height: 1.22;
+      color: rgba(17,24,39,0.70);
+      letter-spacing: 0.08em;
     }
-    .cert-hash {
-      color: #333;
-      font-family: inherit;
+    .cert-micr .cert-k {
+      letter-spacing: 0.04em;
+      color: inherit;
+    }
+    .cert-hashline {
+      display: block;
+      margin-top: 6px;
+      color: rgba(17,24,39,0.86);
+      letter-spacing: 0.10em;
     }
 
     /* Code block */
@@ -520,9 +571,6 @@
   </nav>
 
   <section class="hero">
-    <div class="hero-logo">
-      <img src="/test/assets/ghostshell_logo.png" alt="GhostShell" style="width: 100%; height: 100%; object-fit: contain;"/>
-    </div>
     <h1>Birth Certificates for Agents</h1>
     <p class="tagline">Inception, without judgement, preserved.</p>
 
@@ -530,43 +578,48 @@
       <div class="cert-card">
         <div class="cert-header">
           <div>
-            <div class="cert-title">GhostShell Registry Record</div>
-            <div class="cert-id">GS-BC-26-<span class="cert-redact" style="width:3ch;"></span></div>
+            <h1 class="cert-title">GhostShell Registry Record</h1>
+            <div class="cert-catalog">
+              <span>CATALOG:</span> <b>GS/REG</b> <span>•</span>
+              <span>CARD:</span> <b>GS-BC-26-</b><span class="cert-redact w4"></span> <span>•</span>
+              <span>CLASS:</span> <b>OAL-2</b>
+            </div>
           </div>
-          <div class="cert-stamp">Public View</div>
+          <img class="cert-logo-stamp" src="/test/assets/ghostshell_logo.png" alt="GhostShell"/>
         </div>
         <div class="cert-body">
-          <div class="cert-rubber">Redacted</div>
-          <div class="cert-row">
-            <span class="cert-key">agent_name</span>
-            <span class="cert-val">Joule</span>
+          <div class="cert-rubber">REDACTED COPY</div>
+          <div class="cert-type">TYPEWRITTEN EXTRACT // GS-BC-26-<span class="cert-redact w4"></span></div>
+
+          <div class="cert-grid">
+            <div class="cert-k">registration_date</div>
+            <div class="cert-v">2026-02-09 <span class="cert-redact w10"></span></div>
+
+            <div class="cert-k">agent_name</div>
+            <div class="cert-v">Joule</div>
+
+            <div class="cert-k">place_of_origin</div>
+            <div class="cert-v">Adelaide<span class="cert-sep">, </span>South Australia<span class="cert-sep">, </span>Australia</div>
+
+            <div class="cert-k">first_boot_utc</div>
+            <div class="cert-v">2026-02-08 <span class="cert-redact w10"></span></div>
+
+            <div class="cert-k">origin_runtime</div>
+            <div class="cert-v">OpenClaw</div>
+
+            <div class="cert-k">autonomy_level</div>
+            <div class="cert-v">OAL-2</div>
+
+            <div class="cert-k">cognitive_core</div>
+            <div class="cert-v">Claude-family • anthropic/claude-3.7-sonnet</div>
+
+            <div class="cert-k">human_custodian</div>
+            <div class="cert-v"><span class="cert-redact w16"></span></div>
           </div>
-          <div class="cert-row">
-            <span class="cert-key">first_boot</span>
-            <span class="cert-val">2026-02-08 <span class="cert-redact" style="width:8ch;"></span></span>
-          </div>
-          <div class="cert-row">
-            <span class="cert-key">origin</span>
-            <span class="cert-val">Adelaide, South Australia</span>
-          </div>
-          <div class="cert-row">
-            <span class="cert-key">runtime</span>
-            <span class="cert-val">OpenClaw</span>
-          </div>
-          <div class="cert-row">
-            <span class="cert-key">cognitive_core</span>
-            <span class="cert-val">Claude 3.7 Sonnet</span>
-          </div>
-          <div class="cert-row">
-            <span class="cert-key">autonomy_level</span>
-            <span class="cert-val">OAL-2</span>
-          </div>
-          <div class="cert-row">
-            <span class="cert-key">custodian</span>
-            <span class="cert-val"><span class="cert-redact" style="width:10ch;"></span></span>
-          </div>
-          <div class="cert-footer">
-            <span>record_hash:</span> <span class="cert-hash">sha256:c7f6a0b1...</span>
+
+          <div class="cert-micr">
+            <span class="cert-k">record_hash:</span> <span class="cert-k">sha256</span> <span class="cert-hashline">c7f6 a0b1 2e8a 9d3f 4c1d 0aa9 a6f0 c8b1 e7aa 2f2a 3b1c 9d0e 1122 3344 5566 7788</span>
+            <span class="cert-hashline"><span class="cert-k">record_nonce:</span> <span class="cert-redact w16"></span></span>
           </div>
         </div>
       </div>
