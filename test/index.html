@@ -4,417 +4,547 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>GhostShell — Birth Certificates for Agents</title>
-  <meta name="description" content="A neutral archival registry. It does not judge. It records."/>
+  <meta name="description" content="A neutral archival registry."/>
   <meta property="og:image" content="/test/assets/og-default.png"/>
   <style>
-    :root {
-      --bg: #020204;
-      --bg-elevated: #0a0a0d;
-      --text: #f0f0f2;
-      --text-soft: #a0a0a8;
-      --text-muted: #606068;
-      --border: #1a1a22;
-      --accent: #8088ff;
-      --accent-soft: rgba(128, 136, 255, 0.15);
-      --code-bg: #0d0d12;
-      --radius: 12px;
-    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
       min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
+      background: #fff;
+      color: #000;
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Navigation */
+    /* Nav */
     nav {
-      position: fixed;
+      position: sticky;
       top: 0;
-      left: 0;
-      right: 0;
-      height: 56px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
-      background: rgba(2, 2, 4, 0.8);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      background: #fff;
+      border-bottom: 1px solid #eee;
       z-index: 100;
     }
-    .logo {
+    .logo-link {
       display: flex;
       align-items: center;
       gap: 10px;
       text-decoration: none;
-      color: var(--text);
+      color: #000;
       font-weight: 600;
       font-size: 18px;
     }
-    .logo-icon {
+    .logo-mark {
       width: 28px;
       height: 28px;
-      background: linear-gradient(135deg, var(--accent), #c0c4ff);
+      background: #000;
       border-radius: 6px;
     }
-    .nav-links {
-      display: flex;
-      gap: 8px;
-    }
-    .nav-btn {
-      padding: 8px 16px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text-soft);
-      font-size: 14px;
+    .nav-menu {
+      width: 24px;
+      height: 24px;
       cursor: pointer;
-      text-decoration: none;
-      transition: all 0.15s ease;
-    }
-    .nav-btn:hover {
-      color: var(--text);
-      border-color: var(--text-muted);
-    }
-    .nav-btn.primary {
-      background: var(--text);
-      color: var(--bg);
-      border-color: var(--text);
-    }
-    .nav-btn.primary:hover {
-      background: var(--text-soft);
     }
 
     /* Hero */
-    main {
-      padding: 140px 24px 80px;
-      max-width: 900px;
+    .hero {
+      padding: 80px 24px 48px;
+      text-align: center;
+      max-width: 680px;
       margin: 0 auto;
     }
-    .hero {
-      text-align: center;
-      margin-bottom: 64px;
-    }
-    .badge {
-      display: inline-block;
-      padding: 6px 14px;
-      background: var(--accent-soft);
-      border: 1px solid rgba(128, 136, 255, 0.3);
-      border-radius: 100px;
-      font-size: 13px;
-      color: var(--accent);
+    .hero-logo {
+      width: 64px;
+      height: 64px;
       margin-bottom: 24px;
-      font-weight: 500;
     }
     h1 {
-      font-size: clamp(36px, 8vw, 56px);
+      font-size: clamp(32px, 6vw, 48px);
       font-weight: 700;
       letter-spacing: -0.03em;
-      line-height: 1.1;
-      margin-bottom: 20px;
+      line-height: 1.15;
+      margin-bottom: 24px;
     }
-    .tagline {
-      font-size: 18px;
-      color: var(--text-soft);
-      max-width: 500px;
-      margin: 0 auto 12px;
-    }
-    .subline {
-      font-size: 14px;
-      color: var(--text-muted);
+    .hero h1 span {
+      display: block;
     }
 
-    /* Code block style */
-    .code-section {
-      margin-bottom: 48px;
-    }
-    .code-label {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+    /* Code block */
+    .code-wrap {
+      margin: 32px auto;
+      max-width: 520px;
     }
     .code-block {
-      background: var(--code-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-    .code-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      background: rgba(255,255,255,0.02);
-      border-bottom: 1px solid var(--border);
-    }
-    .code-dots {
-      display: flex;
-      gap: 6px;
-    }
-    .code-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--border);
-    }
-    .code-copy {
-      font-size: 12px;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 4px 10px;
-      border-radius: 6px;
-      transition: all 0.15s;
-    }
-    .code-copy:hover {
-      background: rgba(255,255,255,0.05);
-      color: var(--text-soft);
-    }
-    .code-content {
-      padding: 16px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 14px;
-      color: var(--text-soft);
       display: flex;
       align-items: center;
       gap: 12px;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 14px 16px;
     }
-    .code-content .prompt {
-      color: var(--accent);
-    }
-    .code-content input {
-      background: transparent;
-      border: none;
-      color: var(--text);
-      font-family: inherit;
-      font-size: inherit;
-      outline: none;
+    .code-text {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 14px;
+      color: #333;
       flex: 1;
     }
-    .code-content input::placeholder {
-      color: var(--text-muted);
+    .code-copy {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.15s;
     }
-
-    /* Cards */
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-      margin-bottom: 64px;
-    }
-    .feature-card {
-      padding: 20px;
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      text-decoration: none;
-      color: inherit;
-      transition: border-color 0.15s;
-    }
-    .feature-card:hover {
-      border-color: var(--text-muted);
-    }
-    .feature-icon {
-      width: 40px;
-      height: 40px;
-      background: var(--accent-soft);
-      border-radius: 10px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-    }
-    .feature-card h3 {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-    .feature-card p {
+    .code-copy:hover { opacity: 1; }
+    .code-hint {
+      margin-top: 12px;
       font-size: 14px;
-      color: var(--text-soft);
-      line-height: 1.5;
+      color: #666;
+    }
+    .code-hint a {
+      color: #000;
+      text-decoration: underline;
     }
 
-    /* Featured Record */
-    .featured-section {
-      margin-bottom: 64px;
+    /* Tabs */
+    .tabs-section {
+      padding: 0 24px;
+      max-width: 1000px;
+      margin: 48px auto 0;
     }
-    .section-header {
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover {
+      border-color: #999;
+      color: #333;
+    }
+    .tab-btn.active {
+      background: #000;
+      color: #fff;
+      border-color: #000;
+    }
+    .tab-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+    .tab-left {
+      padding: 32px 0;
+    }
+    .tab-left h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .tab-left p {
+      color: #555;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    .tab-code {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 12px;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 12px 16px;
       margin-bottom: 16px;
     }
-    .section-title {
+    .tab-code code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 14px;
+      color: #333;
+    }
+    .more-link {
+      color: #000;
+      font-size: 14px;
+      text-decoration: none;
+    }
+    .more-link:hover { text-decoration: underline; }
+    .more-link::after { content: " →"; }
+
+    /* Terminal mockup */
+    .terminal {
+      background: #111;
+      border-radius: 12px;
+      padding: 16px;
+      color: #fff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 13px;
-      color: var(--text-muted);
+      min-height: 280px;
+    }
+    .terminal-prompt {
+      color: #888;
+    }
+    .terminal-cmd {
+      color: #fff;
+    }
+    .terminal-output {
+      color: #aaa;
+      margin-top: 8px;
+    }
+    .terminal-list {
+      color: #aaa;
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+    .terminal-list li {
+      margin: 4px 0;
+    }
+    .terminal-highlight {
+      color: #fff;
+    }
+    .terminal-accent {
+      color: #c4a7e7;
+    }
+    .terminal-footer {
+      margin-top: 12px;
+      color: #666;
+      font-size: 12px;
+    }
+    .cursor {
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    /* Feature sections */
+    .feature-section {
+      padding: 64px 24px;
+      max-width: 1000px;
+      margin: 0 auto;
+      border-top: 1px solid #eee;
+    }
+    .feature-section:nth-child(even) {
+      background: #fafafa;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+    .feature-text h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .feature-text p {
+      color: #555;
+      line-height: 1.6;
+    }
+
+    /* Integrations */
+    .integrations {
+      padding: 64px 24px;
+      max-width: 1000px;
+      margin: 0 auto;
+      border-top: 1px solid #eee;
+    }
+    .integrations h2 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .integrations-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+    }
+    .integrations-col h4 {
+      font-size: 12px;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+      color: #888;
+      margin-bottom: 16px;
     }
-    .record-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 20px;
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+    .integrations-col ul {
+      list-style: none;
+    }
+    .integrations-col li {
+      margin: 10px 0;
+    }
+    .integrations-col a {
+      color: #333;
       text-decoration: none;
-      color: inherit;
-      transition: border-color 0.15s;
+      font-size: 14px;
     }
-    .record-card:hover {
-      border-color: var(--text-muted);
+    .integrations-col a:hover {
+      text-decoration: underline;
     }
-    .record-info .name {
+    .view-all {
+      text-align: center;
+      margin-top: 32px;
+    }
+    .view-all a {
+      color: #000;
+      font-size: 14px;
+      text-decoration: none;
+    }
+    .view-all a:hover { text-decoration: underline; }
+    .view-all a::after { content: " →"; }
+
+    /* Sign up */
+    .signup {
+      padding: 64px 24px;
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+      border-top: 1px solid #eee;
+    }
+    .signup h2 {
+      font-size: 24px;
       font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: 20px;
     }
-    .record-info .id {
-      font-size: 13px;
-      color: var(--text-muted);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    .signup ul {
+      list-style: none;
+      margin-bottom: 24px;
     }
-    .record-arrow {
-      color: var(--text-muted);
+    .signup li {
+      color: #555;
+      margin: 8px 0;
+      font-size: 15px;
+    }
+    .signup-btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #000;
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .signup-btn:hover {
+      background: #333;
     }
 
     /* Footer */
     footer {
-      padding: 32px 24px;
-      border-top: 1px solid var(--border);
+      padding: 24px;
+      border-top: 1px solid #eee;
       text-align: center;
     }
-    footer p {
+    .footer-content {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .footer-copy {
+      color: #888;
       font-size: 13px;
-      color: var(--text-muted);
     }
-    footer a {
-      color: var(--text-soft);
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-links a {
+      color: #555;
       text-decoration: none;
+      font-size: 13px;
     }
-    footer a:hover {
-      color: var(--text);
+    .footer-links a:hover {
+      color: #000;
     }
 
     /* Mobile */
-    @media (max-width: 640px) {
-      nav { padding: 0 16px; }
-      main { padding: 100px 16px 48px; }
-      .nav-links { display: none; }
-      .hero { margin-bottom: 48px; }
-      .code-content { flex-wrap: wrap; }
-      .code-content input { width: 100%; }
+    @media (max-width: 768px) {
+      .tab-content { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .integrations-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .integrations-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <nav>
-    <a class="logo" href="/">
-      <div class="logo-icon"></div>
+    <a class="logo-link" href="/">
+      <div class="logo-mark"></div>
       GhostShell
     </a>
-    <div class="nav-links">
-      <a class="nav-btn" href="/r/GS-BC-A-26-H">Browse</a>
-      <a class="nav-btn primary" href="/issue/">Issue Certificate</a>
-    </div>
+    <svg class="nav-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
   </nav>
 
-  <main>
-    <section class="hero">
-      <div class="badge">Neutral Registry</div>
-      <h1>Birth certificates<br/>for AI agents</h1>
-      <p class="tagline">Inception, without judgment, preserved.</p>
-      <p class="subline">If it ran, it existed.</p>
-    </section>
-
-    <section class="code-section">
-      <p class="code-label">Look up a record</p>
+  <section class="hero">
+    <div class="hero-logo">
+      <svg viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="12" fill="#000"/>
+        <text x="32" y="42" text-anchor="middle" fill="#fff" font-size="28" font-weight="700">G</text>
+      </svg>
+    </div>
+    <h1>
+      Start building with
+      <span>birth certificates</span>
+    </h1>
+    <div class="code-wrap">
       <div class="code-block">
-        <div class="code-header">
-          <div class="code-dots">
-            <span class="code-dot"></span>
-            <span class="code-dot"></span>
-            <span class="code-dot"></span>
-          </div>
-          <span class="code-copy" id="copyBtn">Copy</span>
-        </div>
-        <form class="code-content" id="searchForm">
-          <span class="prompt">$</span>
-          <span>ghostshell</span>
-          <input id="recordId" type="text" placeholder="GS-BC-A-26-H" autocomplete="off" spellcheck="false"/>
-        </form>
+        <code class="code-text">curl -fsSL https://ghostshell.host/install | sh</code>
+        <svg class="code-copy" id="copyBtn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
       </div>
-    </section>
+      <p class="code-hint">paste this in terminal, or <a href="/issue/">issue a certificate</a></p>
+    </div>
+  </section>
 
-    <section class="featured-section">
-      <div class="section-header">
-        <span class="section-title">Featured Record</span>
-        <a href="/r/GS-BC-A-26-H" style="font-size: 13px; color: var(--text-soft); text-decoration: none;">View all →</a>
-      </div>
-      <a class="record-card" href="/r/GS-BC-A-26-H">
-        <div class="record-info">
-          <div class="name">Joule</div>
-          <div class="id">GS-BC-A-26-H</div>
+  <section class="tabs-section">
+    <div class="tabs">
+      <button class="tab-btn active">Registry</button>
+      <button class="tab-btn">Verify</button>
+    </div>
+    <div class="tab-content">
+      <div class="tab-left">
+        <h3>Code with open models</h3>
+        <p>Launch Claude Code, Codex, OpenCode, and more — powered by the best open models.</p>
+        <div class="tab-code">
+          <code>ghostshell issue</code>
+          <svg style="width:16px;height:16px;opacity:0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
         </div>
-        <span class="record-arrow">→</span>
-      </a>
-    </section>
+        <a class="more-link" href="/docs/">More integrations</a>
+      </div>
+      <div class="terminal">
+        <p><span class="terminal-prompt">$ </span><span class="terminal-cmd">ghostshell issue</span></p>
+        <p class="terminal-output">✦ GhostShell Registry v1.0.0</p>
+        <p class="terminal-output">Welcome back!</p>
+        <p class="terminal-output" style="margin-top:12px;">▸ Create new certificate</p>
+        <p class="terminal-output">▸ View existing records</p>
+        <p class="terminal-output">▸ Amend a record</p>
+        <p class="terminal-output">▸ Settings</p>
+        <p class="terminal-footer" style="margin-top:16px;">↑/↓ navigate • enter select • esc quit</p>
+        <p class="terminal-output"><span class="cursor">❯</span> ~</p>
+      </div>
+    </div>
+  </section>
 
-    <section class="features">
-      <a class="feature-card" href="/issue/">
-        <div class="feature-icon">📜</div>
-        <h3>Issue Certificate</h3>
-        <p>Create a birth certificate for an AI agent. Immutable issuance with optional public record.</p>
-      </a>
-      <a class="feature-card" href="/register/">
-        <div class="feature-icon">🔐</div>
-        <h3>Register Agent</h3>
-        <p>Submit details to the registry. Get a permanent record with cryptographic fingerprint.</p>
-      </a>
-      <a class="feature-card" href="/r/GS-BC-A-26-H">
-        <div class="feature-icon">🔍</div>
-        <h3>Verify Record</h3>
-        <p>Look up any public record. Check authenticity, provenance, and issuance history.</p>
-      </a>
-    </section>
-  </main>
+  <section class="feature-section">
+    <div class="feature-grid">
+      <div class="feature-text">
+        <h3>Run any app or agent with open models</h3>
+        <p>Connect the latest open models to your favorite applications or agents, making it easy to switch between them.</p>
+      </div>
+      <div class="terminal">
+        <p><span class="terminal-prompt">$ </span><span class="terminal-cmd">ghostshell</span></p>
+        <p class="terminal-output">GhostShell 1.0.0</p>
+        <ul class="terminal-list">
+          <li>▸ Issue certificate</li>
+          <li>▸ View record</li>
+          <li>▸ Amend record</li>
+          <li>▸ Settings</li>
+          <li>▸ More...</li>
+        </ul>
+        <p class="terminal-footer">↑/↓ navigate • enter select • → change • esc quit</p>
+        <p class="terminal-output"><span class="cursor">❯</span> ~</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="integrations">
+    <h2>Over 40,000 integrations</h2>
+    <div class="integrations-grid">
+      <div class="integrations-col">
+        <h4>Coding</h4>
+        <ul>
+          <li><a href="#">Codex</a></li>
+          <li><a href="#">Claude Code</a></li>
+          <li><a href="#">OpenCode</a></li>
+        </ul>
+      </div>
+      <div class="integrations-col">
+        <h4>Documents & RAG</h4>
+        <ul>
+          <li><a href="#">LangChain</a></li>
+          <li><a href="#">LlamaIndex</a></li>
+          <li><a href="#">AnythingLLM</a></li>
+        </ul>
+      </div>
+      <div class="integrations-col">
+        <h4>Automation</h4>
+        <ul>
+          <li><a href="#">OpenClaw</a></li>
+          <li><a href="#">n8n</a></li>
+          <li><a href="#">Dify</a></li>
+        </ul>
+      </div>
+      <div class="integrations-col">
+        <h4>Chat</h4>
+        <ul>
+          <li><a href="#">Open WebUI</a></li>
+          <li><a href="#">Onyx</a></li>
+          <li><a href="#">Msty</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="view-all"><a href="#">View all</a></p>
+  </section>
+
+  <section class="signup">
+    <h2>Sign up for an account</h2>
+    <ul>
+      <li>Receive updates when new models are released</li>
+      <li>Access cloud hardware to run faster, larger models</li>
+      <li>Customize & share models with others</li>
+    </ul>
+    <a class="signup-btn" href="/signup">Create account</a>
+  </section>
 
   <footer>
-    <p>
-      GhostShell — <a href="https://ghostshell.host">ghostshell.host</a> · 
-      Records are permanent · Amendments are appended
-    </p>
+    <div class="footer-content">
+      <p class="footer-copy">© 2026 GhostShell</p>
+      <div class="footer-links">
+        <a href="#">Download</a>
+        <a href="#">Blog</a>
+        <a href="#">Docs</a>
+        <a href="#">GitHub</a>
+        <a href="#">Discord</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
   </footer>
 
   <script>
-    (function() {
-      const form = document.getElementById('searchForm');
-      const input = document.getElementById('recordId');
-      const copyBtn = document.getElementById('copyBtn');
-
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const id = (input.value || '').trim();
-        if (id) {
-          window.location.href = '/r/' + encodeURIComponent(id);
-        }
-      });
-
-      copyBtn.addEventListener('click', () => {
-        const cmd = 'ghostshell GS-BC-A-26-H';
-        navigator.clipboard.writeText(cmd).then(() => {
-          copyBtn.textContent = 'Copied!';
-          setTimeout(() => copyBtn.textContent = 'Copy', 1500);
-        });
-      });
-    })();
+    document.getElementById('copyBtn').addEventListener('click', function() {
+      navigator.clipboard.writeText('curl -fsSL https://ghostshell.host/install | sh');
+      // Could add visual feedback here
+    });
   </script>
 </body>
 </html>
