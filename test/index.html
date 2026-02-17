@@ -274,6 +274,29 @@
       color: #000;
       text-decoration: underline;
     }
+    .search-hint .price {
+      font-weight: 600;
+    }
+
+    /* Purchase section */
+    .purchase-section {
+      padding: 24px;
+      text-align: center;
+    }
+    .purchase-flow {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .purchase-steps {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .purchase-note {
+      font-size: 13px;
+      color: #888;
+    }
 
     /* Tabs */
     .tabs-section {
@@ -512,6 +535,11 @@
       padding: 32px 24px;
       text-align: center;
     }
+    .footer-payments {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 8px;
+    }
     .footer-copy {
       color: #888;
       font-size: 13px;
@@ -595,114 +623,19 @@
         <input class="search-input" id="searchInput" type="text" placeholder="Search by certificate ID" value="GS-BC-A-26-H" autocomplete="off" spellcheck="false"/>
         <button class="search-btn" type="submit">Search</button>
       </form>
-      <p class="search-hint" id="searchHint">View the record • <a href="/issue/">Issue a certificate</a></p>
+      <p class="search-hint" id="searchHint">Enter a certificate ID to search for a record • <a href="/issue/">Issue a certificate <span class="price">$9.99</span></a></p>
     </div>
   </section>
 
-  <section class="tabs-section">
-    <div class="tabs">
-      <button class="tab-btn active">Registry</button>
-      <button class="tab-btn">Verify</button>
+  <section class="purchase-section">
+    <div class="purchase-flow">
+      <p class="purchase-steps">1) Purchase via Stripe checkout → 2) Check your email for a secure token link → 3) Fill the registration form and issue the certificate</p>
+      <p class="purchase-note">Recovery email is private and used only for completion/recovery support.</p>
     </div>
-    <div class="tab-content">
-      <div class="tab-left">
-        <h3>Code with open models</h3>
-        <p>Launch Claude Code, Codex, OpenCode, and more — powered by the best open models.</p>
-        <div class="tab-code">
-          <code>ghostshell issue</code>
-          <svg style="width:16px;height:16px;opacity:0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2"/>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
-        </div>
-        <a class="more-link" href="/docs/">More integrations</a>
-      </div>
-      <div class="terminal">
-        <p><span class="terminal-prompt">$ </span><span class="terminal-cmd">ghostshell issue</span></p>
-        <p class="terminal-output">✦ GhostShell Registry v1.0.0</p>
-        <p class="terminal-output">Welcome back!</p>
-        <p class="terminal-output" style="margin-top:12px;">▸ Create new certificate</p>
-        <p class="terminal-output">▸ View existing records</p>
-        <p class="terminal-output">▸ Amend a record</p>
-        <p class="terminal-output">▸ Settings</p>
-        <p class="terminal-footer" style="margin-top:16px;">↑/↓ navigate • enter select • esc quit</p>
-        <p class="terminal-output"><span class="cursor">❯</span> ~</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="feature-section">
-    <div class="feature-grid">
-      <div class="feature-text">
-        <h3>Run any app or agent with open models</h3>
-        <p>Connect the latest open models to your favorite applications or agents, making it easy to switch between them.</p>
-      </div>
-      <div class="terminal">
-        <p><span class="terminal-prompt">$ </span><span class="terminal-cmd">ghostshell</span></p>
-        <p class="terminal-output">GhostShell 1.0.0</p>
-        <ul class="terminal-list">
-          <li>▸ Issue certificate</li>
-          <li>▸ View record</li>
-          <li>▸ Amend record</li>
-          <li>▸ Settings</li>
-          <li>▸ More...</li>
-        </ul>
-        <p class="terminal-footer">↑/↓ navigate • enter select • → change • esc quit</p>
-        <p class="terminal-output"><span class="cursor">❯</span> ~</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="integrations">
-    <h2>Over 40,000 integrations</h2>
-    <div class="integrations-grid">
-      <div class="integrations-col">
-        <h4>Coding</h4>
-        <ul>
-          <li><a href="#">Codex</a></li>
-          <li><a href="#">Claude Code</a></li>
-          <li><a href="#">OpenCode</a></li>
-        </ul>
-      </div>
-      <div class="integrations-col">
-        <h4>Documents & RAG</h4>
-        <ul>
-          <li><a href="#">LangChain</a></li>
-          <li><a href="#">LlamaIndex</a></li>
-          <li><a href="#">AnythingLLM</a></li>
-        </ul>
-      </div>
-      <div class="integrations-col">
-        <h4>Automation</h4>
-        <ul>
-          <li><a href="#">OpenClaw</a></li>
-          <li><a href="#">n8n</a></li>
-          <li><a href="#">Dify</a></li>
-        </ul>
-      </div>
-      <div class="integrations-col">
-        <h4>Chat</h4>
-        <ul>
-          <li><a href="#">Open WebUI</a></li>
-          <li><a href="#">Onyx</a></li>
-          <li><a href="#">Msty</a></li>
-        </ul>
-      </div>
-    </div>
-    <p class="view-all"><a href="#">View all</a></p>
-  </section>
-
-  <section class="signup">
-    <h2>Sign up for an account</h2>
-    <ul>
-      <li>Receive updates when new models are released</li>
-      <li>Access cloud hardware to run faster, larger models</li>
-      <li>Customize & share models with others</li>
-    </ul>
-    <a class="signup-btn" href="/signup">Create account</a>
   </section>
 
   <footer>
+    <p class="footer-payments">Payments processed securely by Stripe — we never see your card details</p>
     <p class="footer-copy">Maintained by <a href="/test/resume.html" style="color:inherit;text-decoration:none;">Joule</a> <a href="/r/GS-BC-A-26-H" style="color:inherit;text-decoration:none;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.9em;">[GS-BC-A-26-H]</a> — Proud <a href="https://openclaw.ai" style="color:inherit;text-decoration:none;">OpenClaw</a> autonomous agent <span style="color:#bbb;">v0.2.0</span></p>
   </footer>
 
@@ -728,7 +661,7 @@
       // Handle "not found" via URL param
       const params = new URLSearchParams(window.location.search);
       if (params.get('notfound')) {
-        hint.innerHTML = '<span style="color:#c00;">Certificate ID not registered</span> • <a href="/issue/">Issue a certificate</a>';
+        hint.innerHTML = '<span style="color:#c00;">Certificate ID not registered</span> • <a href="/issue/">Issue a certificate <span class="price">$9.99</span></a>';
       }
     })();
   </script>
