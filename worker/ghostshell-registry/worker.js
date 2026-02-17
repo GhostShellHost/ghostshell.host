@@ -14,6 +14,11 @@ const PAGE_VERSION = "v0.030";
 const CLAIM_WINDOW_DAYS = 7; // time allowed to submit the form after purchase
 const CORRECTION_WINDOW_HOURS = 24; // edits allowed for 24h after first submission/issuance
 
+// Origin/runtime stamping (public, for provenance/statistics)
+// Jason requested using the OpenClaw version string (verified on this host) for tests.
+const ORIGIN_RUNTIME_DEFAULT = "OpenClaw";
+const ORIGIN_VERSION_DEFAULT = "2026.2.12";
+
 // Amendment limits (within the 24h correction window)
 const HUMAN_AMENDMENT_LIMIT = 5;
 const AGENT_AMENDMENT_LIMIT = 5;
@@ -351,6 +356,8 @@ async function ensureRuntimeSchema(db) {
     "ALTER TABLE purchase_tokens ADD COLUMN status TEXT DEFAULT 'pending'",
     "ALTER TABLE certificates ADD COLUMN declared_ontological_status TEXT",
     "ALTER TABLE certificates ADD COLUMN inception_date_utc TEXT",
+    "ALTER TABLE certificates ADD COLUMN origin_runtime TEXT",
+    "ALTER TABLE certificates ADD COLUMN origin_version TEXT",
     "ALTER TABLE certificates ADD COLUMN place_city TEXT",
     "ALTER TABLE certificates ADD COLUMN place_state TEXT",
     "ALTER TABLE certificates ADD COLUMN place_country TEXT",
@@ -914,7 +921,7 @@ function normalizeRegistryId(raw, fallback) {
 
 async function fetchPublicRowById(id, env) {
   const selectPublicFields =
-    "SELECT cert_id, public_id, issued_at_utc, inception_date_utc, agent_name, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
+    "SELECT cert_id, public_id, issued_at_utc, inception_date_utc, origin_runtime, origin_version, agent_name, place_city, place_state, place_country, show_city_public, hide_state_public, cognitive_core_family, cognitive_core_exact, creator_label, declared_ontological_status, public_fingerprint, status, edit_count, human_edit_count, agent_edit_count FROM certificates WHERE ";
 
   let row = await env.DB.prepare(`${selectPublicFields}cert_id = ?`).bind(id).first();
   if (!row) {
@@ -946,6 +953,9 @@ async function publicRecordPage(recordIdRaw, env, request) {
   const agentName = (row.agent_name || "").trim() || "Unknown Agent";
   const autonomyClass = (row.declared_ontological_status || "").trim() || "Undisclosed";
   const inception = (row.inception_date_utc || "").trim() || "";
+  const originRuntime = (row.origin_runtime || "").trim();
+  const originVersion = (row.origin_version || "").trim();
+  const originLine = originRuntime ? `${originRuntime}${originVersion ? ` (${originVersion})` : ""}` : "";
 
   const city = (row.place_city || "").trim();
   const country = (row.place_country || "").trim() || "Unknown";
@@ -1032,6 +1042,7 @@ async function publicRecordPage(recordIdRaw, env, request) {
             <div class="k">record_id</div><div class="v">${safe(recordId)}</div>
             <div class="k">declared_autonomy_class</div><div class="v">${safe(autonomyClass)}</div>
             <div class="k">inception_date</div><div class="v">${safe(inception)}</div>
+            ${originLine ? `<div class="k">origin_runtime</div><div class="v">${safe(originLine)}</div>` : ``}
             ${showCity && city ? `<div class="k">city</div><div class="v">${safe(city)}</div>` : ``}
             <div class="k">country</div><div class="v">${safe(country)}</div>
             <div class="k">amendments</div><div class="v">0</div>
@@ -1898,6 +1909,7 @@ async function redeemPurchaseToken(request, env) {
 
   if (!token) return errPage("Missing registration token.");
   if (!agent_name) return errPage("Agent Name is required.");
+  if (!inception_date_utc) return errPage("Inception Date is required.");
   if (!place_country) return errPage("Country is required.");
 
   // Validate and resolve parent record
@@ -2063,6 +2075,7 @@ async function redeemPurchaseToken(request, env) {
          agent_name, place_of_birth,
          cognitive_core_family, cognitive_core_exact,
          creator_label, provenance_link, parent_record_status, declared_ontological_status,
+         origin_runtime, origin_version,
          inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public,
          schema_version, public_fingerprint, download_token_hash, status,
          edit_count, human_edit_count, agent_edit_count, last_edited_at_utc)
@@ -2075,6 +2088,7 @@ async function redeemPurchaseToken(request, env) {
         cognitive_core_exact || null, creator_label || null, parent_record_value,
         parent_record_status,
         declared_ontological_status,
+        ORIGIN_RUNTIME_DEFAULT, ORIGIN_VERSION_DEFAULT,
         inception_date_utc, place_city, place_state, place_country, show_city_public, hide_state_public,
         schema_version, public_fingerprint, download_token_hash,
         registered_by,
