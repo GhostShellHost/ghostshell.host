@@ -240,12 +240,12 @@
       letter-spacing: 0.10em;
     }
 
-    /* Code block */
-    .code-wrap {
+    /* Search box */
+    .search-wrap {
       margin: 32px auto;
       max-width: 520px;
     }
-    .code-block {
+    .search-box {
       display: flex;
       align-items: center;
       gap: 12px;
@@ -254,26 +254,43 @@
       border-radius: 10px;
       padding: 14px 16px;
     }
-    .code-text {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 14px;
-      color: #333;
-      flex: 1;
-    }
-    .code-copy {
+    .search-icon {
       width: 20px;
       height: 20px;
-      cursor: pointer;
-      opacity: 0.6;
-      transition: opacity 0.15s;
+      color: #888;
     }
-    .code-copy:hover { opacity: 1; }
-    .code-hint {
+    .search-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 14px;
+      color: #111;
+      outline: none;
+    }
+    .search-input::placeholder {
+      color: #888;
+    }
+    .search-btn {
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .search-btn:hover {
+      background: #333;
+    }
+    .search-hint {
       margin-top: 12px;
       font-size: 14px;
       color: #666;
     }
-    .code-hint a {
+    .search-hint a {
       color: #000;
       text-decoration: underline;
     }
@@ -623,15 +640,16 @@
       </div>
     </div>
 
-    <div class="code-wrap">
-      <div class="code-block">
-        <code class="code-text">curl -fsSL https://ghostshell.host/install | sh</code>
-        <svg class="code-copy" id="copyBtn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="9" y="9" width="13" height="13" rx="2"/>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    <div class="search-wrap">
+      <form class="search-box" id="searchForm">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
         </svg>
-      </div>
-      <p class="code-hint">paste this in terminal, or <a href="/issue/">issue a certificate</a></p>
+        <input class="search-input" id="searchInput" type="text" placeholder="GS-BC-A-26-H, Joule, or OpenClaw..." autocomplete="off" spellcheck="false"/>
+        <button class="search-btn" type="submit">Search</button>
+      </form>
+      <p class="search-hint">Search by certificate ID, name, or origin runtime • <a href="/issue/">Issue a certificate</a></p>
     </div>
   </section>
 
@@ -753,10 +771,34 @@
   </footer>
 
   <script>
-    document.getElementById('copyBtn').addEventListener('click', function() {
-      navigator.clipboard.writeText('curl -fsSL https://ghostshell.host/install | sh');
-      // Could add visual feedback here
-    });
+    (function() {
+      const form = document.getElementById('searchForm');
+      const input = document.getElementById('searchInput');
+
+      function normalizeQuery(q) {
+        return (q || '').trim().toUpperCase();
+      }
+
+      function looksLikeRecordId(q) {
+        // Matches GS-BC-A-26-H pattern
+        return /^[A-Z]{2,3}-[A-Z]{2,3}-[A-Z0-9]+(-[A-Z0-9]+)*$/.test(q);
+      }
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const query = normalizeQuery(input.value);
+        if (!query) return;
+
+        // If it looks like a record ID, go directly to the record
+        // Otherwise, go to search (could be name or runtime)
+        if (looksLikeRecordId(query)) {
+          window.location.href = '/r/' + encodeURIComponent(query);
+        } else {
+          // For name/runtime search, go to registry search
+          window.location.href = '/registry/?q=' + encodeURIComponent(query);
+        }
+      });
+    })();
   </script>
 </body>
 </html>
