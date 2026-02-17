@@ -124,6 +124,7 @@
       text-transform: uppercase;
       font-weight: 800;
       color: #111827;
+      text-align: right;
     }
     .cert-catalog {
       margin: 6px 0 0;
@@ -138,23 +139,16 @@
     .cert-catalog b {
       color: rgba(17,24,39,0.82);
     }
-    .cert-stamp {
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: rgba(17,24,39,0.55);
-      border: 1px solid rgba(17,24,39,0.22);
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.5);
-      white-space: nowrap;
-    }
     .cert-logo-stamp {
-      width: 80px;
+      position: absolute;
+      top: 10px;
+      right: -20px;
+      width: 200px;
       height: auto;
-      transform: rotate(-8deg);
-      opacity: 0.85;
-      filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.15));
+      transform: rotate(12deg);
+      opacity: 0.9;
+      pointer-events: none;
+      z-index: 10;
     }
     .cert-body {
       margin-top: 14px;
@@ -182,6 +176,7 @@
     .cert-type {
       color: rgba(17,24,39,0.92);
       margin-bottom: 10px;
+      text-align: right;
     }
     .cert-grid {
       display: grid;
@@ -191,6 +186,7 @@
     }
     .cert-k {
       color: rgba(17,24,39,0.66);
+      text-align: right;
     }
     .cert-k::after {
       content: ":";
@@ -201,6 +197,7 @@
     .cert-v {
       color: #111827;
       font-weight: 700;
+      text-align: right;
     }
     .cert-sep {
       color: #111827;
@@ -230,6 +227,7 @@
       line-height: 1.22;
       color: rgba(17,24,39,0.70);
       letter-spacing: 0.08em;
+      text-align: right;
     }
     .cert-micr .cert-k {
       letter-spacing: 0.04em;
@@ -585,8 +583,8 @@
               <span>CLASS:</span> <b>OAL-2</b>
             </div>
           </div>
-          <img class="cert-logo-stamp" src="/test/assets/ghostshell_logo.png" alt="GhostShell"/>
         </div>
+        <img class="cert-logo-stamp" src="/test/assets/ghostshell_logo.png" alt="GhostShell"/>
         <div class="cert-body">
           <div class="cert-rubber">REDACTED COPY</div>
           <div class="cert-type">TYPEWRITTEN EXTRACT // GS-BC-26-<span class="cert-redact w4"></span></div>
