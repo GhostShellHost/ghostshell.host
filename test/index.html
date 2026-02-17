@@ -86,7 +86,8 @@
     /* Certificate card */
     .cert-preview {
       margin: 0 auto 48px;
-      max-width: 420px;
+      width: 600px;
+      max-width: 100%;
     }
     .cert-card {
       background: linear-gradient(180deg, #fbf7ea, #f6f0dd);
@@ -99,19 +100,6 @@
       color: #111;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 12px;
-    }
-    .cert-card::before {
-      content: "";
-      position: absolute;
-      left: 50%;
-      top: -10px;
-      transform: translateX(-50%);
-      width: 80px;
-      height: 20px;
-      border: 1px solid rgba(0,0,0,0.15);
-      border-bottom: none;
-      border-radius: 0 0 10px 10px;
-      background: linear-gradient(180deg, #f6f0dd, #fbf7ea);
     }
     .cert-header {
       display: flex;
