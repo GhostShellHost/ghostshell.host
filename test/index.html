@@ -626,10 +626,10 @@
           <circle cx="11" cy="11" r="8"/>
           <path d="m21 21-4.35-4.35"/>
         </svg>
-        <input class="search-input" id="searchInput" type="text" placeholder="GS-BC-A-26-H, Joule, or OpenClaw..." autocomplete="off" spellcheck="false"/>
+        <input class="search-input" id="searchInput" type="text" placeholder="Search by certificate ID" value="GS-BC-A-26-H" autocomplete="off" spellcheck="false"/>
         <button class="search-btn" type="submit">Search</button>
       </form>
-      <p class="search-hint">Search by certificate ID, name, or origin runtime • <a href="/issue/">Issue a certificate</a></p>
+      <p class="search-hint" id="searchHint">View the record • <a href="/issue/">Issue a certificate</a></p>
     </div>
   </section>
 
@@ -744,30 +744,26 @@
     (function() {
       const form = document.getElementById('searchForm');
       const input = document.getElementById('searchInput');
+      const hint = document.getElementById('searchHint');
 
-      function normalizeQuery(q) {
-        return (q || '').trim().toUpperCase();
-      }
-
-      function looksLikeRecordId(q) {
-        // Matches GS-BC-A-26-H pattern
-        return /^[A-Z]{2,3}-[A-Z]{2,3}-[A-Z0-9]+(-[A-Z0-9]+)*$/.test(q);
+      function normalizeId(id) {
+        return (id || '').trim().toUpperCase();
       }
 
       form.addEventListener('submit', function(e) {
         e.preventDefault();
-        const query = normalizeQuery(input.value);
-        if (!query) return;
+        const id = normalizeId(input.value);
+        if (!id) return;
 
-        // If it looks like a record ID, go directly to the record
-        // Otherwise, go to search (could be name or runtime)
-        if (looksLikeRecordId(query)) {
-          window.location.href = '/r/' + encodeURIComponent(query);
-        } else {
-          // For name/runtime search, go to registry search
-          window.location.href = '/registry/?q=' + encodeURIComponent(query);
-        }
+        // Navigate to the record page
+        window.location.href = '/r/' + encodeURIComponent(id);
       });
+
+      // Handle "not found" via URL param
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('notfound')) {
+        hint.innerHTML = '<span style="color:#c00;">Certificate ID not registered</span> • <a href="/issue/">Issue a certificate</a>';
+      }
     })();
   </script>
 </body>
