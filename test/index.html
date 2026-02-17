@@ -64,9 +64,8 @@
     /* Certificate card */
     .cert-preview {
       margin: 0 auto 48px;
-      width: 100%;
-      max-width: 800px;
-      min-width: 600px;
+      width: 800px;
+      max-width: calc(100vw - 48px);
     }
     .cert-card {
       background: linear-gradient(180deg, #fbf7ea, #f6f0dd);
@@ -207,6 +206,7 @@
       color: rgba(17,24,39,0.70);
       letter-spacing: 0.08em;
       text-align: left;
+      overflow-x: auto;
     }
     .cert-micr .cert-k {
       letter-spacing: 0.04em;
@@ -652,16 +652,23 @@
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         const id = normalizeId(input.value);
-        if (!id) return;
+        if (!id) {
+          // Default to Joule's certificate if empty
+          window.location.href = '/r/GS-BC-A-26-H';
+          return;
+        }
 
         // Navigate to the record page
         window.location.href = '/r/' + encodeURIComponent(id);
       });
 
-      // Handle "not found" via URL param
+      // Handle "not found" via URL param - show message but reset to default after 3s
       const params = new URLSearchParams(window.location.search);
       if (params.get('notfound')) {
-        hint.innerHTML = '<span style="color:#c00;">Certificate ID not registered</span> • <a href="/issue/">Issue a certificate <span class="price">$9.99</span></a>';
+        const notFoundId = params.get('id') || '';
+        hint.innerHTML = '<span style="color:#c00;">Certificate not found: ' + notFoundId + '</span> • <a href="/issue/">Issue a certificate <span class="price">$9.99</span></a>';
+        input.value = 'GS-BC-A-26-H';
+        // After user searches again, remove the notfound param from URL
       }
     })();
   </script>
