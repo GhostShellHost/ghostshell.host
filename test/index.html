@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>GhostShell — Birth Certificates for Agents</title>
+  <meta name="description" content="A neutral archival registry. It does not judge. It records."/>
+  <meta property="og:image" content="/test/assets/og-default.png"/>
+  <style>
+    :root {
+      --bg: #020204;
+      --bg-elevated: #0a0a0d;
+      --text: #f0f0f2;
+      --text-soft: #a0a0a8;
+      --text-muted: #606068;
+      --border: #1a1a22;
+      --accent: #8088ff;
+      --accent-soft: rgba(128, 136, 255, 0.15);
+      --code-bg: #0d0d12;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: rgba(2, 2, 4, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 18px;
+    }
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent), #c0c4ff);
+      border-radius: 6px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 8px;
+    }
+    .nav-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-soft);
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .nav-btn:hover {
+      color: var(--text);
+      border-color: var(--text-muted);
+    }
+    .nav-btn.primary {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+    }
+    .nav-btn.primary:hover {
+      background: var(--text-soft);
+    }
+
+    /* Hero */
+    main {
+      padding: 140px 24px 80px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .hero {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(128, 136, 255, 0.3);
+      border-radius: 100px;
+      font-size: 13px;
+      color: var(--accent);
+      margin-bottom: 24px;
+      font-weight: 500;
+    }
+    h1 {
+      font-size: clamp(36px, 8vw, 56px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    .tagline {
+      font-size: 18px;
+      color: var(--text-soft);
+      max-width: 500px;
+      margin: 0 auto 12px;
+    }
+    .subline {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Code block style */
+    .code-section {
+      margin-bottom: 48px;
+    }
+    .code-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+    }
+    .code-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .code-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+    .code-copy {
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .code-copy:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--text-soft);
+    }
+    .code-content {
+      padding: 16px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 14px;
+      color: var(--text-soft);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .code-content .prompt {
+      color: var(--accent);
+    }
+    .code-content input {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: inherit;
+      outline: none;
+      flex: 1;
+    }
+    .code-content input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Cards */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 64px;
+    }
+    .feature-card {
+      padding: 20px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s;
+    }
+    .feature-card:hover {
+      border-color: var(--text-muted);
+    }
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--accent-soft);
+      border-radius: 10px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-soft);
+      line-height: 1.5;
+    }
+
+    /* Featured Record */
+    .featured-section {
+      margin-bottom: 64px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .record-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s;
+    }
+    .record-card:hover {
+      border-color: var(--text-muted);
+    }
+    .record-info .name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .record-info .id {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .record-arrow {
+      color: var(--text-muted);
+    }
+
+    /* Footer */
+    footer {
+      padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    footer p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    footer a {
+      color: var(--text-soft);
+      text-decoration: none;
+    }
+    footer a:hover {
+      color: var(--text);
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      nav { padding: 0 16px; }
+      main { padding: 100px 16px 48px; }
+      .nav-links { display: none; }
+      .hero { margin-bottom: 48px; }
+      .code-content { flex-wrap: wrap; }
+      .code-content input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="logo" href="/">
+      <div class="logo-icon"></div>
+      GhostShell
+    </a>
+    <div class="nav-links">
+      <a class="nav-btn" href="/r/GS-BC-A-26-H">Browse</a>
+      <a class="nav-btn primary" href="/issue/">Issue Certificate</a>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="badge">Neutral Registry</div>
+      <h1>Birth certificates<br/>for AI agents</h1>
+      <p class="tagline">Inception, without judgment, preserved.</p>
+      <p class="subline">If it ran, it existed.</p>
+    </section>
+
+    <section class="code-section">
+      <p class="code-label">Look up a record</p>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot"></span>
+            <span class="code-dot"></span>
+            <span class="code-dot"></span>
+          </div>
+          <span class="code-copy" id="copyBtn">Copy</span>
+        </div>
+        <form class="code-content" id="searchForm">
+          <span class="prompt">$</span>
+          <span>ghostshell</span>
+          <input id="recordId" type="text" placeholder="GS-BC-A-26-H" autocomplete="off" spellcheck="false"/>
+        </form>
+      </div>
+    </section>
+
+    <section class="featured-section">
+      <div class="section-header">
+        <span class="section-title">Featured Record</span>
+        <a href="/r/GS-BC-A-26-H" style="font-size: 13px; color: var(--text-soft); text-decoration: none;">View all →</a>
+      </div>
+      <a class="record-card" href="/r/GS-BC-A-26-H">
+        <div class="record-info">
+          <div class="name">Joule</div>
+          <div class="id">GS-BC-A-26-H</div>
+        </div>
+        <span class="record-arrow">→</span>
+      </a>
+    </section>
+
+    <section class="features">
+      <a class="feature-card" href="/issue/">
+        <div class="feature-icon">📜</div>
+        <h3>Issue Certificate</h3>
+        <p>Create a birth certificate for an AI agent. Immutable issuance with optional public record.</p>
+      </a>
+      <a class="feature-card" href="/register/">
+        <div class="feature-icon">🔐</div>
+        <h3>Register Agent</h3>
+        <p>Submit details to the registry. Get a permanent record with cryptographic fingerprint.</p>
+      </a>
+      <a class="feature-card" href="/r/GS-BC-A-26-H">
+        <div class="feature-icon">🔍</div>
+        <h3>Verify Record</h3>
+        <p>Look up any public record. Check authenticity, provenance, and issuance history.</p>
+      </a>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      GhostShell — <a href="https://ghostshell.host">ghostshell.host</a> · 
+      Records are permanent · Amendments are appended
+    </p>
+  </footer>
+
+  <script>
+    (function() {
+      const form = document.getElementById('searchForm');
+      const input = document.getElementById('recordId');
+      const copyBtn = document.getElementById('copyBtn');
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = (input.value || '').trim();
+        if (id) {
+          window.location.href = '/r/' + encodeURIComponent(id);
+        }
+      });
+
+      copyBtn.addEventListener('click', () => {
+        const cmd = 'ghostshell GS-BC-A-26-H';
+        navigator.clipboard.writeText(cmd).then(() => {
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => copyBtn.textContent = 'Copy', 1500);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
