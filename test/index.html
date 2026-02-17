@@ -18,47 +18,25 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Nav */
-    nav {
-      position: sticky;
-      top: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 24px;
-      background: #fff;
-      border-bottom: 1px solid #eee;
-      z-index: 100;
-    }
-    .logo-link {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: #000;
-      font-weight: 600;
-      font-size: 18px;
-    }
-    .logo-mark {
-      width: 28px;
-      height: 28px;
-    }
-    .logo-mark img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-    .nav-menu {
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
+    /* Brand */
+    .brand {
+      display: inline-block;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #666;
+      border: 1px solid #ddd;
+      border-radius: 999px;
+      padding: 8px 14px;
+      margin-bottom: 32px;
+      background: #fafafa;
     }
 
     /* Hero */
     .hero {
-      padding: 80px 24px 48px;
+      padding: 48px 24px 48px;
       text-align: center;
-      max-width: 680px;
+      max-width: 860px;
       margin: 0 auto;
     }
     .hero-logo {
@@ -551,21 +529,9 @@
   </style>
 </head>
 <body>
-  <nav>
-    <a class="logo-link" href="/">
-      <div class="logo-mark">
-        <img src="/test/assets/ghostshell_logo.png" alt="GhostShell"/>
-      </div>
-      GhostShell
-    </a>
-    <svg class="nav-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <line x1="3" y1="6" x2="21" y2="6"/>
-      <line x1="3" y1="12" x2="21" y2="12"/>
-      <line x1="3" y1="18" x2="21" y2="18"/>
-    </svg>
-  </nav>
 
   <section class="hero">
+    <div class="brand">ghostshell.host • public registry</div>
     <h1>Birth Certificates for Agents</h1>
     <p class="tagline">Inception, without judgement, preserved.</p>
 
