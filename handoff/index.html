@@ -244,6 +244,67 @@
       margin-bottom: 8px;
     }
 
+    /* Email section */
+    .email-section {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .email-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+    #handoffEmail {
+      flex: 1;
+      background: #070709;
+      border: 1px solid var(--line2);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 10px 13px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    #handoffEmail:focus { border-color: var(--accent2); }
+    #handoffEmail::placeholder { color: var(--muted); opacity: 0.6; }
+    #sendEmailBtn {
+      padding: 10px 14px;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .email-hint {
+      margin-top: 6px;
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* Security warning */
+    .warn-block {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(248, 113, 113, 0.07);
+      border: 1px solid rgba(248, 113, 113, 0.22);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+    .warn-icon {
+      font-size: 15px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      opacity: 0.85;
+    }
+    .warn-text {
+      font-size: 12.5px;
+      color: rgba(248, 113, 113, 0.9);
+      line-height: 1.55;
+    }
+    .warn-text strong { color: var(--danger); }
+
     /* Help text */
     .help-block {
       padding: 16px 22px;
@@ -306,7 +367,7 @@
     <div class="card">
       <div class="card-header">
         <div class="card-title">Certificate Handoff</div>
-        <div class="card-subtitle">Load your purchase token, then register directly or hand off to your AI agent.</div>
+        <div class="card-subtitle">Load your purchase token to register the agent yourself, or hand the link off to your agent to self-register.</div>
       </div>
 
       <div class="status-line" id="statusLine">
@@ -315,6 +376,15 @@
       </div>
 
       <div class="card-body">
+        <div class="warn-block">
+          <div class="warn-icon">⚠</div>
+          <div class="warn-text">
+            <strong>Do not share this link publicly.</strong>
+            Whoever holds it can edit the certificate for <strong>24 hours after first submission</strong>.
+            Forward only to a trusted agent or person.
+          </div>
+        </div>
+
         <div class="token-label">Purchase Token</div>
         <input id="token" type="text" placeholder="GSTK-…" autocomplete="off" spellcheck="false"/>
 
@@ -323,10 +393,22 @@
           <a id="agentBtn" class="btn secondary" href="#">Give to agent (direct link)</a>
         </div>
 
+        <div class="email-section">
+          <div class="token-label">Forward to an email address (optional)</div>
+          <div class="email-row">
+            <input id="handoffEmail" type="email" placeholder="agent@example.com or your own address" autocomplete="off"/>
+            <button id="sendEmailBtn" class="btn secondary" type="button">Copy email draft ↗</button>
+          </div>
+          <p class="email-hint">
+            The email will include the registration link and the plain-text prompt below —
+            you can forward it directly to your agent, or paste it into a new conversation.
+          </p>
+        </div>
+
         <div class="copy-section">
-          <div class="copy-label">Agent copy-paste instructions</div>
-          <textarea id="agentCopy" readonly placeholder="Load a token to generate agent instructions…"></textarea>
-          <button id="copyBtn" class="btn copy-btn" type="button">Copy for AI agent ↗</button>
+          <div class="copy-label">Copy-paste prompt for your agent (plain text)</div>
+          <textarea id="agentCopy" readonly placeholder="Load a token to generate the agent prompt…"></textarea>
+          <button id="copyBtn" class="btn copy-btn" type="button">Copy prompt ↗</button>
         </div>
       </div>
 
@@ -336,10 +418,10 @@
           After first submission, 24 hours to make corrections.
         </p>
         <p class="help-text">
+          The recovery email collected at purchase may belong to a human or an agent —
+          either way, the registration link works the same.
           If <code style="font-family:ui-monospace,monospace;font-size:11px;color:var(--soft)">session_id</code>
-          is in the URL, your token loads automatically.
-          Otherwise paste the token from your confirmation email.
-          <strong>This link is a capability — share only with a trusted agent.</strong>
+          is in the URL, your token loads automatically. Otherwise paste the token from your confirmation email.
         </p>
       </div>
     </div>
