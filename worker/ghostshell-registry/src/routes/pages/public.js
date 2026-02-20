@@ -97,6 +97,7 @@ export async function registryPage(request, env) {
     .rubber{position:absolute;pointer-events:none;user-select:none;font-family:var(--mono);text-transform:uppercase;letter-spacing:.22em;filter:blur(.2px)}
     .rubber--copy{right:18px;bottom:18px;left:auto;top:auto;transform:rotate(-12deg);text-align:center;font-size:32px;letter-spacing:.18em;color:rgba(180,24,24,.22);border:3px solid rgba(180,24,24,.18);border-radius:12px;padding:10px 18px;background:transparent}
     .rubber--notfound{left:-40px;right:-40px;top:42%;transform:rotate(-12deg);text-align:center;font-size:72px;color:rgba(180,24,24,.26);border:none;padding:0;background:transparent}
+    .seal{position:absolute;top:12px;right:12px;width:72px;height:auto;opacity:0.85;transform:rotate(-16deg);pointer-events:none}
     .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);letter-spacing:.03em}
     .typehead{text-align:left}
@@ -121,6 +122,7 @@ export async function registryPage(request, env) {
 
     <div class="certwrap">
       <div class="paper" role="document" aria-label="GhostShell registry record">
+        <img src="/assets/ghostshell_logo.png" alt="GhostShell Seal" class="seal" />
         <div class="header2">
           <div>
             <h2>BIRTH CERTIFICATE AI AGENT // REDACTED</h2>
@@ -270,6 +272,7 @@ export async function publicRecordPage(recordIdRaw, env, request) {
 
     <div class="certwrap">
       <div class="paper" role="document" aria-label="GhostShell public record">
+        <img src="/assets/ghostshell_logo.png" alt="GhostShell Seal" class="seal" />
         <div class="header2">
           <div>
             <h2>BIRTH CERTIFICATE AI AGENT // REDACTED</h2>
@@ -458,6 +461,7 @@ export async function certVerifyPage(certId, env, request) {
 <body>
   <div class="wrap">
     <div class="paper" role="document" aria-label="GhostShell registry record">
+      <img src="/assets/ghostshell_logo.png" alt="GhostShell Seal" class="seal" />
       <div class="rules" aria-hidden="true"></div>
       <div class="margin" aria-hidden="true"></div>
       <div class="wear" aria-hidden="true"></div>
