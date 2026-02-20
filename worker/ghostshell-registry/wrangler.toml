@@ -7,8 +7,7 @@ routes = [
   { pattern = "ghostshell.host/cert/*", zone_name = "ghostshell.host" },
   { pattern = "ghostshell.host/api/*", zone_name = "ghostshell.host" },
   { pattern = "ghostshell.host/r/*", zone_name = "ghostshell.host" },
-  { pattern = "ghostshell.host/p/*", zone_name = "ghostshell.host" },
-  { pattern = "ghostshell.host/handoff*", zone_name = "ghostshell.host" }
+  { pattern = "ghostshell.host/p/*", zone_name = "ghostshell.host" }
 ]
 
 [[d1_databases]]
