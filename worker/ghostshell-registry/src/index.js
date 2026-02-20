@@ -52,7 +52,8 @@ export default {
     // ── Public record: /r/<id> → redirect to main page with ?cert=<id>
     const publicMatch = path.match(/^\/r\/([A-Za-z0-9_-]+)$/);
     if (publicMatch && method === "GET") {
-      return Response.redirect(`/?cert=${encodeURIComponent(publicMatch[1])}`, 302);
+      const origin = url.origin || 'https://ghostshell.host';
+      return Response.redirect(`${origin}/?cert=${encodeURIComponent(publicMatch[1])}`, 302);
     }
 
     // ── Private certificate: /p/<token> ───────────────────────────────────────
