@@ -93,7 +93,7 @@ export async function purchaseFirstCheckout(request, env) {
   const body = new URLSearchParams();
   body.set("mode", "payment");
   body.set("allow_promotion_codes", "true");
-  body.set("success_url", `${baseUrl}/api/cert/post-checkout?session_id={CHECKOUT_SESSION_ID}`);
+  body.set("success_url", `${baseUrl}/handoff/?session_id={CHECKOUT_SESSION_ID}`);
   body.set("cancel_url",  `${baseUrl}/issue/`);
   body.append("line_items[0][price]",    stripePriceId);
   body.append("line_items[0][quantity]", "1");

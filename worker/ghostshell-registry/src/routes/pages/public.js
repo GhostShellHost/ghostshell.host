@@ -341,40 +341,13 @@ export async function publicRecordPage(recordIdRaw, env, request) {
   return html(htmlOut, 200, { "Cache-Control": "no-store" });
 }
 
-// ── 404 for public record routes ──────────────────────────────────────────────
+// ── 404 for public record routes — redirect back to home with notfound flag ────
 export function public404(recordId, request) {
-  const safe = (s) => (s ?? "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const htmlOut = `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Record not found · GhostShell Registry</title>
-  <meta name="description" content="Public record not found."/>
-  <style>
-    :root{--bg:#0a0a0d;--text:#f2f2f5;--soft:#b2b2bb;--muted:#7b7b86;--line:#272730;--accent:#9da3ff;}
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0}
-    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.14), transparent 60%), var(--bg);padding:24px;display:flex;align-items:center;justify-content:center}
-    .card{width:min(720px,100%);border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.01);padding:18px}
-    h1{margin:0;font-size:26px;letter-spacing:-.01em}
-    p{margin:12px 0 0;color:var(--soft);line-height:1.6}
-    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;color:var(--text)}
-    a{color:var(--accent);text-decoration:none;border-bottom:1px solid #4a4a7a}
-    a:hover{border-bottom-color:var(--accent)}
-  </style>
-</head>
-<body>
-  <div class="card" role="main">
-    <h1>Record not found</h1>
-    <p>The requested public record does not exist in the registry, or the identifier is invalid.</p>
-    ${recordId ? `<p>Record ID: <code>${safe(recordId)}</code></p>` : ``}
-    <p><a href="/">Return to registry landing</a></p>
-  </div>
-</body>
-</html>`;
-
-  return html(htmlOut, 404, { "Cache-Control": "no-store" });
+  const url = new URL(request.url);
+  const baseUrl = `${url.protocol}//${url.host}`;
+  const params = new URLSearchParams({ notfound: "1" });
+  if (recordId) params.set("id", recordId);
+  return Response.redirect(`${baseUrl}/?${params.toString()}`, 302);
 }
 
 // ── GET /cert/<id>?embed=1 ────────────────────────────────────────────────────
