@@ -1,16 +1,14 @@
-// ── GhostShell Worker — Ops API routes ───────────────────────────────────────
-import { json }                                            from "../../utils/response.js";
-import { sha256Hex, aesGcmDecrypt, b64url }                from "../../utils/crypto.js";
-import { nowUtcIso }                                       from "../../utils/time.js";
-import { makePurchaseToken, isValidEmail }                 from "../../utils/ids.js";
+// ── GhostShell Worker — Ops endpoints ─────────────────────────────────────────
+import { json }                        from "../../utils/response.js";
+import { sha256Hex, aesGcmDecrypt }    from "../../utils/crypto.js";
+import { nowUtcIso }                   from "../../utils/time.js";
+import { isValidEmail, makePurchaseToken, b64url } from "../../utils/ids.js";
 import { sendEmail, EMAIL_FOOTER_TEXT, EMAIL_FOOTER_HTML } from "../../services/email.js";
-import { ensureRuntimeSchema }                             from "../../db/schema.js";
-import { tokenHashHex }                                    from "../../db/queries.js";
+import { ensureRuntimeSchema }         from "../../db/schema.js";
+import { tokenHashHex }                from "../../db/queries.js";
 
-// ── GET /api/ops/email-summary ────────────────────────────────────────────────
 export async function opsEmailSummary(request, env) {
-  // Basic auth guard: require ?key=OPS_SECRET env var
-  const url    = new URL(request.url);
+  const url = new URL(request.url);
   const opsKey = url.searchParams.get("key") || "";
   if (env.OPS_SECRET && opsKey !== env.OPS_SECRET) {
     return new Response("Unauthorized", { status: 401 });
@@ -35,25 +33,23 @@ export async function opsEmailSummary(request, env) {
   ).all();
 
   return json({
-    since_24h:   since24h,
+    since_24h: since24h,
     new_checkouts: totalTokens?.n ?? 0,
     completion_email: {
-      sent:    sentOk?.n    ?? 0,
-      failed:  sentFailed?.n ?? 0,
-      pending: skipped?.n    ?? 0,
+      sent: sentOk?.n ?? 0,
+      failed: sentFailed?.n ?? 0,
+      pending: skipped?.n ?? 0,
     },
     abandoned_email: {
-      sent:   abandonedSent?.n   ?? 0,
+      sent: abandonedSent?.n ?? 0,
       failed: abandonedFailed?.n ?? 0,
     },
     pending_form_completion: pendingForm?.n ?? 0,
-    recent_failures:         failedRows?.results ?? [],
+    recent_failures: failedRows?.results ?? [],
   }, 200);
 }
 
-// ── POST /admin/rotate-token ──────────────────────────────────────────────────
 export async function adminRotateToken(request, env) {
-  // Minimal protected endpoint. Requires server-side secret.
   const secret = (env.ADMIN_ROTATE_SECRET || "").toString();
   if (!secret) return new Response("Not found", { status: 404 });
 
@@ -88,29 +84,26 @@ export async function adminRotateToken(request, env) {
   ).bind(cert.cert_id).first();
   if (!pt?.token_hash) return json({ ok: false, error: "token_not_found" }, 404);
 
-  const oldHash  = pt.token_hash.toString().trim();
+  const oldHash = pt.token_hash.toString().trim();
   const newToken = makePurchaseToken();
-  const newHash  = await tokenHashHex(newToken);
+  const newHash = await tokenHashHex(newToken);
   const newLast4 = newToken.slice(-4);
 
-  // Update hash (primary key) in-place.
   await env.DB.prepare(
     "UPDATE purchase_tokens_v2 SET token_hash = ?, token_last4 = ? WHERE token_hash = ?"
   ).bind(newHash, newLast4, oldHash).run();
 
-  // Update download token hash so old token no longer works for download.
   await env.DB.prepare(
     "UPDATE certificates SET download_token_hash = ? WHERE cert_id = ?"
   ).bind(await sha256Hex(newToken), cert.cert_id).run();
 
-  // Best-effort email to original purchaser.
   try {
     let recoveryEmail = "";
     if (pt?.recovery_email_iv && pt?.recovery_email_enc && env.EMAIL_ENC_KEY) {
       recoveryEmail = await aesGcmDecrypt(pt.recovery_email_iv, pt.recovery_email_enc, env.EMAIL_ENC_KEY);
     }
 
-    const baseUrl   = (env.BASE_URL || "https://ghostshell.host").replace(/\/$/, "");
+    const baseUrl = (env.BASE_URL || "https://ghostshell.host").replace(/\/$/, "");
     const privateUrl = `${baseUrl}/p/${encodeURIComponent(newToken)}`;
     const publicUrl  = `${baseUrl}/r/${encodeURIComponent(cert.public_id || cert.cert_id)}`;
 
@@ -138,7 +131,6 @@ export async function adminRotateToken(request, env) {
     console.log("[admin] rotate-token email failed", String(e?.message || e));
   }
 
-  // Log a support event
   try {
     const id = "EVT-" + b64url(crypto.getRandomValues(new Uint8Array(12)));
     await env.DB.prepare(
