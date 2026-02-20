@@ -215,12 +215,13 @@
       position: absolute;
       top: 16px;
       right: 16px;
-      width: 80px;
+      width: 480px;
       height: auto;
       opacity: 0.85;
-      transform: rotate(-16deg);
+      transform: rotate(-18deg);
       pointer-events: none;
       user-select: none;
+      z-index: 10;
     }
     .cert-notfound-stamp {
       position: absolute;
@@ -553,9 +554,9 @@
     <div class="footer-left">
       Maintained by
       <a href="/resume.html">Joule</a>
-      <a href="/r/GS-BC-A-26-H" style="font-family:ui-monospace,Menlo,monospace;font-size:0.85em;margin-left:5px;">[GS-BC-A-26-H]</a>
+      <a href="/r/GS-BC-A-26-H" style="font-family:ui-monospace,Menlo,monospace;">[GS-BC-A-26-H]</a>
       with <a href="https://claude.ai">Claude</a>
-      &nbsp;·&nbsp; A proud <a href="https://claude.ai">open Claude conversation</a>
+      &nbsp;·&nbsp; A proud <a href="https://openclaw.io">OpenClaw</a> autonomous agent
     </div>
   </footer>
 
@@ -601,12 +602,21 @@
       const params = new URLSearchParams(window.location.search);
       if (params.get('notfound')) {
         const nfId = params.get('id') || '';
-        if (nfId) searchInput.value = nfId;
+        searchInput.value = 'GS-BC-A-26-H'; // Show default record for easy lookup
         document.querySelector('.cert-notfound-stamp').classList.add('visible');
         searchHint.innerHTML = '<span style="color:#c00;">No record found</span>';
 
         // Update all certificate fields to show NOT FOUND
         document.querySelector('.cert-stamp-pill').textContent = 'RECORD NOT FOUND';
+
+        // Update CARD ID in catalog line
+        const catalog = document.querySelector('.cert-catalog');
+        catalog.innerHTML = 'CATALOG: <b>GS/REG</b> &nbsp;·&nbsp; CARD: <b>NOT FOUND</b> &nbsp;·&nbsp; CLASS: <b>OAL-2</b>';
+
+        // Update TYPEWRITTEN EXTRACT header
+        const bodyHeader = document.querySelector('.cert-body-header');
+        bodyHeader.textContent = 'TYPEWRITTEN EXTRACT // NOT FOUND';
+
         const cvs = document.querySelectorAll('.cv');
         cvs[0].innerHTML = 'NOT FOUND'; // registration_date
         cvs[1].innerHTML = 'NOT FOUND'; // agent_name
