@@ -1,8 +1,8 @@
 // ── GhostShell Worker — Ops endpoints ─────────────────────────────────────────
 import { json }                        from "../../utils/response.js";
-import { sha256Hex, aesGcmDecrypt }    from "../../utils/crypto.js";
+import { sha256Hex, aesGcmDecrypt, b64url }    from "../../utils/crypto.js";
 import { nowUtcIso }                   from "../../utils/time.js";
-import { isValidEmail, makePurchaseToken, b64url } from "../../utils/ids.js";
+import { isValidEmail, makePurchaseToken } from "../../utils/ids.js";
 import { sendEmail, EMAIL_FOOTER_TEXT, EMAIL_FOOTER_HTML } from "../../services/email.js";
 import { ensureRuntimeSchema }         from "../../db/schema.js";
 import { tokenHashHex }                from "../../db/queries.js";
