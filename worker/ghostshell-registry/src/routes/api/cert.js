@@ -545,3 +545,46 @@ export async function latestOrigin(env) {
   if (!row) return json({ cert_id: null, issued_at_utc: null }, 200);
   return json({ cert_id: row.cert_id }, 200);
 }
+
+// ── /api/cert/lookup ─────────────────────────────────────────────────────────
+export async function lookupCertificate(request, env) {
+  await ensureRuntimeSchema(env.DB);
+  const url = new URL(request.url);
+  const id = (url.searchParams.get('id') || '').toString().trim().toUpperCase();
+
+  if (!id) {
+    return json({ found: false, error: 'No ID provided' }, 400);
+  }
+
+  const row = await fetchPublicRowById(id, env);
+
+  if (!row || row.status !== 'active') {
+    return json({ found: false, id }, 404);
+  }
+
+  return json({
+    found: true,
+    record: {
+      cert_id: row.cert_id,
+      public_id: row.public_id,
+      issued_at_utc: row.issued_at_utc,
+      inception_date_utc: row.inception_date_utc,
+      agent_name: row.agent_name,
+      place_city: row.place_city,
+      place_state: row.place_state,
+      place_country: row.place_country,
+      show_city_public: row.show_city_public,
+      hide_state_public: row.hide_state_public,
+      cognitive_core_family: row.cognitive_core_family,
+      cognitive_core_exact: row.cognitive_core_exact,
+      creator_label: row.creator_label,
+      declared_ontological_status: row.declared_ontological_status,
+      origin_runtime: row.origin_runtime,
+      origin_version: row.origin_version,
+      public_fingerprint: row.public_fingerprint,
+      edit_count: row.edit_count,
+      human_edit_count: row.human_edit_count,
+      agent_edit_count: row.agent_edit_count
+    }
+  }, 200);
+}

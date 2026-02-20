@@ -3,6 +3,7 @@ import {
   createCheckout, purchaseFirstCheckout, testCheckout,
   handoffToken, postCheckoutRedirect, getHandoff,
   tokenStatus, redeemPurchaseToken, latestOrigin,
+  lookupCertificate,
 } from "./routes/api/cert.js";
 
 import { stripeWebhook }                from "./routes/api/stripe_wh.js";
@@ -33,6 +34,7 @@ export default {
     if (path === "/api/cert/redeem-token"     && method === "POST") return redeemPurchaseToken(request, env);
     if (path === "/api/cert/token-status"     && method === "GET")  return tokenStatus(request, env);
     if (path === "/api/cert/latest-origin"    && method === "GET")  return latestOrigin(env);
+    if (path === "/api/cert/lookup"           && method === "GET")  return lookupCertificate(request, env);
 
     // ── API: Stripe webhook ────────────────────────────────────────────────────
     if (path === "/api/stripe/webhook"        && method === "POST") return stripeWebhook(request, env);
@@ -47,9 +49,11 @@ export default {
     // ── Public registry page ───────────────────────────────────────────────────
     if ((path === "/registry" || path === "/registry/") && method === "GET") return registryPage(request, env);
 
-    // ── Public record: /r/<id> ────────────────────────────────────────────────
+    // ── Public record: /r/<id> → redirect to main page with ?cert=<id>
     const publicMatch = path.match(/^\/r\/([A-Za-z0-9_-]+)$/);
-    if (publicMatch && method === "GET") return publicRecordPage(publicMatch[1], env, request);
+    if (publicMatch && method === "GET") {
+      return Response.redirect(`/?cert=${encodeURIComponent(publicMatch[1])}`, 302);
+    }
 
     // ── Private certificate: /p/<token> ───────────────────────────────────────
     const privateDlMatch = path.match(/^\/p\/(GSTK-[A-Za-z0-9_-]+)\/download$/i);

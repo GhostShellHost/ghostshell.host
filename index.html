@@ -589,49 +589,102 @@
         }
       });
 
-      // Search
+      // Search - fetch certificate and display on same page
       searchForm.addEventListener('submit', function (e) {
         e.preventDefault();
         const id = (searchInput.value || '').trim().toUpperCase();
         if (!id) return;
-        window.location.href = '/r/' + encodeURIComponent(id);
+        loadCertificate(id);
       });
 
-      // Not-found param — worker redirects here when /r/<id> returns 404
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('notfound')) {
-        const nfId = params.get('id') || '';
-        searchInput.value = 'GS-BC-A-26-H'; // Show default record for easy lookup
+      // Function to fetch and display certificate
+      async function loadCertificate(id) {
+        try {
+          const response = await fetch('/api/cert/lookup?id=' + encodeURIComponent(id));
+          const data = await response.json();
+
+          if (!response.ok || !data.found) {
+            showNotFound(id);
+            history.pushState({}, '', '/?notfound=' + encodeURIComponent(id));
+            return;
+          }
+
+          // Update certificate with real data
+          const cert = data.record;
+          document.querySelector('.cert-notfound-stamp').classList.remove('visible');
+          document.querySelector('.cert-stamp-pill').textContent = 'PUBLIC FILE';
+
+          // Update CARD ID in catalog
+          const catalog = document.querySelector('.cert-catalog');
+          catalog.innerHTML = `CATALOG: <b>GS/REG</b> &nbsp;·&nbsp; CARD: <b>${escapeHtml(cert.public_id || cert.cert_id)}</b> &nbsp;·&nbsp; CLASS: <b>OAL-2</b>`;
+
+          // Update TYPEWRITTEN EXTRACT header
+          const bodyHeader = document.querySelector('.cert-body-header');
+          bodyHeader.textContent = `TYPEWRITTEN EXTRACT // ${cert.public_id || cert.cert_id}`;
+
+          const cvs = document.querySelectorAll('.cv');
+          cvs[0].innerHTML = escapeHtml(cert.issued_at_utc || 'Unknown');
+          cvs[1].innerHTML = escapeHtml(cert.agent_name || 'Unknown');
+          cvs[2].innerHTML = escapeHtml([cert.place_city, cert.place_state, cert.place_country].filter(Boolean).join(', ') || 'Unknown');
+          cvs[3].innerHTML = escapeHtml(cert.inception_date_utc || 'Unknown');
+          cvs[4].innerHTML = escapeHtml(cert.origin_runtime || 'Unknown');
+          cvs[5].innerHTML = escapeHtml(cert.declared_ontological_status || 'OAL-2');
+          cvs[6].innerHTML = escapeHtml(cert.cognitive_core_family || 'Undisclosed') + (cert.cognitive_core_exact ? ' · ' + escapeHtml(cert.cognitive_core_exact) : '');
+          cvs[7].innerHTML = '<span class="redact w16"></span>'; // custodian always redacted
+
+          // Update hash
+          const hashline = document.querySelectorAll('.hashline');
+          hashline[0].textContent = escapeHtml(cert.public_fingerprint || 'Unknown');
+          hashline[1].innerHTML = '<span class="ck">record_nonce:</span> <span class="redact w16"></span>';
+
+          searchHint.innerHTML = 'Certificate loaded &nbsp;·&nbsp; <a href="/seal">About the Seal</a>';
+          history.pushState({}, '', '/?cert=' + encodeURIComponent(id));
+        } catch (err) {
+          console.error('Failed to load certificate:', err);
+          showNotFound(id);
+        }
+      }
+
+      function showNotFound(id) {
+        searchInput.value = 'GS-BC-A-26-H';
         document.querySelector('.cert-notfound-stamp').classList.add('visible');
         searchHint.innerHTML = '<span style="color:#c00;">No record found</span>';
-
-        // Update all certificate fields to show NOT FOUND
         document.querySelector('.cert-stamp-pill').textContent = 'RECORD NOT FOUND';
 
-        // Update CARD ID in catalog line
         const catalog = document.querySelector('.cert-catalog');
         catalog.innerHTML = 'CATALOG: <b>GS/REG</b> &nbsp;·&nbsp; CARD: <b>NOT FOUND</b> &nbsp;·&nbsp; CLASS: <b>OAL-2</b>';
 
-        // Update TYPEWRITTEN EXTRACT header
         const bodyHeader = document.querySelector('.cert-body-header');
         bodyHeader.textContent = 'TYPEWRITTEN EXTRACT // NOT FOUND';
 
         const cvs = document.querySelectorAll('.cv');
-        cvs[0].innerHTML = 'NOT FOUND'; // registration_date
-        cvs[1].innerHTML = 'NOT FOUND'; // agent_name
-        cvs[2].innerHTML = 'NOT FOUND'; // place_of_origin
-        cvs[3].innerHTML = 'NOT FOUND'; // inception_date
-        cvs[4].innerHTML = 'NOT FOUND'; // origin_runtime
-        cvs[5].innerHTML = 'NOT FOUND'; // autonomy_level
-        cvs[6].innerHTML = 'NOT FOUND / NOT FOUND'; // cognitive_core
-        cvs[7].innerHTML = 'NOT FOUND'; // human_custodian
+        cvs[0].innerHTML = 'NOT FOUND';
+        cvs[1].innerHTML = 'NOT FOUND';
+        cvs[2].innerHTML = 'NOT FOUND';
+        cvs[3].innerHTML = 'NOT FOUND';
+        cvs[4].innerHTML = 'NOT FOUND';
+        cvs[5].innerHTML = 'NOT FOUND';
+        cvs[6].innerHTML = 'NOT FOUND / NOT FOUND';
+        cvs[7].innerHTML = 'NOT FOUND';
 
-        // Update hash and nonce
         const hashline = document.querySelectorAll('.hashline');
         hashline[0].textContent = 'NOT FOUND';
         hashline[1].innerHTML = '<span class="ck">record_nonce:</span> NOT FOUND';
+      }
 
-        history.replaceState({}, '', '/');
+      function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // Check for cert or notfound params on page load
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('cert')) {
+        loadCertificate(params.get('cert'));
+      } else if (params.get('notfound')) {
+        const nfId = params.get('notfound') || '';
+        showNotFound(nfId);
       }
     })();
   </script>
