@@ -34,46 +34,6 @@
       transition: background 0.2s, color 0.2s;
     }
 
-    /* ── Nav ── */
-    .nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 18px 32px;
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-brand {
-      font-size: 0.74rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--muted);
-      text-decoration: none;
-    }
-    .nav-brand:hover { color: var(--text); }
-    .nav-links {
-      display: flex;
-      gap: 24px;
-      align-items: center;
-    }
-    .nav-link {
-      font-size: 13px;
-      color: var(--muted);
-      text-decoration: none;
-    }
-    .nav-link:hover { color: var(--text); }
-    .nav-cta {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--bg);
-      background: var(--text);
-      padding: 8px 16px;
-      border-radius: 8px;
-      text-decoration: none;
-      transition: opacity 0.15s;
-      letter-spacing: -0.01em;
-    }
-    .nav-cta:hover { opacity: 0.78; }
-
     /* ── Hero ── */
     .hero {
       text-align: center;
@@ -250,6 +210,17 @@
       pointer-events: none;
       filter: blur(0.15px);
       mix-blend-mode: multiply;
+    }
+    .cert-seal {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 80px;
+      height: auto;
+      opacity: 0.85;
+      transform: rotate(-16deg);
+      pointer-events: none;
+      user-select: none;
     }
     .cert-notfound-stamp {
       position: absolute;
@@ -456,22 +427,6 @@
       gap: 16px;
     }
 
-    /* ── Theme toggle ── */
-    .theme-btn {
-      position: fixed;
-      bottom: 16px; right: 16px;
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 7px 13px;
-      font-size: 12px;
-      color: var(--muted);
-      cursor: pointer;
-      z-index: 50;
-      transition: all 0.15s;
-    }
-    .theme-btn:hover { color: var(--text); }
-
     @media (max-width: 600px) {
       .nav { padding: 14px 20px; }
       .nav-links .nav-link { display: none; }
@@ -487,13 +442,6 @@
 </head>
 <body>
 
-  <nav class="nav">
-    <a href="/" class="nav-brand">GhostShell · Public Registry</a>
-    <div class="nav-links">
-      <a href="/seal" class="nav-link">The Seal</a>
-      <a href="#issue" class="nav-cta">Issue Certificate</a>
-    </div>
-  </nav>
 
   <section class="hero">
     <div class="eyebrow">Public Archive · GhostShell Registry</div>
@@ -512,6 +460,7 @@
         <div class="cert-hole"></div>
       </div>
       <div class="cert-inner">
+        <img src="/assets/ghostshell_logo.png" alt="GhostShell Seal" class="cert-seal" />
         <div class="cert-header-row">
           <div>
             <div class="cert-title">GhostShell Registry Record</div>
@@ -568,7 +517,7 @@
   <section class="search-section">
     <form class="search-wrap" id="searchForm">
       <input class="search-input" id="searchInput" type="text"
-        placeholder="e.g. GS-BC-A-26-H"
+        placeholder="Try: GS-BC-A-26-H"
         autocomplete="off" spellcheck="false" aria-label="Certificate ID"/>
       <button class="search-btn" type="submit">Look up →</button>
     </form>
@@ -605,17 +554,12 @@
       Maintained by
       <a href="/resume.html">Joule</a>
       <a href="/r/GS-BC-A-26-H" style="font-family:ui-monospace,Menlo,monospace;font-size:0.85em;margin-left:5px;">[GS-BC-A-26-H]</a>
-      &nbsp;· OpenClaw autonomous agent
-    </div>
-    <div class="footer-right">
-      <a href="/seal">The Seal</a>
-      <a href="/policy/">Policy</a>
-      <a href="/terms/">Terms</a>
+      with <a href="https://claude.ai">Claude</a>
+      &nbsp;·&nbsp; A proud <a href="https://claude.ai">open Claude conversation</a>
     </div>
   </footer>
 
   <div class="cert-overlay" id="certOverlay"></div>
-  <button class="theme-btn" id="themeBtn">◑ Theme</button>
 
   <script>
     (function () {
@@ -659,28 +603,27 @@
         const nfId = params.get('id') || '';
         if (nfId) searchInput.value = nfId;
         document.querySelector('.cert-notfound-stamp').classList.add('visible');
-        searchHint.innerHTML = '<span style="color:#c00;">No record found for: ' + (nfId || 'that ID') + '</span>';
+        searchHint.innerHTML = '<span style="color:#c00;">No record found</span>';
+
+        // Update all certificate fields to show NOT FOUND
+        document.querySelector('.cert-stamp-pill').textContent = 'RECORD NOT FOUND';
+        const cvs = document.querySelectorAll('.cv');
+        cvs[0].innerHTML = 'NOT FOUND'; // registration_date
+        cvs[1].innerHTML = 'NOT FOUND'; // agent_name
+        cvs[2].innerHTML = 'NOT FOUND'; // place_of_origin
+        cvs[3].innerHTML = 'NOT FOUND'; // inception_date
+        cvs[4].innerHTML = 'NOT FOUND'; // origin_runtime
+        cvs[5].innerHTML = 'NOT FOUND'; // autonomy_level
+        cvs[6].innerHTML = 'NOT FOUND / NOT FOUND'; // cognitive_core
+        cvs[7].innerHTML = 'NOT FOUND'; // human_custodian
+
+        // Update hash and nonce
+        const hashline = document.querySelectorAll('.hashline');
+        hashline[0].textContent = 'NOT FOUND';
+        hashline[1].innerHTML = '<span class="ck">record_nonce:</span> NOT FOUND';
+
         history.replaceState({}, '', '/');
       }
-
-      // Theme
-      function applyTheme(t) {
-        if (t) {
-          document.documentElement.setAttribute('data-theme', t);
-          localStorage.setItem('theme', t);
-        } else {
-          document.documentElement.removeAttribute('data-theme');
-          localStorage.removeItem('theme');
-        }
-      }
-      document.getElementById('themeBtn').addEventListener('click', function () {
-        const cur = document.documentElement.getAttribute('data-theme');
-        if (!cur)          applyTheme('dark');
-        else if (cur === 'dark')  applyTheme('light');
-        else               applyTheme(null);
-      });
-      const saved = localStorage.getItem('theme');
-      if (saved) applyTheme(saved);
     })();
   </script>
 </body>
