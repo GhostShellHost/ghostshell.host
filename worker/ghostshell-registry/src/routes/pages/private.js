@@ -130,8 +130,6 @@ export async function privateCertificatePage(token, env, request) {
 
   const lockAgentEdits = Number(cert.lock_agent_edits || 0) === 1;
 
-  const safe = (s) => (s ?? "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
   const htmlOut = `<!doctype html>
 <html lang="en">
 <head>
