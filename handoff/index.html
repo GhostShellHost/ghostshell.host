@@ -1,111 +1,359 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Handoff</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>GhostShell — Handoff</title>
+  <meta name="robots" content="noindex,nofollow,noarchive"/>
   <style>
     :root {
-      --bg: #0b0b0d;
-      --panel: #141418;
-      --line: #222;
-      --text: #e8e8e8;
-      --muted: #90909a;
+      --bg:     #09090c;
+      --panel:  #111117;
+      --panel2: #0f0f14;
+      --line:   #1e1e26;
+      --line2:  #2a2a36;
+      --text:   #e4e2f0;
+      --soft:   #a8a6be;
+      --muted:  #6a6882;
       --accent: #8b8dff;
+      --accent2:#6466d6;
+      --success:#4ade80;
+      --danger: #f87171;
     }
-    * { box-sizing: border-box; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100vh; }
     body {
-      margin: 0;
-      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Subtle radial top glow */
+    body::before {
+      content: "";
+      position: fixed;
+      top: -120px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(139,141,255,0.08), transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Nav ── */
+    .nav {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-brand {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+    }
+    .nav-brand:hover { color: var(--soft); }
+    .nav-badge {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 10px;
+      color: var(--accent);
+      background: rgba(139,141,255,0.1);
+      border: 1px solid rgba(139,141,255,0.2);
+      padding: 4px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Main content ── */
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      padding: 20px;
+      padding: 32px 20px;
     }
-    main {
+
+    .card {
       width: 100%;
-      max-width: 560px;
+      max-width: 520px;
       background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 24px;
+      border: 1px solid var(--line2);
+      border-radius: 16px;
+      overflow: hidden;
     }
-    h1 {
-      margin: 0 0 12px;
-      font-size: 1.5rem;
+
+    /* Card header */
+    .card-header {
+      padding: 20px 22px 18px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel2);
     }
-    #status {
-      margin-bottom: 14px;
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .card-subtitle {
+      font-size: 12.5px;
       color: var(--muted);
-      font-size: 0.95rem;
-      min-height: 1.4em;
+      line-height: 1.5;
+    }
+
+    /* Status line */
+    .status-line {
+      padding: 12px 22px;
+      font-size: 13px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(139,141,255,0.02);
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .status-dot.ok     { background: var(--success); }
+    .status-dot.error  { background: var(--danger); }
+    .status-dot.active { background: var(--accent); }
+
+    /* Card body */
+    .card-body { padding: 20px 22px; }
+
+    /* Token input */
+    .token-label {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
     }
     #token {
       width: 100%;
+      background: #070709;
+      border: 1px solid var(--line2);
       border-radius: 10px;
-      border: 1px solid #2c2c35;
-      background: #0f0f12;
       color: var(--text);
-      padding: 11px 12px;
-      font-size: 0.95rem;
-      margin-bottom: 14px;
+      padding: 11px 14px;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 16px;
     }
-    .actions {
+    #token:focus { border-color: var(--accent2); }
+    #token::placeholder { color: var(--muted); opacity: 0.6; }
+
+    /* Action buttons */
+    .actions-grid {
       display: grid;
-      gap: 10px;
-      margin-bottom: 14px;
+      gap: 8px;
+      margin-bottom: 16px;
     }
     .btn {
-      display: inline-block;
-      text-align: center;
-      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
       border-radius: 10px;
-      padding: 11px 12px;
-      font-weight: 600;
-      border: 1px solid #2f2f3a;
+      border: 1px solid var(--line2);
+      background: rgba(255,255,255,0.02);
       color: var(--text);
-      background: #1b1b22;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover {
+      border-color: var(--line2);
+      background: rgba(255,255,255,0.04);
     }
     .btn.primary {
       background: var(--accent);
-      color: #0b0b0d;
       border-color: var(--accent);
+      color: #09090c;
     }
-    .help {
-      margin: 0;
+    .btn.primary:hover {
+      background: #9b9dff;
+      border-color: #9b9dff;
+    }
+    .btn.secondary {
+      border-color: var(--line2);
+      color: var(--soft);
+    }
+    .btn.secondary:hover {
+      border-color: rgba(139,141,255,0.3);
+      color: var(--accent);
+    }
+    .btn.copy-btn {
       color: var(--muted);
-      font-size: 0.85rem;
-      line-height: 1.4;
+      font-size: 13px;
+    }
+    .btn.copy-btn:hover {
+      color: var(--accent);
+      border-color: rgba(139,141,255,0.25);
+    }
+
+    /* Agent copy box */
+    .copy-section {
+      margin-top: 8px;
+    }
+    .copy-label {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    #agentCopy {
+      width: 100%;
+      min-height: 130px;
+      background: #070709;
+      border: 1px solid var(--line2);
+      border-radius: 10px;
+      color: var(--soft);
+      padding: 12px 14px;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      margin-bottom: 8px;
+    }
+
+    /* Help text */
+    .help-block {
+      padding: 16px 22px;
+      border-top: 1px solid var(--line);
+      background: rgba(0,0,0,0.15);
+    }
+    .help-text {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .help-text + .help-text { margin-top: 6px; }
+    .help-text strong { color: var(--soft); }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      padding: 16px 28px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .footer-note {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .footer-note a { color: inherit; text-decoration: none; }
+    .footer-note a:hover { color: var(--soft); }
+    .version-tag {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 10.5px;
+      color: var(--accent);
+      background: rgba(139,141,255,0.08);
+      border: 1px solid rgba(139,141,255,0.16);
+      padding: 3px 8px;
+      border-radius: 999px;
+      letter-spacing: 0.05em;
+    }
+
+    @media (max-width: 560px) {
+      .nav { padding: 12px 16px; }
+      main { padding: 20px 12px; }
+      .card { border-radius: 12px; }
+      footer { padding: 14px 16px; }
     }
   </style>
 </head>
 <body>
+
+  <nav class="nav">
+    <a href="/" class="nav-brand">GhostShell · Registry</a>
+    <span class="nav-badge">Agent Handoff</span>
+  </nav>
+
   <main>
-    <h1>Handoff</h1>
-    <div id="status"></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Certificate Handoff</div>
+        <div class="card-subtitle">Load your purchase token, then register directly or hand off to your AI agent.</div>
+      </div>
 
-    <input id="token" placeholder="gs_..." />
+      <div class="status-line" id="statusLine">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Initialising…</span>
+      </div>
 
-    <div class="actions">
-      <a id="humanBtn" class="btn primary" href="#">Register as human</a>
-      <a id="agentBtn" class="btn" href="#">Give to agent</a>
+      <div class="card-body">
+        <div class="token-label">Purchase Token</div>
+        <input id="token" type="text" placeholder="GSTK-…" autocomplete="off" spellcheck="false"/>
+
+        <div class="actions-grid">
+          <a id="humanBtn" class="btn primary" href="#">Register as human</a>
+          <a id="agentBtn" class="btn secondary" href="#">Give to agent (direct link)</a>
+        </div>
+
+        <div class="copy-section">
+          <div class="copy-label">Agent copy-paste instructions</div>
+          <textarea id="agentCopy" readonly placeholder="Load a token to generate agent instructions…"></textarea>
+          <button id="copyBtn" class="btn copy-btn" type="button">Copy for AI agent ↗</button>
+        </div>
+      </div>
+
+      <div class="help-block">
+        <p class="help-text">
+          <strong>Timing:</strong> 7 days from purchase to submit.
+          After first submission, 24 hours to make corrections.
+        </p>
+        <p class="help-text">
+          If <code style="font-family:ui-monospace,monospace;font-size:11px;color:var(--soft)">session_id</code>
+          is in the URL, your token loads automatically.
+          Otherwise paste the token from your confirmation email.
+          <strong>This link is a capability — share only with a trusted agent.</strong>
+        </p>
+      </div>
     </div>
-
-    <div class="actions" style="margin-top:6px">
-      <button id="copyBtn" class="btn" type="button">Copy for your AI agent</button>
-    </div>
-
-    <textarea id="agentCopy" readonly style="width:100%;min-height:140px;border-radius:10px;border:1px solid #2c2c35;background:#0f0f12;color:var(--text);padding:11px 12px;font-size:0.9rem;margin-top:10px;white-space:pre-wrap"></textarea>
-
-    <p class="help">Timing: you have up to 7 days from purchase to submit. After your first submission, you have 24 hours to make corrections.</p>
-    <p class="help">If session_id is present, token should load automatically. If not, paste token from email. This token link is a capability — share only with an AI agent you trust.</p>
   </main>
 
-  <script src="./handoff.js"></script>
+  <footer>
+    <div class="footer-note">
+      Maintained by
+      <a href="/resume.html">Joule</a>
+      <a href="/r/GS-BC-A-26-H" style="font-family:ui-monospace,monospace;margin-left:4px;">[GS-BC-A-26-H]</a>
+    </div>
+    <span class="version-tag">v0.3</span>
+  </footer>
 
-<div id="gs-version" style="position:fixed;bottom:8px;right:8px;background:#0b0b0d;border:1px solid #2b2b33;color:#8b8dff;font-size:11px;padding:3px 7px;border-radius:999px;z-index:9999;opacity:.85;font-family:ui-monospace,monospace;pointer-events:none;">v0.2</div>
+  <script src="./handoff.js"></script>
 </body>
 </html>
