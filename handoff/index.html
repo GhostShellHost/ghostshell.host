@@ -7,18 +7,18 @@
   <meta name="robots" content="noindex,nofollow,noarchive"/>
   <style>
     :root {
-      --bg:     #09090c;
-      --panel:  #111117;
-      --panel2: #0f0f14;
-      --line:   #1e1e26;
-      --line2:  #2a2a36;
-      --text:   #e4e2f0;
-      --soft:   #a8a6be;
-      --muted:  #6a6882;
-      --accent: #8b8dff;
-      --accent2:#6466d6;
-      --success:#4ade80;
-      --danger: #f87171;
+      --bg:     #fff;
+      --panel:  #f9f9f9;
+      --panel2: #f5f5f5;
+      --line:   #e0e0e0;
+      --line2:  #d0d0d0;
+      --text:   #0a0a0a;
+      --soft:   #444;
+      --muted:  #666;
+      --accent: #4a4aff;
+      --accent2:#3838cc;
+      --success:#22c55e;
+      --danger: #ef4444;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,17 +32,7 @@
       flex-direction: column;
     }
 
-    /* Subtle radial top glow */
-    body::before {
-      content: "";
-      position: fixed;
-      top: -120px; left: 50%;
-      transform: translateX(-50%);
-      width: 600px; height: 300px;
-      background: radial-gradient(ellipse, rgba(139,141,255,0.08), transparent 70%);
-      pointer-events: none;
-      z-index: 0;
-    }
+    /* Removed background glow for clean white theme */
 
     /* ── Nav ── */
     .nav {

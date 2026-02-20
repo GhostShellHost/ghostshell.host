@@ -68,10 +68,10 @@ export async function registryPage(request, env) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GhostShell Registry — Public Registry</title>
   <style>
-    :root{--bg:#0a0a0d;--text:#f2f2f5;--soft:#b2b2bb;--muted:#7b7b86;--line:#272730;--accent:#9da3ff;}
+    :root{--bg:#fff;--text:#0a0a0a;--soft:#444;--muted:#666;--line:#e0e0e0;--accent:#4a4aff;}
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
-    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.16), transparent 60%), var(--bg);padding:24px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: var(--bg);padding:24px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
     main{width:min(760px,100%);text-align:center;margin:0 auto;padding-top:min(10vh,84px)}
     .brand{display:inline-block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);border:1px solid var(--line);border-radius:999px;padding:6px 12px;margin-bottom:16px;background:rgba(255,255,255,.01);}
     h1{margin:0;font-size:clamp(34px,6vw,58px);line-height:1.05;letter-spacing:-.02em;font-weight:740}
@@ -79,7 +79,7 @@ export async function registryPage(request, env) {
     form{margin:26px auto 0;max-width:560px;display:grid;gap:10px}
     input{width:100%;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);padding:12px 13px;font:inherit;text-align:center;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;}
     input::placeholder{color:var(--muted)}
-    button{justify-self:center;margin-top:6px;border-radius:999px;border:1px solid var(--accent);background:var(--accent);color:#0a0a0d;padding:10px 20px;font:inherit;font-weight:620;cursor:pointer;}
+    button{justify-self:center;margin-top:6px;border-radius:999px;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:10px 20px;font:inherit;font-weight:620;cursor:pointer;}
     .small{margin:20px auto 0;max-width:64ch;color:var(--muted);font-size:.9rem;text-align:center;border-top:1px solid var(--line);padding-top:14px;}
     a{color:var(--accent);text-decoration:none;border-bottom:1px solid #4a4a7a}
     a:hover{border-bottom-color:var(--accent)}
@@ -89,7 +89,7 @@ export async function registryPage(request, env) {
   <style>
     :root{--paper:#fbf7ea;--paper2:#f6f0dd;--ink:#111827;--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
     .certwrap{max-width:920px;margin:18px auto 0}
-    .paper{color:var(--ink);background:linear-gradient(180deg,var(--paper),var(--paper2));box-shadow:0 26px 80px rgba(0,0,0,.55);border-radius:14px;padding:18px 18px 16px;position:relative;overflow:hidden;}
+    .paper{color:var(--ink);background:linear-gradient(180deg,var(--paper),var(--paper2));box-shadow:0 2px 8px rgba(0,0,0,.1);border-radius:14px;padding:18px 18px 16px;position:relative;overflow:hidden;}
     .header2{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;position:relative}
     .paper h2{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
     .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
@@ -224,16 +224,16 @@ export async function publicRecordPage(recordIdRaw, env, request) {
   <meta name="twitter:card" content="summary_large_image" />
 
   <style>
-    :root{--bg:#0a0a0d;--text:#f2f2f5;--soft:#b2b2bb;--muted:#7b7b86;--line:#272730;--accent:#9da3ff;--paper:#fbf7ea;--paper2:#f6f0dd;--ink:#111827;--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    :root{--bg:#fff;--text:#0a0a0a;--soft:#444;--muted:#666;--line:#e0e0e0;--accent:#4a4aff;--paper:#fbf7ea;--paper2:#f6f0dd;--ink:#111827;--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
-    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.16), transparent 60%), var(--bg);padding:24px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: var(--bg);padding:24px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
     main{width:min(860px,100%);margin:0 auto;padding-top:min(8vh,64px)}
     .brand{display:inline-block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);border:1px solid var(--line);border-radius:999px;padding:6px 12px;margin-bottom:18px;background:rgba(255,255,255,.01);}
     h1{margin:0;font-size:clamp(30px,5.6vw,52px);line-height:1.06;letter-spacing:-.02em;font-weight:760}
 
     .certwrap{margin-top:18px}
-    .paper{color:var(--ink);background:linear-gradient(180deg,var(--paper),var(--paper2));box-shadow:0 26px 80px rgba(0,0,0,.55);border-radius:14px;padding:18px 18px 16px;position:relative;overflow:hidden;}
+    .paper{color:var(--ink);background:linear-gradient(180deg,var(--paper),var(--paper2));box-shadow:0 2px 8px rgba(0,0,0,.1);border-radius:14px;padding:18px 18px 16px;position:relative;overflow:hidden;}
     .header2{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;position:relative}
     .paper h2{margin:0;font-size:16px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
     .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}

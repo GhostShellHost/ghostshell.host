@@ -15,10 +15,10 @@ export function private404() {
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <title>Not found · GhostShell</title>
   <style>
-    :root{--bg:#0a0a0d;--text:#f2f2f5;--soft:#b2b2bb;--muted:#7b7b86;--line:#272730;--accent:#9da3ff;}
+    :root{--bg:#fff;--text:#0a0a0a;--soft:#444;--muted:#666;--line:#e0e0e0;--accent:#4a4aff;}
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
-    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.14), transparent 60%), var(--bg);padding:24px;display:flex;align-items:center;justify-content:center}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: var(--bg);padding:24px;display:flex;align-items:center;justify-content:center}
     .card{width:min(720px,100%);border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.01);padding:18px}
     h1{margin:0;font-size:26px;letter-spacing:-.01em}
     p{margin:12px 0 0;color:var(--soft);line-height:1.6}
@@ -62,10 +62,10 @@ export async function privateCertificatePage(token, env, request) {
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <title>Private certificate · GhostShell</title>
   <style>
-    :root{--bg:#0a0a0d;--text:#f2f2f5;--soft:#b2b2bb;--muted:#7b7b86;--line:#272730;--accent:#9da3ff;}
+    :root{--bg:#fff;--text:#0a0a0a;--soft:#444;--muted:#666;--line:#e0e0e0;--accent:#4a4aff;}
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
-    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.14), transparent 60%), var(--bg);padding:24px}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: var(--bg);padding:24px}
     main{width:min(860px,100%);margin:0 auto;padding-top:min(8vh,64px)}
     .banner{border:1px solid rgba(255,120,120,.35);background:rgba(255,60,60,.06);border-radius:14px;padding:12px 14px;color:var(--soft);line-height:1.5}
     .btn{display:inline-flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);padding:12px 12px;font-size:.95rem;font-weight:650;cursor:pointer;text-decoration:none;transition:.15s ease;white-space:nowrap}
@@ -141,7 +141,7 @@ export async function privateCertificatePage(token, env, request) {
     :root{--bg:#0a0a0d;--text:#f2f2f5;--soft:#b2b2bb;--muted:#7b7b86;--line:#272730;--accent:#9da3ff;--paper:#fbf7ea;--paper2:#f6f0dd;--ink:#111827;--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
-    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: radial-gradient(900px 520px at 50% -120px, rgba(157,163,255,.14), transparent 60%), var(--bg);padding:24px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+    body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background: var(--bg);padding:24px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
     main{width:min(920px,100%);margin:0 auto;padding-top:min(6vh,48px)}
     .banner{border:1px solid rgba(255,120,120,.35);background:rgba(255,60,60,.06);border-radius:14px;padding:12px 14px;color:var(--soft);line-height:1.5}
     .actions{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -377,12 +377,12 @@ export async function certDownloadPrintable(certId, token, env) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${safe(row.public_id || row.cert_id)} • GhostShell Registry</title>
   <style>
-    :root{--desk:#0b0c10;--paper:#fbf7ea;--paper2:#f6f0dd;--ink:#111827;--line:rgba(17,24,39,.18);--shadow:0 26px 80px rgba(0,0,0,.55);--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    :root{--desk:#fff;--paper:#fbf7ea;--paper2:#f6f0dd;--ink:#111827;--line:rgba(17,24,39,.18);--shadow:0 2px 8px rgba(0,0,0,.1);--mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
     *{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(900px 600px at 20% 0%, rgba(255,255,255,.05), transparent 55%),radial-gradient(900px 600px at 80% 20%, rgba(255,255,255,.03), transparent 60%),var(--desk);color:#e9edf1;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:18px;}
+    body{margin:0;background:var(--desk);color:#0a0a0a;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:18px;}
     .wrap{max-width:920px;margin:0 auto}
     .toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin:0 auto 14px;max-width:920px}
-    .tbtn{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(255,255,255,.06);font-size:13px;text-decoration:none;color:#e9edf1}
+    .tbtn{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid #e0e0e0;border-radius:999px;background:#f5f5f5;font-size:13px;text-decoration:none;color:#0a0a0a}
     .tbtn:hover{background:rgba(255,255,255,.10)}
     #certWrap{display:block}
     .paper{color:var(--ink);background:linear-gradient(180deg,var(--paper),var(--paper2));border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow);border-radius:14px;padding:18px 18px 16px;position:relative;overflow:hidden;transform:rotate(-.12deg);}
