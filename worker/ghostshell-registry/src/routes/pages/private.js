@@ -399,7 +399,7 @@ export async function certDownloadPrintable(certId, token, env) {
     .catalog{margin:6px 0 0;display:flex;gap:10px;flex-wrap:nowrap;align-items:center;font-family:var(--mono);font-size:11px;color:rgba(17,24,39,.62);letter-spacing:.06em;white-space:nowrap}
     .stamp{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(17,24,39,.55);border:1px solid rgba(17,24,39,.22);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.5);white-space:nowrap}
     .rubber{position:absolute;right:18px;bottom:14px;transform:rotate(-12deg);font-family:var(--mono);font-size:24px;letter-spacing:.16em;text-transform:uppercase;color:rgba(16,120,60,.18);border:2px solid rgba(16,120,60,.16);padding:10px 14px;border-radius:10px;mix-blend-mode:multiply;pointer-events:none;user-select:none;filter:blur(.15px)}
-    .seal{position:absolute;top:-53px;right:-79px;width:400px;height:auto;opacity:0.85;transform:rotate(-21deg);pointer-events:none;z-index:10}
+    .seal{position:absolute;top:-73px;right:-84px;width:400px;height:auto;opacity:0.85;transform:rotate(-21deg);pointer-events:none;z-index:10}
     .sheet{margin-top:14px;border:1px solid rgba(17,24,39,.16);border-radius:12px;background:rgba(255,255,255,.42);padding:14px;position:relative}
     .type{font-family:var(--mono);font-size:12.6px;line-height:1.7;color:rgba(17,24,39,.92);position:relative;letter-spacing:.03em;text-shadow:0.35px 0 rgba(17,24,39,.55),-0.15px 0 rgba(17,24,39,.25);filter:contrast(1.02) saturate(0.95)}
     .grid{margin-top:10px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px 16px;align-items:baseline;justify-content:start;grid-auto-rows:minmax(20px,auto)}
