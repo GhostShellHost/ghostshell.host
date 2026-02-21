@@ -214,10 +214,10 @@
     .cert-seal {
       position: absolute;
       top: -65px;
-      right: -74px;
+      right: -79px;
       width: 400px;
       height: auto;
-      opacity: 0.85;
+      opacity: 0.55;
       transform: rotate(-21deg);
       pointer-events: none;
       user-select: none;
@@ -258,16 +258,14 @@
       letter-spacing: 0.08em;
     }
     .cert-version {
-      position: absolute;
-      bottom: 3px;
-      right: 12px;
+      float: right;
       font-family: ui-monospace, Menlo, Consolas, monospace;
       font-size: 8.5px;
       color: rgba(17,24,39,0.42);
       letter-spacing: 0.08em;
       margin: 0;
       padding: 0;
-      line-height: 1;
+      line-height: 1.3;
     }
     .cert-inner {
       position: relative;
@@ -280,6 +278,9 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: clip;
+    }
+    .hashline:last-child {
+      overflow: visible;
     }
 
     /* Expand/collapse */
@@ -524,10 +525,9 @@
 
           <div class="cert-micr">
             <div class="hashline"><span class="ck">record_hash:</span> <span class="ck">sha256</span> c7f6 a0b1 2e8a 9d3f 4c1d 0aa9 a6f0 c8b1 e7aa 2f2a 3b1c 9d0e 1122 3344 5566 7788</div>
-            <div class="hashline"><span class="ck">record_nonce:</span> <span class="redact w16"></span></div>
+            <div class="hashline"><span class="ck">record_nonce:</span> <span class="redact w16"></span><span class="cert-version">v0.030</span></div>
           </div>
         </div>
-        <div class="cert-version">v0.030</div>
       </div>
     </div>
   </div>
