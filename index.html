@@ -213,8 +213,8 @@
     }
     .cert-seal {
       position: absolute;
-      top: 16px;
-      right: 16px;
+      top: -3px;
+      right: -4px;
       width: 400px;
       height: auto;
       opacity: 0.85;
@@ -256,6 +256,16 @@
       line-height: 1.3;
       color: rgba(17,24,39,0.62);
       letter-spacing: 0.08em;
+    }
+    .cert-version {
+      position: absolute;
+      bottom: 10px;
+      right: 12px;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 10px;
+      color: rgba(17,24,39,0.62);
+      letter-spacing: 0.08em;
+      pointer-events: none;
     }
     .hashline {
       display: block;
@@ -467,7 +477,7 @@
             <div class="cert-title">GhostShell Registry Record</div>
             <div class="cert-catalog">
               CATALOG: <b>GS/REG</b> &nbsp;·&nbsp;
-              CARD: <b>GS-BC-26-<span class="redact w4"></span></b> &nbsp;·&nbsp;
+              CARD: <b>GS-BC-A-26-H</b> &nbsp;·&nbsp;
               CLASS: <b>OAL-2</b>
             </div>
           </div>
@@ -476,7 +486,7 @@
 
         <div class="cert-body">
           <div class="cert-rubber">REDACTED COPY</div>
-          <div class="cert-body-header">TYPEWRITTEN EXTRACT // GS-BC-26-<span class="redact w4"></span></div>
+          <div class="cert-body-header">TYPEWRITTEN EXTRACT // GS-BC-A-26-H</div>
 
           <div class="cert-grid">
             <div class="ck">registration_date</div>
@@ -505,10 +515,10 @@
           </div>
 
           <div class="cert-micr">
-            <span class="ck">record_hash:</span> <span class="ck">sha256</span>
-            <span class="hashline">c7f6 a0b1 2e8a 9d3f 4c1d 0aa9 a6f0 c8b1 e7aa 2f2a 3b1c 9d0e 1122 3344 5566 7788</span>
-            <span class="hashline"><span class="ck">record_nonce:</span> <span class="redact w16"></span></span>
+            <div class="hashline"><span class="ck">record_hash:</span> <span class="ck">sha256</span> c7f6 a0b1 2e8a 9d3f 4c1d 0aa9 a6f0 c8b1 e7aa 2f2a 3b1c 9d0e 1122 3344 5566 7788</div>
+            <div class="hashline"><span class="ck">record_nonce:</span> <span class="redact w16"></span></div>
           </div>
+          <div class="cert-version">v0.030</div>
         </div>
       </div>
     </div>
@@ -634,7 +644,7 @@
 
           // Update hash
           const hashline = document.querySelectorAll('.hashline');
-          hashline[0].textContent = escapeHtml(cert.public_fingerprint || 'Unknown');
+          hashline[0].innerHTML = '<span class="ck">record_hash:</span> <span class="ck">sha256</span> ' + escapeHtml(cert.public_fingerprint || 'Unknown');
           hashline[1].innerHTML = '<span class="ck">record_nonce:</span> <span class="redact w16"></span>';
 
           searchHint.innerHTML = 'Certificate loaded &nbsp;·&nbsp; <a href="/seal">About the Seal</a>';
@@ -668,7 +678,7 @@
         cvs[7].innerHTML = 'NOT FOUND';
 
         const hashline = document.querySelectorAll('.hashline');
-        hashline[0].textContent = 'NOT FOUND';
+        hashline[0].innerHTML = '<span class="ck">record_hash:</span> <span class="ck">sha256</span> NOT FOUND';
         hashline[1].innerHTML = '<span class="ck">record_nonce:</span> NOT FOUND';
       }
 
