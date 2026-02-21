@@ -654,7 +654,7 @@
           // Update hash
           const hashline = document.querySelectorAll('.hashline');
           hashline[0].innerHTML = '<span class="ck">record_hash:</span> <span class="ck">sha256</span> ' + escapeHtml(cert.public_fingerprint || 'Unknown');
-          hashline[1].innerHTML = '<span class="ck">record_nonce:</span> <span class="redact w16"></span>';
+          hashline[1].innerHTML = '<span class="ck">record_nonce:</span> <span class="redact w16"></span><span class="cert-version">v0.030</span>';
 
           searchHint.innerHTML = 'Certificate loaded &nbsp;·&nbsp; <a href="/seal">About the Seal</a>';
           history.pushState({}, '', '/?cert=' + encodeURIComponent(id));
@@ -689,7 +689,7 @@
 
         const hashline = document.querySelectorAll('.hashline');
         hashline[0].innerHTML = '<span class="ck">record_hash:</span> <span class="ck">sha256</span> NOT FOUND';
-        hashline[1].innerHTML = '<span class="ck">record_nonce:</span> NOT FOUND';
+        hashline[1].innerHTML = '<span class="ck">record_nonce:</span> NOT FOUND<span class="cert-version">v0.030</span>';
       }
 
       function escapeHtml(str) {
