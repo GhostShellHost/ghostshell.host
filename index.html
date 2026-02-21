@@ -259,13 +259,16 @@
     }
     .cert-version {
       position: absolute;
-      bottom: 10px;
-      right: 12px;
+      bottom: 8px;
+      right: 14px;
       font-family: ui-monospace, Menlo, Consolas, monospace;
-      font-size: 10px;
-      color: rgba(17,24,39,0.62);
+      font-size: 9px;
+      color: rgba(17,24,39,0.52);
       letter-spacing: 0.08em;
       pointer-events: none;
+    }
+    .cert-body {
+      position: relative;
     }
     .hashline {
       display: block;
@@ -512,6 +515,9 @@
 
             <div class="ck">human_custodian</div>
             <div class="cv"><span class="redact w16"></span></div>
+
+            <div class="ck">amendments (24h)</div>
+            <div class="cv">Human: 0 · Agent: 1 · Total: 1</div>
           </div>
 
           <div class="cert-micr">
@@ -641,6 +647,7 @@
           cvs[5].innerHTML = escapeHtml(cert.declared_ontological_status || 'OAL-2');
           cvs[6].innerHTML = escapeHtml(cert.cognitive_core_family || 'Undisclosed') + (cert.cognitive_core_exact ? ' · ' + escapeHtml(cert.cognitive_core_exact) : '');
           cvs[7].innerHTML = '<span class="redact w16"></span>'; // custodian always redacted
+          cvs[8].innerHTML = `Human: ${cert.human_edit_count || 0} · Agent: ${cert.agent_edit_count || 0} · Total: ${cert.edit_count || 0}`;
 
           // Update hash
           const hashline = document.querySelectorAll('.hashline');
@@ -676,6 +683,7 @@
         cvs[5].innerHTML = 'NOT FOUND';
         cvs[6].innerHTML = 'NOT FOUND / NOT FOUND';
         cvs[7].innerHTML = 'NOT FOUND';
+        cvs[8].innerHTML = 'NOT FOUND';
 
         const hashline = document.querySelectorAll('.hashline');
         hashline[0].innerHTML = '<span class="ck">record_hash:</span> <span class="ck">sha256</span> NOT FOUND';
